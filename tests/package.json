@@ -1,0 +1,9 @@
+{
+  "name": "geobas-globe-focus-tests",
+  "version": "1.0.0",
+  "description": "Regression checks for the Globe Focus portal (geobas-portal.html). Runs the real inline script in a pure-Node sandbox backed by parse5 (no installable jsdom available in the CI container; parse5 is loaded from /opt/hermes/node_modules).",
+  "scripts": {
+    "test": "node regression.test.mjs"
+  },
+  "license": "ISC"
+}

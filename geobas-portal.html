@@ -6,9 +6,10 @@
 <title>GeoBas — Landinfo för återvändare</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Noto+Naskh+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/globe.gl"></script>
 <script src="https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/sql-wasm.js"></script>
+<script src="https://cdn.ckeditor.com/ckeditor5/40.0.0/classic/ckeditor.js" defer></script>
 <style>
   :root{
     --bg:#221610; --bg-2:#2e1e15; --panel:#3a271b;
@@ -26,12 +27,12 @@
       radial-gradient(ellipse 900px 500px at 15% -10%, #4a3020 0%, transparent 60%),
       radial-gradient(ellipse 800px 600px at 110% 10%, #3a2818 0%, transparent 55%),
       linear-gradient(180deg, var(--bg) 0%, #1b110c 100%);
-    color:var(--paper); font-family:'Inter',sans-serif; min-height:100vh; overflow-x:hidden;
+    color:var(--paper); font-family:'Inter','Noto Naskh Arabic','Segoe UI',Tahoma,sans-serif; min-height:100vh; overflow-x:hidden;
   }
   ::selection{background:var(--accent); color:var(--paper);}
   a{color:inherit;}
-  h1,h2,h3{font-family:'Fraunces',serif; margin:0; font-weight:600; letter-spacing:-0.01em;}
-  .eyebrow{font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:0.14em; font-size:0.72rem; color:var(--accent);}
+  h1,h2,h3{font-family:'Fraunces','Noto Naskh Arabic','Segoe UI',Tahoma,serif; margin:0; font-weight:600; letter-spacing:-0.01em;}
+  .eyebrow{font-family:'JetBrains Mono','Noto Naskh Arabic','Segoe UI',Tahoma,monospace; text-transform:uppercase; letter-spacing:0.14em; font-size:0.72rem; color:var(--accent);}
   button, input, textarea{font-family:inherit;}
   :focus-visible{outline:2px solid var(--accent); outline-offset:3px;}
 
@@ -86,9 +87,7 @@
 
   #view-start{padding-top:10px;}
   .hero{display:grid; grid-template-columns: 1.05fr 1fr; gap:20px; align-items:center; min-height:74vh;}
-  .hero-stacked{display:flex; flex-direction:column; gap:10px; min-height:auto;}
   .hero-copy{position:relative; z-index:2;}
-  .hero-stacked .hero-copy{max-width:720px;}
   .hero-copy h1{font-size:clamp(2.6rem, 5.4vw, 4.4rem); line-height:0.98; margin:14px 0 22px;}
   .hero-copy h1 .stroke{-webkit-text-stroke:1.5px var(--paper); color:transparent;}
   .hero-copy p.lede{font-size:1.05rem; color:var(--sand-2); max-width:46ch; line-height:1.6; margin:0 0 30px;}
@@ -106,7 +105,6 @@
   .hint{font-size:0.78rem; color:var(--muted);}
 
   .globe-stage{position:relative; height:min(74vh, 600px); z-index:1;}
-  .globe-stage-big{height:min(90vh, 1100px); width:100%;}
   #globe-canvas-wrap{position:absolute; inset:0; cursor:grab;}
   #globe-canvas-wrap:active{cursor:grabbing;}
   .globe-loading{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:var(--muted); letter-spacing:0.08em;}
@@ -269,6 +267,52 @@
   footer.foot{max-width:1180px; margin:60px auto 0; padding:24px 28px; border-top:1px solid var(--line); display:flex; justify-content:space-between; color:var(--muted); font-size:0.72rem; font-family:'JetBrains Mono',monospace; flex-wrap:wrap; gap:14px; align-items:center;}
   footer.foot .data-actions{display:flex; gap:8px;}
   #import-file{display:none;}
+
+  /* --- Globe Focus hero: side-by-side with ~35% larger globe --- */
+  .hero-globe{grid-template-columns:minmax(0,1fr) minmax(0,1.55fr); gap:36px; min-height:88vh;}
+  .hero-globe .globe-stage{height:min(86vh, 810px);}
+  .hero-globe .hero-copy h1{font-size:clamp(2.2rem,3.6vw,3.4rem);}
+  @media (max-width:940px){
+    .hero-globe{grid-template-columns:1fr; min-height:auto; gap:24px;}
+    .hero-globe .globe-stage{height:min(60vh, 480px);}
+  }
+
+  /* --- RTL (Arabic) --- */
+  [dir="rtl"] .topbar{flex-direction:row-reverse;}
+  [dir="rtl"] .crumbs{flex-direction:row-reverse;}
+  [dir="rtl"] .back-strip{flex-direction:row-reverse;}
+  [dir="rtl"] .country-card:hover{transform:translateX(-4px);}
+  [dir="rtl"] .country-card:hover .arrow{transform:translateX(-3px);}
+  [dir="rtl"] .country-card .arrow svg,[dir="rtl"] .cta svg,[dir="rtl"] .link-btn svg{transform:scaleX(-1);}
+  [dir="rtl"] .del-x{right:auto; left:8px;}
+  [dir="rtl"] .country-hero{text-align:right;}
+  [dir="rtl"] .kv-edit-row input{flex-basis:auto;}
+
+  /* --- CKEditor edit modal --- */
+  .modal-overlay{position:fixed; inset:0; background:rgba(15,9,6,0.75); z-index:60; display:flex; align-items:center; justify-content:center; padding:22px;}
+  .modal-overlay[hidden]{display:none;}
+  .modal{background:var(--panel); border:1px solid var(--line); border-radius:18px; width:min(880px, 96vw); max-height:92vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:var(--shadow);}
+  .modal-head{display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--line);}
+  .modal-head h3{font-size:1.15rem;}
+  .modal-close{background:none; border:none; color:var(--muted); font-size:1.5rem; line-height:1; cursor:pointer; padding:2px 8px; border-radius:8px;}
+  .modal-close:hover{color:var(--paper); background:rgba(0,0,0,0.25);}
+  .modal-body{overflow-y:auto; padding:18px 20px; display:flex; flex-direction:column; gap:16px;}
+  .modal-card-title{font-family:'Fraunces','Noto Naskh Arabic',serif; font-weight:600; font-size:1.25rem;}
+  .modal-actions{display:flex; justify-content:flex-end; gap:12px; padding:16px 20px; border-top:1px solid var(--line);}
+  .modal-actions .cta{padding:12px 22px; font-size:0.78rem;}
+  .modal-kv{border-top:1px dashed var(--line); padding-top:14px;}
+  .modal-kv .eyebrow{display:block; margin-bottom:10px;}
+  #modal-editor-host{min-height:0;}
+  .modal-body .ck-editor__editable{min-height:230px; max-height:40vh; overflow-y:auto; border-radius:0 0 8px 8px;}
+  .ck.ck-editor{
+    --ck-color-base-background:#3a271b; --ck-color-base-border:#6b4a2e; --ck-color-base-text:#f5ecd9;
+    --ck-color-toolbar-background:#2e1e15; --ck-color-toolbar-border:#6b4a2e;
+    --ck-color-button-default-background:#2e1e15; --ck-color-button-default-hover-background:#4a3020; --ck-color-button-default-active-background:#4a3020;
+    --ck-color-panel-background:#3a271b; --ck-color-input-background:#3a271b; --ck-color-input-text:#f5ecd9;
+    --ck-color-dropdown-panel-background:#3a271b; --ck-color-link-default:#8fb7d4; --ck-color-editor-background:#2a1a11;
+    --ck-color-focus-border:#c1652f; --ck-color-widget-hover-border:#c1652f;
+  }
+  .ck.ck-editor .ck-content{color:var(--paper);}
 </style>
 </head>
 <body>
@@ -279,40 +323,40 @@
   <header class="topbar">
     <div class="brand" data-nav="start">
       <span class="mark">Geo<em>Bas</em></span>
-      <span class="sub">LANDINFO / ÅTERVÄNDARPORTAL</span>
+      <span class="sub" data-i18n="brand_sub">LANDINFO / ÅTERVÄNDARPORTAL</span>
     </div>
     <div class="topbar-right">
-      <button class="icon-btn" data-nav="about" type="button">Om oss</button>
-      <button class="icon-btn" data-nav="resources" type="button">Egenstudier</button>
+      <button class="icon-btn" data-nav="about" data-i18n="nav_about" type="button">Om oss</button>
+      <button class="icon-btn" data-nav="resources" data-i18n="nav_resources" type="button">Egenstudier</button>
       <div id="save-status"><span class="status-dot" style="display:none;"></span><span id="save-status-text"></span></div>
       <div class="lang-switch" id="lang-switch"></div>
       <button class="icon-btn" id="btn-edit-toggle" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m16.5 3.5 4 4L7 21l-4.5 1L4 17.5 16.5 3.5Z"/></svg>
-        <span id="edit-toggle-label">Redigera</span>
+        <span id="edit-toggle-label" data-i18n="btn_edit">Redigera</span>
       </button>
     </div>
   </header>
   <nav class="crumbs" id="crumbs"></nav>
 
   <section id="view-start" class="view active">
-    <div class="hero hero-stacked">
+    <div class="hero hero-globe">
       <div class="hero-copy">
-        <span class="eyebrow">Migrationsverket · organiserad sysselsättning</span>
-        <h1>Var vill du<br><span class="stroke">bygga</span> nästa?</h1>
-        <p class="lede">En samlad guide till affärsmöjligheter, stödprogram och praktiska första steg — sorterat efter var i världen du är på väg tillbaka.</p>
+        <span class="eyebrow" data-i18n="hero_eyebrow">Migrationsverket · organiserad sysselsättning</span>
+        <h1 data-i18n-html="hero_h1">Var vill du bygga<br><span class="stroke">ditt nästa kapitel</span>?</h1>
+        <p class="lede" data-i18n="hero_lede">En samlad guide till affärsmöjligheter, stödprogram och praktiska första steg — oavsett vilket land du är på väg tillbaka till.</p>
         <div class="cta-row">
           <button class="cta" id="btn-start" type="button">
-            Tryck här för att gå vidare
+            <span data-i18n="hero_cta">Tryck här för att gå vidare</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </button>
-          <button class="cta cta-secondary" data-nav="about" type="button">
+          <button class="cta cta-secondary" data-nav="about" data-i18n="hero_cta_secondary" type="button">
             Om oss &amp; våra samarbeten
           </button>
         </div>
-        <p class="hint">Dra i jordgloben för att snurra den · tryck på en prick för att välja region</p>
+        <p class="hint" data-i18n="hero_hint">Dra i globen för att rotera · håll musen över den för att pausa · tryck på en prick för att välja region</p>
       </div>
-      <div class="globe-stage globe-stage-big">
-        <div id="globe-canvas-wrap"><div class="globe-loading">Laddar databas &amp; jordglob…</div></div>
+      <div class="globe-stage">
+        <div id="globe-canvas-wrap"><div class="globe-loading" data-i18n="globe_loading">Laddar databas &amp; jordglob…</div></div>
       </div>
     </div>
   </section>
@@ -320,9 +364,9 @@
   <section id="view-regions" class="view">
     <div class="page-head">
       <div>
-        <span class="eyebrow">Steg 1 av 3</span>
-        <h2>Var kommer du ifrån?</h2>
-        <p>Tryck på den världsdelen som du ska återvända till.</p>
+        <span class="eyebrow" data-i18n="regions_eyebrow">Steg 1 av 3</span>
+        <h2 data-i18n="regions_title">Var kommer du ifrån?</h2>
+        <p data-i18n="regions_sub">Tryck på den världsdelen som du ska återvända till.</p>
       </div>
     </div>
     <div class="region-grid" id="region-grid"></div>
@@ -331,31 +375,31 @@
   <section id="view-about" class="view">
     <div class="page-head">
       <div>
-        <span class="eyebrow">Om oss</span>
-        <h2>Vilka vi är &amp; vad vi erbjuder</h2>
-        <p>Allt material nedan finns även samlat i vår folder, tillsammans med fullständiga kontaktuppgifter.</p>
+        <span class="eyebrow" data-i18n="about_eyebrow">Om oss</span>
+        <h2 data-i18n="about_title">Vilka vi är &amp; vad vi erbjuder</h2>
+        <p data-i18n="about_sub">Allt material nedan finns även samlat i vår folder, tillsammans med fullständiga kontaktuppgifter.</p>
       </div>
     </div>
     <div class="about-photo-grid" id="about-photo-grid"></div>
     <div class="topics-grid" style="margin-top:24px;">
       <div class="topic-card">
         <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m11 14 2-2 4 4"/><path d="M3 12h4l2-3 2 3h2"/><path d="M13 12h4l2-3"/><path d="M7 14a5 5 0 0 0 8 4"/></svg></div>
-        <h3>Vad vi erbjuder</h3>
-        <p class="body-text">Vi samlar landinfo, affärsmöjligheter och stödprogram för dig som planerar en återetablering — sorterat per land och kopplat till de organisationer som kan hjälpa dig vidare.</p>
-        <p class="body-text">Genom våra samarbetspartners kan du få hjälp med allt från ekonomiskt återetableringsstöd till praktisk vägledning på plats i ditt hemland.</p>
+        <h3 data-i18n="about_offer_title">Vad vi erbjuder</h3>
+        <p class="body-text" data-i18n="about_offer_p1">Vi samlar landinfo, affärsmöjligheter och stödprogram för dig som planerar en återetablering — sorterat per land och kopplat till de organisationer som kan hjälpa dig vidare.</p>
+        <p class="body-text" data-i18n="about_offer_p2">Genom våra samarbetspartners kan du få hjälp med allt från ekonomiskt återetableringsstöd till praktisk vägledning på plats i ditt hemland.</p>
       </div>
     </div>
     <div class="page-head" style="margin-top:44px;">
       <div>
-        <span class="eyebrow">Kontakt</span>
-        <h2 style="font-size:1.6rem;">Lokala organisationer &amp; samarbeten</h2>
+        <span class="eyebrow" data-i18n="contact_eyebrow">Kontakt</span>
+        <h2 style="font-size:1.6rem;" data-i18n="contact_title">Lokala organisationer &amp; samarbeten</h2>
       </div>
     </div>
     <div id="org-directory-list"></div>
     <div class="back-strip">
       <button class="link-btn" data-nav="start">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
-        Till startsidan
+        <span data-i18n="back_home">Till startsidan</span>
       </button>
     </div>
   </section>
@@ -363,16 +407,16 @@
   <section id="view-resources" class="view">
     <div class="page-head">
       <div>
-        <span class="eyebrow">Egenstudier</span>
-        <h2>Studera på egen hand</h2>
-        <p>Gratis och kostnadseffektiva resurser för CV, språk, översättning och vidareutbildning — oavsett var du befinner dig i processen.</p>
+        <span class="eyebrow" data-i18n="resources_eyebrow">Egenstudier</span>
+        <h2 data-i18n="resources_title">Studera på egen hand</h2>
+        <p data-i18n="resources_sub">Gratis och kostnadseffektiva resurser för CV, språk, översättning och vidareutbildning — oavsett var du befinner dig i processen.</p>
       </div>
     </div>
     <div id="resources-list"></div>
     <div class="back-strip">
       <button class="link-btn" data-nav="start">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
-        Till startsidan
+        <span data-i18n="back_home">Till startsidan</span>
       </button>
     </div>
   </section>
@@ -380,16 +424,16 @@
   <section id="view-countries" class="view">
     <div class="page-head">
       <div>
-        <span class="eyebrow" id="countries-eyebrow">Steg 2 av 3</span>
+        <span class="eyebrow" id="countries-eyebrow" data-i18n="countries_eyebrow">Steg 2 av 3</span>
         <h2 id="countries-title">Region</h2>
-        <p>Välj land för att läsa affärsmöjligheter, stödprogram och hur du kommer igång.</p>
+        <p data-i18n="countries_sub">Välj land för att läsa affärsmöjligheter, stödprogram och hur du kommer igång.</p>
       </div>
     </div>
     <div class="country-grid" id="country-grid"></div>
     <div class="back-strip">
       <button class="link-btn" data-nav="regions">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
-        Alla regioner
+        <span data-i18n="back_regions">Alla regioner</span>
       </button>
     </div>
   </section>
@@ -409,18 +453,18 @@
     <div id="empty-state"></div>
 
     <div class="sources-panel">
-      <span class="eyebrow">Källor &amp; internationella organisationer</span>
+      <span class="eyebrow" data-i18n="sources_eyebrow">Källor &amp; internationella organisationer</span>
       <div class="sources-links">
         <a class="source-chip" href="https://lifos.migrationsverket.se/fokuslander.html" target="_blank" rel="noopener">Lifos — landinformation (Migrationsverket)</a>
         <a class="source-chip" href="https://www.iom.int/" target="_blank" rel="noopener">IOM — International Organization for Migration</a>
         <a class="source-chip" href="https://reintegrationfacility.eu/" target="_blank" rel="noopener">ERRIN / Return &amp; Reintegration Facility</a>
       </div>
-      <p class="sources-note">ERRIN avslutades formellt 2022 — arbetet fortsätter sedan dess genom Return and Reintegration Facility (RRF), som drivs av ICMPD.</p>
+      <p class="sources-note" data-i18n="sources_note">ERRIN avslutades formellt 2022 — arbetet fortsätter sedan dess genom Return and Reintegration Facility (RRF), som drivs av ICMPD.</p>
     </div>
 
     <div class="ngo-panel">
       <div class="page-head" style="margin:0 0 16px;">
-        <div><span class="eyebrow">Lokala organisationer</span><h2 style="font-size:1.3rem;">NGOs i landet</h2></div>
+        <div><span class="eyebrow" data-i18n="ngo_eyebrow">Lokala organisationer</span><h2 style="font-size:1.3rem;" data-i18n="ngo_title">NGOs i landet</h2></div>
       </div>
       <div id="ngo-list"></div>
     </div>
@@ -429,20 +473,42 @@
     <div class="back-strip">
       <button class="link-btn" data-nav="back-to-countries">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
-        Fler länder i regionen
+        <span data-i18n="back_more_countries">Fler länder i regionen</span>
       </button>
-      <button class="link-btn" data-nav="regions">Byt region</button>
+      <button class="link-btn" data-nav="regions"><span data-i18n="back_switch_region">Byt region</span></button>
     </div>
   </section>
 
   <footer class="foot">
-    <span>Källa: Google · GeoBas — driven av SQLite (sql.js) i webbläsaren</span>
+    <span data-i18n="footer_source">Källa: Google · GeoBas — driven av SQLite (sql.js) i webbläsaren</span>
     <div class="data-actions">
-      <button class="icon-btn" id="btn-export">Exportera .sqlite</button>
-      <button class="icon-btn" id="btn-import">Importera .sqlite</button>
+      <button class="icon-btn" id="btn-export" data-i18n="export_btn">Exportera .sqlite</button>
+      <button class="icon-btn" id="btn-import" data-i18n="import_btn">Importera .sqlite</button>
       <input type="file" id="import-file" accept=".sqlite,.db">
     </div>
   </footer>
+</div>
+
+<div class="modal-overlay" id="edit-modal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-head">
+      <h3 id="modal-title" data-i18n="modal_title">Redigera kort</h3>
+      <button class="modal-close" id="modal-close" type="button" data-i18n-aria="modal_close_aria" aria-label="Stäng">×</button>
+    </div>
+    <div class="modal-body">
+      <input class="edit-field modal-card-title" id="modal-card-title" data-i18n-placeholder="modal_title_placeholder" placeholder="Rubrik (valfritt)">
+      <div id="modal-editor-host"></div>
+      <div class="modal-kv">
+        <span class="eyebrow" data-i18n="modal_kv_label">Etikett: text</span>
+        <div id="modal-kv-list" style="margin-top:10px;"></div>
+        <button class="mini-btn" id="modal-add-kv" type="button" data-i18n="modal_add_kv">+ Rad (etikett: text)</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="link-btn" id="modal-cancel" type="button" data-i18n="modal_cancel">Avbryt</button>
+      <button class="cta" id="modal-save" type="button" data-i18n="modal_save">Spara ändringar</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -465,33 +531,33 @@ const SEED_CARDS = {"Georgien": [{"title": null, "body": ["I Georgien 2026 är a
 
 const RESOURCE_LINKS = [
   {
-    group: "CV & jobbsökning",
+    group: "res_group_cv",
     items: [
-      { name: "CVkungen", url: "https://cvkungen.se/", note: "Bygg ett jobb-vinnande CV." },
+      { name: "CVkungen", url: "https://cvkungen.se/", note: "res_cvkungen_note" },
     ]
   },
   {
-    group: "Översättning & dokument",
+    group: "res_group_translate",
     items: [
-      { name: "DeepL AI Platform", url: "https://www.deepl.com/", note: "Översätt betyg, dokument och intyg." },
+      { name: "DeepL AI Platform", url: "https://www.deepl.com/", note: "res_deepl_note" },
     ]
   },
   {
-    group: "Språk",
+    group: "res_group_lang",
     items: [
-      { name: "Duolingo", url: "https://sv.duolingo.com/", note: "Det mest populära sättet att lära sig ett nytt språk." },
+      { name: "Duolingo", url: "https://sv.duolingo.com/", note: "res_duolingo_note" },
     ]
   },
   {
-    group: "Gratis kurser online",
+    group: "res_group_courses",
     items: [
-      { name: "Alison — Free Online Courses", url: "https://alison.com/tags", note: "Tusentals gratis kurser från välkända utgivare." },
-      { name: "Matteboken.se", url: "https://www.matteboken.se/", note: "Gratis matteläromedel, alla nivåer." },
-      { name: "Khan Academy", url: "https://www.khanacademy.org/", note: "Gratis lektioner i matematik, naturvetenskap m.m." },
-      { name: "Coursera", url: "https://www.coursera.org/", note: "Universitetskurser — många går att läsa gratis (audit)." },
-      { name: "edX", url: "https://www.edx.org/", note: "Kurser från ledande universitet, gratis att läsa utan certifikat." },
-      { name: "Google Digitalakademin", url: "https://grow.google/intl/se/", note: "Kostnadsfria kurser i digital kompetens och marknadsföring." },
-      { name: "Digitala Jag", url: "https://www.digitalajag.se/", note: "Digitala vardagskunskaper, från Google & Arbetsförmedlingen." },
+      { name: "Alison — Free Online Courses", url: "https://alison.com/tags", note: "res_alison_note" },
+      { name: "Matteboken.se", url: "https://www.matteboken.se/", note: "res_matteboken_note" },
+      { name: "Khan Academy", url: "https://www.khanacademy.org/", note: "res_khan_note" },
+      { name: "Coursera", url: "https://www.coursera.org/", note: "res_coursera_note" },
+      { name: "edX", url: "https://www.edx.org/", note: "res_edx_note" },
+      { name: "Google Digitalakademin", url: "https://grow.google/intl/se/", note: "res_gdigital_note" },
+      { name: "Digitala Jag", url: "https://www.digitalajag.se/", note: "res_digitala_jag_note" },
     ]
   },
 ];
@@ -547,8 +613,439 @@ function slugify(s){
 function escapeHtml(str){
   const div = document.createElement('div');
   div.textContent = str == null ? '' : str;
-  return div.innerHTML;
+  // Quotes are harmless in text context but must be escaped when the same
+  // value is interpolated into an attribute (data-lang, value, placeholder…).
+  return div.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
+// Safe URL filter for user-supplied links (NGO list / org directory / rich text):
+// allow only http(s), mailto, and relative URLs (scheme-less, '/'- or '#'-prefixed).
+// Everything else (javascript:, data:, vbscript:, file:, custom schemes) is rejected.
+function safeUrl(u){
+  let s = String(u == null ? '' : u);
+  // Mirror browser URL preprocessing: tabs/newlines/CR are dropped anywhere,
+  // C0 controls and spaces are stripped at the edges — otherwise
+  // '\u0000javascript:' or 'java\tscript:' would parse as a script scheme.
+  s = s.replace(/[\t\n\r]/g, '').replace(/^[\u0000-\u0020]+|[\u0000-\u0020]+$/g, '');
+  if(!s) return '';
+  if(/^[a-z][a-z0-9+.\-]*:/i.test(s)){
+    return /^(https?:|mailto:)/i.test(s) ? s : '';
+  }
+  return s;
+}
+function renderExternalLink(url, label){
+  const safe = safeUrl(url);
+  if(!safe) return '';
+  return `<a href="${escapeHtml(safe)}" target="_blank" rel="noopener">${escapeHtml(label)}</a>`;
+}
+
+/* =====================================================================
+   UI STRINGS / INTERNATIONALIZATION (sv, en, es, ar)
+   ===================================================================== */
+const STRINGS = {
+  sv: {
+    doc_title:'GeoBas — Landinfo för återvändare',
+    brand_sub:'LANDINFO / ÅTERVÄNDARPORTAL',
+    nav_about:'Om oss', nav_resources:'Egenstudier',
+    btn_edit:'Redigera', btn_done:'Klar', add_lang:'Nytt språk',
+    crumb_start:'Start',
+    hero_eyebrow:'Migrationsverket · organiserad sysselsättning',
+    hero_h1_a:'Var vill du bygga', hero_h1_b:'ditt nästa kapitel',
+    hero_lede:'En samlad guide till affärsmöjligheter, stödprogram och praktiska första steg — oavsett vilket land du är på väg tillbaka till.',
+    hero_cta:'Tryck här för att gå vidare',
+    hero_cta_secondary:'Om oss & våra samarbeten',
+    hero_hint:'Dra i globen för att rotera · håll musen över den för att pausa · tryck på en prick för att välja region',
+    globe_loading:'Laddar databas & jordglob…',
+    regions_eyebrow:'Steg 1 av 3', regions_title:'Var kommer du ifrån?',
+    regions_sub:'Tryck på den världsdelen som du ska återvända till.',
+    countries_eyebrow:'Steg 2 av 3',
+    countries_sub:'Välj land för att läsa affärsmöjligheter, stödprogram och hur du kommer igång.',
+    countries_count:'%s länder',
+    untranslated:'Ej översatt', untranslated_short:'ej öv.',
+    add_region:'+ Ny region', add_country:'+ Nytt land', add_card:'+ Nytt kort',
+    add_paragraph:'+ Stycke', add_kv:'+ Rad (etikett: text)',
+    del_card:'Ta bort kort', edit_card:'Redigera',
+    coming_soon:'Kommer snart', nameless:'(namnlös)',
+    delete_confirm_region:'Ta bort denna region och dess koppling till länder?',
+    delete_confirm_country:'Ta bort detta land från regionen?',
+    delete_confirm_card:'Ta bort hela kortet?',
+    prompt_region_name:'Namn på ny region:', prompt_country_name:'Namn på nytt land:',
+    prompt_lang_code:'Språkkod (t.ex. "de", "fr"):', prompt_lang_name:'Språkets namn (t.ex. "Deutsch"):',
+    back_home:'Till startsidan', back_regions:'Alla regioner',
+    back_more_countries:'Fler länder i regionen', back_switch_region:'Byt region',
+    empty_title:'Innehåll på väg',
+    empty_body_p1:'Det finns ännu ingen landinfo för %s på %s.',
+    empty_body_p2:'Kom tillbaka snart, eller välj ett annat land i %s.',
+    sources_eyebrow:'Källor & internationella organisationer',
+    sources_note:'ERRIN avslutades formellt 2022 — arbetet fortsätter sedan dess genom Return and Reintegration Facility (RRF), som drivs av ICMPD.',
+    ngo_eyebrow:'Lokala organisationer', ngo_title:'NGOs i landet',
+    ngo_empty:'Inga lokala organisationer inlagda ännu för det här landet.',
+    ngo_name_placeholder:'Namn', ngo_url_placeholder:'URL (https://...)', ngo_note_placeholder:'Kort beskrivning',
+    add_ngo:'+ Lägg till organisation', unnamed_org:'(namnlös organisation)',
+    visit_site:'Besök webbplats →',
+    disclaimer_body:'Innehållet för %s är sammanställt från Migrationsverkets landinfo-underlag (2026) och kan komma att uppdateras.',
+    about_eyebrow:'Om oss', about_title:'Vilka vi är & vad vi erbjuder',
+    about_sub:'Allt material nedan finns även samlat i vår folder, tillsammans med fullständiga kontaktuppgifter.',
+    about_offer_title:'Vad vi erbjuder',
+    about_offer_p1:'Vi samlar landinfo, affärsmöjligheter och stödprogram för dig som planerar en återetablering — sorterat per land och kopplat till de organisationer som kan hjälpa dig vidare.',
+    about_offer_p2:'Genom våra samarbetspartners kan du få hjälp med allt från ekonomiskt återetableringsstöd till praktisk vägledning på plats i ditt hemland.',
+    contact_eyebrow:'Kontakt', contact_title:'Lokala organisationer & samarbeten',
+    about_photo_1:'Verksamheten på plats', about_photo_2:'Rådgivning & vägledning', about_photo_3:'Lokala samarbeten',
+    org_name_placeholder:'Namn', org_url_placeholder:'URL (https://...)',
+    org_contact_placeholder:'Kontakt (telefon/e-post)', org_desc_placeholder:'Beskrivning',
+    org_delete:'Ta bort', org_empty:'Inga organisationer inlagda ännu.',
+    resources_eyebrow:'Egenstudier', resources_title:'Studera på egen hand',
+    resources_sub:'Gratis och kostnadseffektiva resurser för CV, språk, översättning och vidareutbildning — oavsett var du befinner dig i processen.',
+    res_group_cv:'CV & jobbsökning', res_cvkungen_note:'Bygg ett jobb-vinnande CV.',
+    res_group_translate:'Översättning & dokument', res_deepl_note:'Översätt betyg, dokument och intyg.',
+    res_group_lang:'Språk', res_duolingo_note:'Det mest populära sättet att lära sig ett nytt språk.',
+    res_group_courses:'Gratis kurser online', res_alison_note:'Tusentals gratis kurser från välkända utgivare.',
+    res_matteboken_note:'Gratis matteläromedel, alla nivåer.',
+    res_khan_note:'Gratis lektioner i matematik, naturvetenskap m.m.',
+    res_coursera_note:'Universitetskurser — många går att läsa gratis (audit).',
+    res_edx_note:'Kurser från ledande universitet, gratis att läsa utan certifikat.',
+    res_gdigital_note:'Kostnadsfria kurser i digital kompetens och marknadsföring.',
+    res_digitala_jag_note:'Digitala vardagskunskaper, från Google & Arbetsförmedlingen.',
+    footer_source:'Källa: Google · GeoBas — driven av SQLite (sql.js) i webbläsaren',
+    export_btn:'Exportera .sqlite', import_btn:'Importera .sqlite',
+    save_pending:'Ändringar...', save_saving:'Sparar...', save_saved:'Sparat', save_error:'Kunde inte spara',
+    import_ok:'Databasen har importerats.', import_fail:'Kunde inte läsa filen som en SQLite-databas.',
+    modal_title:'Redigera kort', modal_title_placeholder:'Rubrik (valfritt)',
+    modal_kv_label:'Etikett: text', modal_add_kv:'+ Rad (etikett: text)',
+    modal_cancel:'Avbryt', modal_save:'Spara ändringar',
+    modal_close_aria:'Stäng',
+    modal_editor_placeholder:'Skriv eller klistra in innehåll här…',
+    modal_editor_fallback:'Rich-text-editorn kunde inte laddas — du kan fortfarande redigera som vanlig text.',
+    kv_label_placeholder:'Etikett', kv_value_placeholder:'Text',
+  },
+  en: {
+    doc_title:'GeoBas — Country information for returnees',
+    brand_sub:'COUNTRY INFO / RETURNEE PORTAL',
+    nav_about:'About us', nav_resources:'Self-study',
+    btn_edit:'Edit', btn_done:'Done', add_lang:'New language',
+    crumb_start:'Start',
+    hero_eyebrow:'Swedish Migration Agency · organised employment',
+    hero_h1_a:'Where do you want to build', hero_h1_b:'your next chapter?',
+    hero_lede:'A single guide to business opportunities, support programmes and practical first steps — no matter which country you are returning to.',
+    hero_cta:'Click here to continue',
+    hero_cta_secondary:'About us & our partners',
+    hero_hint:'Drag the globe to rotate · hover over it to pause · click a dot to choose a region',
+    globe_loading:'Loading database & globe…',
+    regions_eyebrow:'Step 1 of 3', regions_title:'Where are you from?',
+    regions_sub:'Tap the part of the world you are returning to.',
+    countries_eyebrow:'Step 2 of 3',
+    countries_sub:'Choose a country to read about business opportunities, support programmes and how to get started.',
+    countries_count:'%s countries',
+    untranslated:'Not translated', untranslated_short:'not trans.',
+    add_region:'+ New region', add_country:'+ New country', add_card:'+ New card',
+    add_paragraph:'+ Paragraph', add_kv:'+ Row (label: text)',
+    del_card:'Delete card', edit_card:'Edit',
+    coming_soon:'Coming soon', nameless:'(unnamed)',
+    delete_confirm_region:'Delete this region and its links to countries?',
+    delete_confirm_country:'Remove this country from the region?',
+    delete_confirm_card:'Delete the whole card?',
+    prompt_region_name:'Name of new region:', prompt_country_name:'Name of new country:',
+    prompt_lang_code:'Language code (e.g. "de", "fr"):', prompt_lang_name:'Language name (e.g. "German"):',
+    back_home:'Back to home', back_regions:'All regions',
+    back_more_countries:'More countries in the region', back_switch_region:'Change region',
+    empty_title:'Content on the way',
+    empty_body_p1:'There is no country information for %s in %s yet.',
+    empty_body_p2:'Come back soon, or choose another country in %s.',
+    sources_eyebrow:'Sources & international organisations',
+    sources_note:'ERRIN formally ended in 2022 — the work continues through the Return and Reintegration Facility (RRF), run by ICMPD.',
+    ngo_eyebrow:'Local organisations', ngo_title:'NGOs in the country',
+    ngo_empty:'No local organisations have been added for this country yet.',
+    ngo_name_placeholder:'Name', ngo_url_placeholder:'URL (https://...)', ngo_note_placeholder:'Short description',
+    add_ngo:'+ Add organisation', unnamed_org:'(unnamed organisation)',
+    visit_site:'Visit website →',
+    disclaimer_body:'Content for %s is compiled from the Swedish Migration Agency\'s country information (2026) and may be updated.',
+    about_eyebrow:'About us', about_title:'Who we are & what we offer',
+    about_sub:'All material below is also collected in our folder, together with full contact details.',
+    about_offer_title:'What we offer',
+    about_offer_p1:'We collect country information, business opportunities and support programmes for those planning to re-establish — sorted by country and linked to the organisations that can help you move forward.',
+    about_offer_p2:'Through our partners you can get help with everything from financial reintegration support to practical guidance in your home country.',
+    contact_eyebrow:'Contact', contact_title:'Local organisations & partnerships',
+    about_photo_1:'Work on the ground', about_photo_2:'Advice & guidance', about_photo_3:'Local partnerships',
+    org_name_placeholder:'Name', org_url_placeholder:'URL (https://...)',
+    org_contact_placeholder:'Contact (phone/email)', org_desc_placeholder:'Description',
+    org_delete:'Delete', org_empty:'No organisations added yet.',
+    resources_eyebrow:'Self-study', resources_title:'Study on your own',
+    resources_sub:'Free and cost-effective resources for CVs, languages, translation and further education — wherever you are in the process.',
+    res_group_cv:'CV & job hunting', res_cvkungen_note:'Build a job-winning CV.',
+    res_group_translate:'Translation & documents', res_deepl_note:'Translate grades, documents and certificates.',
+    res_group_lang:'Languages', res_duolingo_note:'The most popular way to learn a new language.',
+    res_group_courses:'Free online courses', res_alison_note:'Thousands of free courses from well-known publishers.',
+    res_matteboken_note:'Free maths learning materials, all levels.',
+    res_khan_note:'Free lessons in maths, science and more.',
+    res_coursera_note:'University courses — many can be audited for free.',
+    res_edx_note:'Courses from leading universities, free without a certificate.',
+    res_gdigital_note:'Free courses in digital skills and marketing.',
+    res_digitala_jag_note:'Everyday digital skills, from Google & the Swedish Public Employment Service.',
+    footer_source:'Source: Google · GeoBas — powered by SQLite (sql.js) in the browser',
+    export_btn:'Export .sqlite', import_btn:'Import .sqlite',
+    save_pending:'Changes...', save_saving:'Saving...', save_saved:'Saved', save_error:'Could not save',
+    import_ok:'The database has been imported.', import_fail:'Could not read the file as an SQLite database.',
+    modal_title:'Edit card', modal_title_placeholder:'Title (optional)',
+    modal_kv_label:'Label: text', modal_add_kv:'+ Row (label: text)',
+    modal_cancel:'Cancel', modal_save:'Save changes',
+    modal_close_aria:'Close',
+    modal_editor_placeholder:'Type or paste content here…',
+    modal_editor_fallback:'The rich-text editor could not be loaded — you can still edit as plain text.',
+    kv_label_placeholder:'Label', kv_value_placeholder:'Text',
+  },
+  es: {
+    doc_title:'GeoBas — Información de países para retornados',
+    brand_sub:'INFORMACIÓN DE PAÍSES / PORTAL DE RETORNO',
+    nav_about:'Sobre nosotros', nav_resources:'Autoestudio',
+    btn_edit:'Editar', btn_done:'Listo', add_lang:'Nuevo idioma',
+    crumb_start:'Inicio',
+    hero_eyebrow:'Agencia de Migración · empleo organizado',
+    hero_h1_a:'¿Dónde quieres construir', hero_h1_b:'tu próximo capítulo?',
+    hero_lede:'Una guía completa de oportunidades de negocio, programas de apoyo y primeros pasos prácticos — sin importar a qué país vuelvas.',
+    hero_cta:'Haz clic aquí para continuar',
+    hero_cta_secondary:'Sobre nosotros y nuestros socios',
+    hero_hint:'Arrastra el globo para rotar · pasa el cursor sobre él para pausar · haz clic en un punto para elegir región',
+    globe_loading:'Cargando base de datos y globo…',
+    regions_eyebrow:'Paso 1 de 3', regions_title:'¿De dónde eres?',
+    regions_sub:'Toca la parte del mundo a la que vas a regresar.',
+    countries_eyebrow:'Paso 2 de 3',
+    countries_sub:'Elige un país para leer sobre oportunidades de negocio, programas de apoyo y cómo empezar.',
+    countries_count:'%s países',
+    untranslated:'Sin traducir', untranslated_short:'sin trad.',
+    add_region:'+ Nueva región', add_country:'+ Nuevo país', add_card:'+ Nueva tarjeta',
+    add_paragraph:'+ Párrafo', add_kv:'+ Fila (etiqueta: texto)',
+    del_card:'Eliminar tarjeta', edit_card:'Editar',
+    coming_soon:'Próximamente', nameless:'(sin nombre)',
+    delete_confirm_region:'¿Eliminar esta región y sus enlaces a países?',
+    delete_confirm_country:'¿Eliminar este país de la región?',
+    delete_confirm_card:'¿Eliminar toda la tarjeta?',
+    prompt_region_name:'Nombre de la nueva región:', prompt_country_name:'Nombre del nuevo país:',
+    prompt_lang_code:'Código de idioma (p. ej. "de", "fr"):', prompt_lang_name:'Nombre del idioma (p. ej. "Alemán"):',
+    back_home:'Volver al inicio', back_regions:'Todas las regiones',
+    back_more_countries:'Más países en la región', back_switch_region:'Cambiar región',
+    empty_title:'Contenido en camino',
+    empty_body_p1:'Aún no hay información de país para %s en %s.',
+    empty_body_p2:'Vuelve pronto o elige otro país en %s.',
+    sources_eyebrow:'Fuentes y organizaciones internacionales',
+    sources_note:'ERRIN terminó formalmente en 2022; el trabajo continúa a través de la Return and Reintegration Facility (RRF), gestionada por ICMPD.',
+    ngo_eyebrow:'Organizaciones locales', ngo_title:'ONG en el país',
+    ngo_empty:'Aún no se han añadido organizaciones locales para este país.',
+    ngo_name_placeholder:'Nombre', ngo_url_placeholder:'URL (https://...)', ngo_note_placeholder:'Breve descripción',
+    add_ngo:'+ Añadir organización', unnamed_org:'(organización sin nombre)',
+    visit_site:'Visitar sitio web →',
+    disclaimer_body:'El contenido de %s se ha elaborado a partir de la información de países de la Agencia de Migración (2026) y puede actualizarse.',
+    about_eyebrow:'Sobre nosotros', about_title:'Quiénes somos y qué ofrecemos',
+    about_sub:'Todo el material siguiente también está recopilado en nuestro folleto, junto con los datos de contacto completos.',
+    about_offer_title:'Qué ofrecemos',
+    about_offer_p1:'Recopilamos información de países, oportunidades de negocio y programas de apoyo para quienes planean reasentarse — ordenado por país y enlazado con las organizaciones que pueden ayudarte.',
+    about_offer_p2:'A través de nuestros socios puedes recibir ayuda con todo, desde el apoyo económico para la reintegración hasta la orientación práctica en tu país de origen.',
+    contact_eyebrow:'Contacto', contact_title:'Organizaciones locales y colaboraciones',
+    about_photo_1:'Trabajo sobre el terreno', about_photo_2:'Asesoramiento y orientación', about_photo_3:'Colaboraciones locales',
+    org_name_placeholder:'Nombre', org_url_placeholder:'URL (https://...)',
+    org_contact_placeholder:'Contacto (teléfono/correo)', org_desc_placeholder:'Descripción',
+    org_delete:'Eliminar', org_empty:'Aún no se han añadido organizaciones.',
+    resources_eyebrow:'Autoestudio', resources_title:'Estudia por tu cuenta',
+    resources_sub:'Recursos gratuitos y rentables para CV, idiomas, traducción y formación continua — sin importar en qué punto del proceso estés.',
+    res_group_cv:'CV y búsqueda de empleo', res_cvkungen_note:'Crea un CV ganador.',
+    res_group_translate:'Traducción y documentos', res_deepl_note:'Traduce notas, documentos y certificados.',
+    res_group_lang:'Idiomas', res_duolingo_note:'La forma más popular de aprender un idioma nuevo.',
+    res_group_courses:'Cursos gratuitos en línea', res_alison_note:'Miles de cursos gratuitos de editoriales reconocidas.',
+    res_matteboken_note:'Material gratuito de matemáticas, todos los niveles.',
+    res_khan_note:'Lecciones gratuitas de matemáticas, ciencias y más.',
+    res_coursera_note:'Cursos universitarios — muchos se pueden auditar gratis.',
+    res_edx_note:'Cursos de universidades líderes, gratis sin certificado.',
+    res_gdigital_note:'Cursos gratuitos de competencias digitales y marketing.',
+    res_digitala_jag_note:'Habilidades digitales cotidianas, de Google y el Servicio Público de Empleo sueco.',
+    footer_source:'Fuente: Google · GeoBas — impulsado por SQLite (sql.js) en el navegador',
+    export_btn:'Exportar .sqlite', import_btn:'Importar .sqlite',
+    save_pending:'Cambios...', save_saving:'Guardando...', save_saved:'Guardado', save_error:'No se pudo guardar',
+    import_ok:'La base de datos se ha importado.', import_fail:'No se pudo leer el archivo como base de datos SQLite.',
+    modal_title:'Editar tarjeta', modal_title_placeholder:'Título (opcional)',
+    modal_kv_label:'Etiqueta: texto', modal_add_kv:'+ Fila (etiqueta: texto)',
+    modal_cancel:'Cancelar', modal_save:'Guardar cambios',
+    modal_close_aria:'Cerrar',
+    modal_editor_placeholder:'Escribe o pega contenido aquí…',
+    modal_editor_fallback:'No se pudo cargar el editor de texto enriquecido — aún puedes editar como texto plano.',
+    kv_label_placeholder:'Etiqueta', kv_value_placeholder:'Texto',
+  },
+  ar: {
+    doc_title:'GeoBas — معلومات بلدية للعائدين',
+    brand_sub:'معلومات البلدان / بوابة العائدين',
+    nav_about:'من نحن', nav_resources:'دراسة ذاتية',
+    btn_edit:'تعديل', btn_done:'تم', add_lang:'لغة جديدة',
+    crumb_start:'البداية',
+    hero_eyebrow:'وكالة الهجرة السويدية · توظيف منظم',
+    hero_h1_a:'أين تريد بناء', hero_h1_b:'فصلك القادم؟',
+    hero_lede:'دليل شامل لفرص الأعمال وبرامج الدعم والخطوات العملية الأولى — أياً كان البلد الذي تعود إليه.',
+    hero_cta:'اضغط هنا للمتابعة',
+    hero_cta_secondary:'من نحن وشركاؤنا',
+    hero_hint:'اسحب الكرة الأرضية للتدوير · مرر المؤشر فوقها للإيقاف · اضغط على نقطة لاختيار منطقة',
+    globe_loading:'جارٍ تحميل قاعدة البيانات والكرة الأرضية…',
+    regions_eyebrow:'الخطوة 1 من 3', regions_title:'من أين أنت؟',
+    regions_sub:'اضغط على جزء العالم الذي ستعود إليه.',
+    countries_eyebrow:'الخطوة 2 من 3',
+    countries_sub:'اختر بلداً لقراءة فرص الأعمال وبرامج الدعم وكيفية البدء.',
+    countries_count:'%s دولة',
+    untranslated:'غير مترجم', untranslated_short:'غير مترجم',
+    add_region:'+ منطقة جديدة', add_country:'+ بلد جديد', add_card:'+ بطاقة جديدة',
+    add_paragraph:'+ فقرة', add_kv:'+ صف (تسمية: نص)',
+    del_card:'حذف البطاقة', edit_card:'تعديل',
+    coming_soon:'قريباً', nameless:'(بدون اسم)',
+    delete_confirm_region:'حذف هذه المنطقة وارتباطها بالبلدان؟',
+    delete_confirm_country:'إزالة هذا البلد من المنطقة؟',
+    delete_confirm_card:'حذف البطاقة بالكامل؟',
+    prompt_region_name:'اسم المنطقة الجديدة:', prompt_country_name:'اسم البلد الجديد:',
+    prompt_lang_code:'رمز اللغة (مثل "de", "fr"):', prompt_lang_name:'اسم اللغة (مثل "Deutsch"):',
+    back_home:'العودة إلى الصفحة الرئيسية', back_regions:'كل المناطق',
+    back_more_countries:'مزيد من البلدان في المنطقة', back_switch_region:'تغيير المنطقة',
+    empty_title:'المحتوى قيد الإعداد',
+    empty_body_p1:'لا توجد بعد معلومات بلدية عن %s باللغة %s.',
+    empty_body_p2:'عد قريباً، أو اختر بلداً آخر في %s.',
+    sources_eyebrow:'المصادر والمنظمات الدولية',
+    sources_note:'انتهى برنامج ERRIN رسمياً عام 2022 — ويستمر العمل منذ ذلك الحين عبر مرفق العودة وإعادة الإدماج (RRF) الذي تديره ICMPD.',
+    ngo_eyebrow:'المنظمات المحلية', ngo_title:'المنظمات غير الحكومية في البلد',
+    ngo_empty:'لم تُضف أي منظمات محلية لهذا البلد بعد.',
+    ngo_name_placeholder:'الاسم', ngo_url_placeholder:'رابط (https://...)', ngo_note_placeholder:'وصف مختصر',
+    add_ngo:'+ إضافة منظمة', unnamed_org:'(منظمة بدون اسم)',
+    visit_site:'زيارة الموقع ←',
+    disclaimer_body:'محتوى %s مُجمّع من معلومات بلدية لوكالة الهجرة السويدية (2026) وقد يُحدَّث.',
+    about_eyebrow:'من نحن', about_title:'من نحن وماذا نقدم',
+    about_sub:'جميع المواد أدناه متوفرة أيضاً في كتيبنا، مع بيانات الاتصال الكاملة.',
+    about_offer_title:'ماذا نقدم',
+    about_offer_p1:'نجمع معلومات البلدان وفرص الأعمال وبرامج الدعم لمن يخطط للعودة وإعادة الإدماج — مرتبة حسب البلد ومرتبطة بالمنظمات التي يمكنها مساعدتك.',
+    about_offer_p2:'من خلال شركائنا يمكنك الحصول على المساعدة في كل شيء، من الدعم المالي لإعادة الإدماج إلى الإرشاد العملي في بلدك.',
+    contact_eyebrow:'اتصال', contact_title:'المنظمات المحلية والشراكات',
+    about_photo_1:'العمل الميداني', about_photo_2:'الاستشارة والإرشاد', about_photo_3:'الشراكات المحلية',
+    org_name_placeholder:'الاسم', org_url_placeholder:'رابط (https://...)',
+    org_contact_placeholder:'الاتصال (هاتف/بريد)', org_desc_placeholder:'الوصف',
+    org_delete:'حذف', org_empty:'لم تُضف أي منظمات بعد.',
+    resources_eyebrow:'دراسة ذاتية', resources_title:'ادرس بنفسك',
+    resources_sub:'موارد مجانية وفعالة من حيث التكلفة للسيرة الذاتية واللغات والترجمة والتعليم المستمر — أينما كنت في العملية.',
+    res_group_cv:'السيرة الذاتية والبحث عن عمل', res_cvkungen_note:'ابنِ سيرة ذاتية تفوز بالوظيفة.',
+    res_group_translate:'الترجمة والمستندات', res_deepl_note:'ترجم الشهادات والمستندات والإثباتات.',
+    res_group_lang:'اللغات', res_duolingo_note:'الطريقة الأكثر شيوعاً لتعلم لغة جديدة.',
+    res_group_courses:'دورات مجانية عبر الإنترنت', res_alison_note:'آلاف الدورات المجانية من ناشرين معروفين.',
+    res_matteboken_note:'مواد رياضيات مجانية لجميع المستويات.',
+    res_khan_note:'دروس مجانية في الرياضيات والعلوم والمزيد.',
+    res_coursera_note:'دورات جامعية — يمكن حضور الكثير منها مجاناً.',
+    res_edx_note:'دورات من جامعات رائدة، مجانية بدون شهادة.',
+    res_gdigital_note:'دورات مجانية في المهارات الرقمية والتسويق.',
+    res_digitala_jag_note:'مهارات رقمية يومية من Google ومصلحة العمل السويدية.',
+    footer_source:'المصدر: Google · GeoBas — يعمل بواسطة SQLite (sql.js) في المتصفح',
+    export_btn:'تصدير .sqlite', import_btn:'استيراد .sqlite',
+    save_pending:'تغييرات...', save_saving:'جارٍ الحفظ...', save_saved:'تم الحفظ', save_error:'تعذر الحفظ',
+    import_ok:'تم استيراد قاعدة البيانات.', import_fail:'تعذر قراءة الملف كقاعدة بيانات SQLite.',
+    modal_title:'تعديل البطاقة', modal_title_placeholder:'العنوان (اختياري)',
+    modal_kv_label:'التسمية: نص', modal_add_kv:'+ صف (تسمية: نص)',
+    modal_cancel:'إلغاء', modal_save:'حفظ التغييرات',
+    modal_close_aria:'إغلاق',
+    modal_editor_placeholder:'اكتب أو ألصق المحتوى هنا…',
+    modal_editor_fallback:'تعذر تحميل محرر النصوص المنسقة — لا يزال بإمكانك التعديل كنص عادي.',
+    kv_label_placeholder:'التسمية', kv_value_placeholder:'نص',
+  },
+};
+
+function T(key){
+  const lang = STRINGS[currentLang];
+  if(lang && lang[key] != null) return lang[key];
+  if(STRINGS.sv[key] != null) return STRINGS.sv[key];
+  return key;
+}
+function Tf(key, ...args){
+  let s = T(key);
+  args.forEach(a => { s = s.replace('%s', String(a == null ? '' : a)); });
+  return s;
+}
+function applyStaticI18n(){
+  document.documentElement.lang = currentLang;
+  document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+  document.title = T('doc_title');
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent = T(el.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{ el.setAttribute('placeholder', T(el.getAttribute('data-i18n-placeholder'))); });
+  document.querySelectorAll('[data-i18n-aria]').forEach(el=>{ el.setAttribute('aria-label', T(el.getAttribute('data-i18n-aria'))); });
+  document.querySelectorAll('[data-i18n-html]').forEach(el=>{
+    const k = el.getAttribute('data-i18n-html');
+    if(k === 'hero_h1') el.innerHTML = T('hero_h1_a') + '<br><span class="stroke">' + T('hero_h1_b') + '</span>';
+  });
+  // edit toggle reflects current editMode, not the static default
+  const editLabel = document.getElementById('edit-toggle-label');
+  if(editLabel) editLabel.textContent = editMode ? T('btn_done') : T('btn_edit');
+}
+
+/* --- seed translations: region / country / org names (en, es, ar) --- */
+const REGION_TRANSLATIONS = {
+  'Syd Amerika':     { en:'South America', es:'Sudamérica', ar:'أمريكا الجنوبية' },
+  'Central Amerika': { en:'Central America', es:'Centroamérica', ar:'أمريكا الوسطى' },
+  'Europa':          { en:'Europe', es:'Europa', ar:'أوروبا' },
+  'Centralasien':    { en:'Central Asia', es:'Asia Central', ar:'آسيا الوسطى' },
+  'Syd Asien':       { en:'South Asia', es:'Asia del Sur', ar:'جنوب آسيا' },
+  'Asien':           { en:'Asia', es:'Asia', ar:'آسيا' },
+  'Afrika':          { en:'Africa', es:'África', ar:'أفريقيا' },
+  'Nord Afrika':     { en:'North Africa', es:'Norte de África', ar:'شمال أفريقيا' },
+  'Mellanöstern':    { en:'Middle East', es:'Oriente Medio', ar:'الشرق الأوسط' },
+};
+const COUNTRY_TRANSLATIONS = {
+  'Ecuador': { en:'Ecuador', es:'Ecuador', ar:'الإكوادور' },
+  'Venezuela': { en:'Venezuela', es:'Venezuela', ar:'فنزويلا' },
+  'Peru': { en:'Peru', es:'Perú', ar:'بيرو' },
+  'Chile': { en:'Chile', es:'Chile', ar:'تشيلي' },
+  'Colombia': { en:'Colombia', es:'Colombia', ar:'كولومبيا' },
+  'El Salvador': { en:'El Salvador', es:'El Salvador', ar:'السلفادور' },
+  'Guatemala': { en:'Guatemala', es:'Guatemala', ar:'غواتيمالا' },
+  'Nicaragua': { en:'Nicaragua', es:'Nicaragua', ar:'نيكاراغوا' },
+  'Georgien': { en:'Georgia', es:'Georgia', ar:'جورجيا' },
+  'Kosovo': { en:'Kosovo', es:'Kosovo', ar:'كوسوفو' },
+  'Albanien': { en:'Albania', es:'Albania', ar:'ألبانيا' },
+  'Ryssland': { en:'Russia', es:'Rusia', ar:'روسيا' },
+  'Ukraina': { en:'Ukraine', es:'Ucrania', ar:'أوكرانيا' },
+  'Rumänien': { en:'Romania', es:'Rumanía', ar:'رومانيا' },
+  'Azerbajdzjan': { en:'Azerbaijan', es:'Azerbaiyán', ar:'أذربيجان' },
+  'Uzbekistan': { en:'Uzbekistan', es:'Uzbekistán', ar:'أوزبكستان' },
+  'Kazakstan': { en:'Kazakhstan', es:'Kazajistán', ar:'كازاخستان' },
+  'Afghanistan': { en:'Afghanistan', es:'Afganistán', ar:'أفغانستان' },
+  'Pakistan': { en:'Pakistan', es:'Pakistán', ar:'باكستان' },
+  'Sri Lanka': { en:'Sri Lanka', es:'Sri Lanka', ar:'سريلانكا' },
+  'Bangladesh': { en:'Bangladesh', es:'Bangladés', ar:'بنغلاديش' },
+  'Vietnam': { en:'Vietnam', es:'Vietnam', ar:'فيتنام' },
+  'Indien': { en:'India', es:'India', ar:'الهند' },
+  'Mongoliet': { en:'Mongolia', es:'Mongolia', ar:'منغوليا' },
+  'Uigur': { en:'Uyghur', es:'Uigur', ar:'الأويغور' },
+  'Kina': { en:'China', es:'China', ar:'الصين' },
+  'Nigeria': { en:'Nigeria', es:'Nigeria', ar:'نيجيريا' },
+  'Elfenbenskusten': { en:'Ivory Coast', es:'Costa de Marfil', ar:'ساحل العاج' },
+  'Ghana': { en:'Ghana', es:'Ghana', ar:'غانا' },
+  'Somalia': { en:'Somalia', es:'Somalia', ar:'الصومال' },
+  'Senegal': { en:'Senegal', es:'Senegal', ar:'السنغال' },
+  'Kenya': { en:'Kenya', es:'Kenia', ar:'كينيا' },
+  'Kongo': { en:'Congo', es:'Congo', ar:'الكونغو' },
+  'Marocko': { en:'Morocco', es:'Marruecos', ar:'المغرب' },
+  'Egypten': { en:'Egypt', es:'Egipto', ar:'مصر' },
+  'Libyen': { en:'Libya', es:'Libia', ar:'ليبيا' },
+  'Tunisien': { en:'Tunisia', es:'Túnez', ar:'تونس' },
+  'Algeriet': { en:'Algeria', es:'Argelia', ar:'الجزائر' },
+  'Palestina': { en:'Palestine', es:'Palestina', ar:'فلسطين' },
+  'Libanon': { en:'Lebanon', es:'Líbano', ar:'لبنان' },
+  'Syrien': { en:'Syria', es:'Siria', ar:'سوريا' },
+  'Turkiet': { en:'Turkey', es:'Turquía', ar:'تركيا' },
+  'Iran': { en:'Iran', es:'Irán', ar:'إيران' },
+  'Irak': { en:'Iraq', es:'Irak', ar:'العراق' },
+};
+const ORG_TRANSLATIONS = {
+  'Migrationsverket': {
+    en:{ description:'The Swedish authority responsible for return matters and reintegration support.' },
+    es:{ description:'Autoridad sueca responsable de los asuntos de retorno y el apoyo a la reintegración.' },
+    ar:{ description:'الهيئة السويدية المسؤولة عن شؤون العودة ودعم إعادة الإدماج.' },
+  },
+  'IOM — International Organization for Migration': {
+    en:{ description:'The UN body that in most cases administers and pays out reintegration support on the ground in the home country.' },
+    es:{ description:'El organismo de la ONU que en la mayoría de los casos administra y paga el apoyo a la reintegración sobre el terreno en el país de origen.' },
+    ar:{ description:'هيئة الأمم المتحدة التي تدير وتدفع في معظم الحالات دعم إعادة الإدماج على أرض الواقع في بلد العودة.' },
+  },
+  'Svenska Röda Korset': {
+    en:{ description:'Can among other things help trace relatives and provide support before and after return.' },
+    es:{ description:'Puede ayudar, entre otras cosas, a localizar familiares y a dar apoyo antes y después del retorno.' },
+    ar:{ description:'يمكنها المساعدة، من بين أمور أخرى، في البحث عن الأقارب وتقديم الدعم قبل العودة وبعدها.' },
+  },
+};
 
 /* =====================================================================
    DATABASE LAYER (sql.js)
@@ -649,6 +1146,8 @@ function buildSchema(){
 function seedDatabase(){
   run(`INSERT INTO languages (code, name, sort_order) VALUES (?,?,?)`, ['sv','Svenska',0]);
   run(`INSERT INTO languages (code, name, sort_order) VALUES (?,?,?)`, ['en','English',1]);
+  run(`INSERT INTO languages (code, name, sort_order) VALUES (?,?,?)`, ['es','Español',2]);
+  run(`INSERT INTO languages (code, name, sort_order) VALUES (?,?,?)`, ['ar','العربية',3]);
 
   const countryIdBySlug = {};
   function ensureCountry(name){
@@ -661,6 +1160,10 @@ function seedDatabase(){
     const introCard = cards[0] && !cards[0].title ? cards[0] : null;
     const intro = introCard ? introCard.body.join(' ') : '';
     run(`INSERT INTO country_i18n (country_id, lang, name, intro) VALUES (?,?,?,?)`, [id, 'sv', name, intro]);
+    const ctr = COUNTRY_TRANSLATIONS[name] || {};
+    ['en','es','ar'].forEach(lang => {
+      if(ctr[lang]) run(`INSERT INTO country_i18n (country_id, lang, name, intro) VALUES (?,?,?,?)`, [id, lang, ctr[lang], '']);
+    });
     const topicCards = introCard ? cards.slice(1) : cards;
     topicCards.forEach((c, ci) => {
       run(`INSERT INTO cards (country_id, lang, sort_order, title) VALUES (?,?,?,?)`, [id, 'sv', ci, c.title || null]);
@@ -674,12 +1177,21 @@ function seedDatabase(){
   ORG_DIRECTORY_SEED.forEach((o, oi) => {
     run(`INSERT INTO org_directory (lang, name, url, contact, description, sort_order) VALUES (?,?,?,?,?,?)`,
       ['sv', o.name, o.url, o.contact, o.description, oi]);
+    const otr = ORG_TRANSLATIONS[o.name] || {};
+    ['en','es','ar'].forEach(lang => {
+      if(otr[lang]) run(`INSERT INTO org_directory (lang, name, url, contact, description, sort_order) VALUES (?,?,?,?,?,?)`,
+        [lang, o.name, o.url, o.contact, otr[lang].description, oi]);
+    });
   });
 
   SEED_REGIONS.forEach((r, ri) => {
     run(`INSERT INTO regions (slug, lat, lng, sort_order) VALUES (?,?,?,?)`, [r.slug, r.lat, r.lng, ri]);
     const regionId = db.exec("SELECT last_insert_rowid() AS id")[0].values[0][0];
     run(`INSERT INTO region_i18n (region_id, lang, name) VALUES (?,?,?)`, [regionId, 'sv', r.name]);
+    const rtr = REGION_TRANSLATIONS[r.name] || {};
+    ['en','es','ar'].forEach(lang => {
+      if(rtr[lang]) run(`INSERT INTO region_i18n (region_id, lang, name) VALUES (?,?,?)`, [regionId, lang, rtr[lang]]);
+    });
     r.countries.forEach((cname, ci) => {
       const countryId = ensureCountry(cname);
       run(`INSERT OR IGNORE INTO country_regions (country_id, region_id, sort_order) VALUES (?,?,?)`, [countryId, regionId, ci]);
@@ -687,11 +1199,31 @@ function seedDatabase(){
   });
 }
 
+// Storage contract: the hosting environment may provide window.storage with a
+// {get(key)->Promise<{value}>, set(key,value,isPrivate)->Promise} bridge. When it
+// is absent we fall back to browser-native localStorage so edits/imports survive
+// reload without requiring an external host bridge. window.storage stays the
+// preferred path when present.
+function storage(){
+  const s = typeof window !== 'undefined' ? window.storage : null;
+  if(s && typeof s.get === 'function' && typeof s.set === 'function') return s;
+  return {
+    async get(key){
+      let raw = null;
+      try{ raw = window.localStorage.getItem(key); }catch(e){ raw = null; }
+      return raw == null ? null : { value: raw };
+    },
+    async set(key, value){
+      window.localStorage.setItem(key, value); // throws (quota/disabled) -> save-status 'error'
+    }
+  };
+}
+
 async function initDatabase(){
   SQLLib = await initSqlJs({ locateFile: f => SQLJS_CDN + f });
   let bytes = null;
   try{
-    const stored = await window.storage.get(STORAGE_KEY);
+    const stored = await storage().get(STORAGE_KEY);
     if(stored && stored.value) bytes = base64ToBytes(stored.value);
   }catch(e){ /* no stored db yet */ }
 
@@ -725,7 +1257,7 @@ async function persistDB(){
   try{
     const bytes = db.export();
     const b64 = bytesToBase64(bytes);
-    await window.storage.set(STORAGE_KEY, b64, false);
+    await storage().set(STORAGE_KEY, b64, false);
     setSaveStatus('saved');
   }catch(e){
     console.error('persist failed', e);
@@ -740,10 +1272,10 @@ function scheduleSave(){
 function setSaveStatus(state){
   const dot = document.querySelector('#save-status .status-dot');
   const txt = document.getElementById('save-status-text');
-  if(state === 'pending'){ dot.style.display='inline-block'; dot.style.background='#e0a96d'; txt.textContent='Ändringar...'; }
-  else if(state === 'saving'){ dot.style.display='inline-block'; dot.style.background='#e0a96d'; txt.textContent='Sparar...'; }
-  else if(state === 'saved'){ dot.style.display='inline-block'; dot.style.background='var(--accent-2)'; txt.textContent='Sparat'; setTimeout(()=>{ if(txt.textContent==='Sparat'){ dot.style.display='none'; txt.textContent=''; } }, 2000); }
-  else if(state === 'error'){ dot.style.display='inline-block'; dot.style.background='var(--danger)'; txt.textContent='Kunde inte spara'; }
+  if(state === 'pending'){ dot.style.display='inline-block'; dot.style.background='#e0a96d'; txt.textContent=T('save_pending'); }
+  else if(state === 'saving'){ dot.style.display='inline-block'; dot.style.background='#e0a96d'; txt.textContent=T('save_saving'); }
+  else if(state === 'saved'){ dot.style.display='inline-block'; dot.style.background='var(--accent-2)'; txt.textContent=T('save_saved'); setTimeout(()=>{ if(txt.textContent===T('save_saved')){ dot.style.display='none'; txt.textContent=''; } }, 2000); }
+  else if(state === 'error'){ dot.style.display='inline-block'; dot.style.background='var(--danger)'; txt.textContent=T('save_error'); }
 }
 
 /* =====================================================================
@@ -763,7 +1295,7 @@ function getRegions(lang){
   });
 }
 function getRegionById(id){
-  return getRegions('sv').find(r=>r.id===id) || null;
+  return getRegions(currentLang).find(r=>r.id===id) || null;
 }
 function getCountriesForRegion(regionId, lang){
   const rows = q(`SELECT c.id FROM countries c JOIN country_regions cr ON cr.country_id=c.id WHERE cr.region_id=? ORDER BY cr.sort_order`, [regionId]);
@@ -866,20 +1398,16 @@ function deleteCard(cardId){
   scheduleSave();
 }
 function updateCardTitle(cardId, title){ run(`UPDATE cards SET title=? WHERE id=?`, [title, cardId]); scheduleSave(); }
-function addParagraph(cardId){
-  const maxOrder = q(`SELECT COALESCE(MAX(sort_order),-1) AS m FROM card_body WHERE card_id=?`, [cardId])[0].m;
-  run(`INSERT INTO card_body (card_id, sort_order, text) VALUES (?,?,?)`, [cardId, maxOrder+1, '']);
+function replaceCardBody(cardId, paragraphs){
+  run(`DELETE FROM card_body WHERE card_id=?`, [cardId]);
+  paragraphs.forEach((p, i) => run(`INSERT INTO card_body (card_id, sort_order, text) VALUES (?,?,?)`, [cardId, i, p]));
   scheduleSave();
 }
-function updateParagraph(bodyId, text){ run(`UPDATE card_body SET text=? WHERE id=?`, [text, bodyId]); scheduleSave(); }
-function deleteParagraph(bodyId){ run(`DELETE FROM card_body WHERE id=?`, [bodyId]); scheduleSave(); }
-function addKvRow(cardId){
-  const maxOrder = q(`SELECT COALESCE(MAX(sort_order),-1) AS m FROM card_kv WHERE card_id=?`, [cardId])[0].m;
-  run(`INSERT INTO card_kv (card_id, sort_order, k, v) VALUES (?,?,?,?)`, [cardId, maxOrder+1, '', '']);
+function replaceCardKv(cardId, rows){
+  run(`DELETE FROM card_kv WHERE card_id=?`, [cardId]);
+  rows.forEach((r, i) => run(`INSERT INTO card_kv (card_id, sort_order, k, v) VALUES (?,?,?,?)`, [cardId, i, r.k, r.v]));
   scheduleSave();
 }
-function updateKvRow(kvId, k, v){ run(`UPDATE card_kv SET k=?, v=? WHERE id=?`, [k, v, kvId]); scheduleSave(); }
-function deleteKvRow(kvId){ run(`DELETE FROM card_kv WHERE id=?`, [kvId]); scheduleSave(); }
 function addLanguage(code, name){
   const maxOrder = q(`SELECT COALESCE(MAX(sort_order),0) AS m FROM languages`)[0].m;
   run(`INSERT OR IGNORE INTO languages (code, name, sort_order) VALUES (?,?,?)`, [code, name, maxOrder+1]);
@@ -899,7 +1427,7 @@ function addNgo(countryId, lang){
   scheduleSave();
   return lastId();
 }
-function updateNgo(id, name, url, note){ run(`UPDATE country_ngos SET name=?, url=?, note=? WHERE id=?`, [name, url, note, id]); scheduleSave(); }
+function updateNgo(id, name, url, note){ run(`UPDATE country_ngos SET name=?, url=?, note=? WHERE id=?`, [name, safeUrl(url), note, id]); scheduleSave(); }
 function deleteNgo(id){ run(`DELETE FROM country_ngos WHERE id=?`, [id]); scheduleSave(); }
 
 /* --- Org directory (About page) --- */
@@ -915,10 +1443,63 @@ function addOrg(lang){
   return lastId();
 }
 function updateOrg(id, name, url, contact, description){
-  run(`UPDATE org_directory SET name=?, url=?, contact=?, description=? WHERE id=?`, [name, url, contact, description, id]);
+  run(`UPDATE org_directory SET name=?, url=?, contact=?, description=? WHERE id=?`, [name, safeUrl(url), contact, description, id]);
   scheduleSave();
 }
 function deleteOrg(id){ run(`DELETE FROM org_directory WHERE id=?`, [id]); scheduleSave(); }
+
+// Trust boundary for imported .sqlite files: accept only databases carrying the
+// app's full schema — every required table AND its required columns with
+// compatible declared types — so an arbitrary/foreign file can never replace
+// the live db, even one that names the expected tables but with a malformed or
+// incompatible layout. Validation runs on the candidate before `db` is
+// reassigned, so a rejected import leaves the current database untouched.
+const REQUIRED_TABLES = ['languages','regions','region_i18n','countries','country_regions','country_i18n','cards','card_body','card_kv','country_ngos','org_directory'];
+// column name -> declared type, mirroring buildSchema()
+const REQUIRED_SCHEMA = {
+  languages:      { code: 'TEXT', name: 'TEXT', sort_order: 'INTEGER' },
+  regions:        { id: 'INTEGER', slug: 'TEXT', lat: 'REAL', lng: 'REAL', sort_order: 'INTEGER' },
+  region_i18n:    { region_id: 'INTEGER', lang: 'TEXT', name: 'TEXT' },
+  countries:      { id: 'INTEGER', slug: 'TEXT' },
+  country_regions:{ country_id: 'INTEGER', region_id: 'INTEGER', sort_order: 'INTEGER' },
+  country_i18n:   { country_id: 'INTEGER', lang: 'TEXT', name: 'TEXT', intro: 'TEXT' },
+  cards:          { id: 'INTEGER', country_id: 'INTEGER', lang: 'TEXT', sort_order: 'INTEGER', title: 'TEXT' },
+  card_body:      { id: 'INTEGER', card_id: 'INTEGER', sort_order: 'INTEGER', text: 'TEXT' },
+  card_kv:        { id: 'INTEGER', card_id: 'INTEGER', sort_order: 'INTEGER', k: 'TEXT', v: 'TEXT' },
+  country_ngos:   { id: 'INTEGER', country_id: 'INTEGER', lang: 'TEXT', name: 'TEXT', url: 'TEXT', note: 'TEXT', sort_order: 'INTEGER' },
+  org_directory:  { id: 'INTEGER', lang: 'TEXT', name: 'TEXT', url: 'TEXT', contact: 'TEXT', description: 'TEXT', sort_order: 'INTEGER' },
+};
+// SQLite column-affinity rules (https://sqlite.org/datatype3.html#determination_of_column_affinity)
+function sqliteAffinity(declared){
+  const t = String(declared || '').toUpperCase();
+  if(t.indexOf('INT') >= 0) return 'INTEGER';
+  if(t.indexOf('CHAR') >= 0 || t.indexOf('CLOB') >= 0 || t.indexOf('TEXT') >= 0) return 'TEXT';
+  if(t.indexOf('REAL') >= 0 || t.indexOf('FLOA') >= 0 || t.indexOf('DOUB') >= 0) return 'REAL';
+  if(t.indexOf('BLOB') >= 0 || t === '') return 'BLOB';
+  return 'NUMERIC';
+}
+function validateImportedDb(database){
+  const rows = database.exec("SELECT name FROM sqlite_master WHERE type='table'");
+  const tables = new Set();
+  (rows[0] ? rows[0].values : []).forEach(r => tables.add(String(r[0]).toLowerCase()));
+  const missing = REQUIRED_TABLES.filter(t => !tables.has(t));
+  if(missing.length) throw new Error('import rejected: missing tables: ' + missing.join(','));
+  const problems = [];
+  for(const t of REQUIRED_TABLES){
+    const info = database.exec('PRAGMA table_info("' + t + '")');
+    const cols = new Map();
+    (info[0] ? info[0].values : []).forEach(r => cols.set(String(r[1]).toLowerCase(), r[2]));
+    const required = REQUIRED_SCHEMA[t] || {};
+    for(const c in required){
+      if(!cols.has(c)){ problems.push(t + '.' + c + ' (missing)'); continue; }
+      if(sqliteAffinity(required[c]) !== sqliteAffinity(cols.get(c))){
+        problems.push(t + '.' + c + ' (type "' + cols.get(c) + '" instead of "' + required[c] + '")');
+      }
+    }
+  }
+  if(problems.length) throw new Error('import rejected: incompatible schema: ' + problems.join(', '));
+  return true;
+}
 
 /* =====================================================================
    THREE-GLOBE HERO (via globe.gl)
@@ -938,23 +1519,31 @@ function initGlobe(){
     .showAtmosphere(true).atmosphereColor('#c1652f').atmosphereAltitude(0.22)
     .pointsData(regions)
     .pointLat('lat').pointLng('lng')
-    .pointColor(()=> '#c1652f').pointAltitude(0.012).pointRadius(0.55)
-    .pointLabel(d => `<div style="font-family:'JetBrains Mono',monospace;font-size:11px;background:#221610;color:#f5ecd9;padding:6px 10px;border-radius:6px;border:1px solid rgba(236,223,196,0.25);">${escapeHtml(d.name)}</div>`)
-    .labelsData(regions)
-    .labelLat('lat').labelLng('lng').labelText('name').labelSize(1.15).labelDotRadius(0.35)
-    .labelColor(()=> 'rgba(245,236,217,0.9)').labelResolution(2)
-    .onPointClick(d => goRegion(d.id))
-    .onLabelClick(d => goRegion(d.id));
+    .pointColor(()=> '#c1652f')
+    .pointAltitude(0.02)
+    .pointRadius(0.95)          // larger clickable region markers
+    .pointResolution(24)
+    .onPointHover(d => { wrap.style.cursor = d ? 'pointer' : 'grab'; })
+    .onPointClick(d => goRegion(d.id));
+  // No labelsData / pointLabel / onLabelClick — region labels are intentionally hidden.
 
   world.pointOfView({ lat: 25, lng: 20, altitude: 2.4 });
   const controls = world.controls();
-  controls.autoRotate = true; controls.autoRotateSpeed = 0.6; controls.enableZoom = false; controls.enablePan = false;
+  controls.autoRotate = true; controls.autoRotateSpeed = 0.6;
+  controls.enableZoom = false; controls.enablePan = false;   // drag-to-rotate stays enabled
+  let hoverPaused = false, dragActive = false;
+  const syncAutoRotate = () => { controls.autoRotate = !hoverPaused && !dragActive; };
+  controls.addEventListener('start', () => { dragActive = true;  syncAutoRotate(); });
+  controls.addEventListener('end',   () => { dragActive = false; syncAutoRotate(); });
+  wrap.addEventListener('pointerenter', () => { hoverPaused = true;  syncAutoRotate(); });
+  wrap.addEventListener('pointerleave', () => { hoverPaused = false; syncAutoRotate(); });
+
   window.addEventListener('resize', onGlobeResize);
 }
 function refreshGlobePoints(){
   if(!world) return;
   const regions = getRegions(currentLang);
-  world.pointsData(regions).labelsData(regions);
+  world.pointsData(regions);
 }
 function onGlobeResize(){
   if(!world) return;
@@ -978,7 +1567,7 @@ function setActive(viewId){
 }
 function renderCrumbs(){
   const el = document.getElementById('crumbs');
-  let parts = [`<button data-nav="start">Start</button>`];
+  let parts = [`<button data-nav="start">${escapeHtml(T('crumb_start'))}</button>`];
   if(state.regionId){
     const region = getRegionById(state.regionId);
     parts.push(`<span class="sep">/</span>`);
@@ -996,16 +1585,16 @@ function renderCrumbs(){
 function renderLangSwitch(){
   const el = document.getElementById('lang-switch');
   const langs = getLanguages();
-  el.innerHTML = langs.map(l => `<button class="lang-pill ${l.code===currentLang?'active':''}" data-lang="${l.code}">${escapeHtml(l.code)}</button>`).join('')
-    + (editMode ? `<button class="lang-pill add" id="btn-add-lang" title="Nytt språk">+</button>` : '');
+  el.innerHTML = langs.map(l => `<button class="lang-pill ${l.code===currentLang?'active':''}" data-lang="${escapeHtml(l.code)}">${escapeHtml(l.code)}</button>`).join('')
+    + (editMode ? `<button class="lang-pill add" id="btn-add-lang" title="${escapeHtml(T('add_lang'))}">+</button>` : '');
   el.querySelectorAll('[data-lang]').forEach(btn=>{
     btn.addEventListener('click', ()=>{ currentLang = btn.getAttribute('data-lang'); rerenderAll(); });
   });
   const addBtn = document.getElementById('btn-add-lang');
   if(addBtn) addBtn.addEventListener('click', ()=>{
-    const code = prompt('Språkkod (t.ex. "de", "fr"):');
+    const code = prompt(T('prompt_lang_code'));
     if(!code) return;
-    const name = prompt('Språkets namn (t.ex. "Deutsch"):', code);
+    const name = prompt(T('prompt_lang_name'), code);
     if(!name) return;
     addLanguage(code.trim().toLowerCase(), name.trim());
     renderLangSwitch();
@@ -1013,6 +1602,7 @@ function renderLangSwitch(){
 }
 
 function rerenderAll(){
+  applyStaticI18n();
   renderLangSwitch();
   renderCrumbs();
   refreshGlobePoints();
@@ -1037,14 +1627,14 @@ function goRegions(){
   const regions = getRegions(currentLang);
   grid.innerHTML = regions.map(r => `
     <div class="region-card" data-region-id="${r.id}">
-      ${editMode ? `<button class="del-x" data-del-region="${r.id}" title="Ta bort region">×</button>` : ''}
+      ${editMode ? `<button class="del-x" data-del-region="${r.id}" title="${escapeHtml(T('del_card'))}">×</button>` : ''}
       <div class="mini-globe"></div>
       ${editMode
         ? `<input class="name-input" data-region-name="${r.id}" value="${escapeHtml(r.name)}">`
-        : `<div class="name">${escapeHtml(r.name)}</div>${!r.translated ? '<span class="untranslated-badge">Ej översatt</span>' : ''}`}
-      <div class="count">${r.countryCount} länder</div>
+        : `<div class="name">${escapeHtml(r.name)}</div>${!r.translated ? '<span class="untranslated-badge">' + escapeHtml(T('untranslated')) + '</span>' : ''}`}
+      <div class="count">${Tf('countries_count', r.countryCount)}</div>
     </div>
-  `).join('') + (editMode ? `<div class="region-card add-card" id="add-region-card">+ Ny region</div>` : '');
+  `).join('') + (editMode ? `<div class="region-card add-card" id="add-region-card">${escapeHtml(T('add_region'))}</div>` : '');
 
   grid.querySelectorAll('.region-card[data-region-id]').forEach(card=>{
     card.addEventListener('click', (e)=>{
@@ -1055,14 +1645,14 @@ function goRegions(){
   grid.querySelectorAll('[data-region-name]').forEach(inp=>{
     inp.addEventListener('click', e=>e.stopPropagation());
     inp.addEventListener('change', ()=>{
-      upsertRegionName(parseInt(inp.getAttribute('data-region-name'),10), currentLang, inp.value.trim() || '(namnlös)');
+      upsertRegionName(parseInt(inp.getAttribute('data-region-name'),10), currentLang, inp.value.trim() || T('nameless'));
       refreshGlobePoints();
     });
   });
   grid.querySelectorAll('[data-del-region]').forEach(btn=>{
     btn.addEventListener('click', e=>{
       e.stopPropagation();
-      if(confirm('Ta bort denna region och dess koppling till länder?')){
+      if(confirm(T('delete_confirm_region'))){
         deleteRegion(parseInt(btn.getAttribute('data-del-region'),10));
         refreshGlobePoints();
         goRegions();
@@ -1071,7 +1661,7 @@ function goRegions(){
   });
   const addRegionCard = document.getElementById('add-region-card');
   if(addRegionCard) addRegionCard.addEventListener('click', ()=>{
-    const name = prompt('Namn på ny region:');
+    const name = prompt(T('prompt_region_name'));
     if(!name) return;
     addRegion(name.trim(), currentLang);
     refreshGlobePoints();
@@ -1091,15 +1681,15 @@ function goRegion(regionId){
   const countries = getCountriesForRegion(regionId, currentLang);
   grid.innerHTML = countries.map(c => `
     <div class="country-card ${c.hasContent ? '' : 'stub'}" data-country-id="${c.id}">
-      ${editMode ? `<button class="del-x" data-del-country="${c.id}" title="Ta bort land">×</button>` : ''}
+      ${editMode ? `<button class="del-x" data-del-country="${c.id}" title="${escapeHtml(T('del_card'))}">×</button>` : ''}
       ${editMode
         ? `<input class="name-input" data-country-name="${c.id}" value="${escapeHtml(c.name)}">`
-        : `<span>${escapeHtml(c.name)}${!c.translated ? ' <span class=\"untranslated-badge\">ej öv.</span>' : ''}</span>`}
+        : `<span>${escapeHtml(c.name)}${!c.translated ? ' <span class=\"untranslated-badge\">' + escapeHtml(T('untranslated_short')) + '</span>' : ''}</span>`}
       ${!editMode ? (c.hasContent
         ? `<span class="arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>`
-        : `<span class="stub-tag">Kommer snart</span>`) : ''}
+        : `<span class="stub-tag">${escapeHtml(T('coming_soon'))}</span>`) : ''}
     </div>
-  `).join('') + (editMode ? `<div class="country-card add-card" id="add-country-card">+ Nytt land</div>` : '');
+  `).join('') + (editMode ? `<div class="country-card add-card" id="add-country-card">${escapeHtml(T('add_country'))}</div>` : '');
 
   grid.querySelectorAll('.country-card[data-country-id]').forEach(card=>{
     card.addEventListener('click', (e)=>{
@@ -1110,13 +1700,13 @@ function goRegion(regionId){
   grid.querySelectorAll('[data-country-name]').forEach(inp=>{
     inp.addEventListener('click', e=>e.stopPropagation());
     inp.addEventListener('change', ()=>{
-      upsertCountryName(parseInt(inp.getAttribute('data-country-name'),10), currentLang, inp.value.trim() || '(namnlös)');
+      upsertCountryName(parseInt(inp.getAttribute('data-country-name'),10), currentLang, inp.value.trim() || T('nameless'));
     });
   });
   grid.querySelectorAll('[data-del-country]').forEach(btn=>{
     btn.addEventListener('click', e=>{
       e.stopPropagation();
-      if(confirm('Ta bort detta land från regionen?')){
+      if(confirm(T('delete_confirm_country'))){
         deleteCountryFromRegion(parseInt(btn.getAttribute('data-del-country'),10), regionId);
         goRegion(regionId);
       }
@@ -1124,7 +1714,7 @@ function goRegion(regionId){
   });
   const addCountryCard = document.getElementById('add-country-card');
   if(addCountryCard) addCountryCard.addEventListener('click', ()=>{
-    const name = prompt('Namn på nytt land:');
+    const name = prompt(T('prompt_country_name'));
     if(!name) return;
     addCountry(regionId, name.trim(), currentLang);
     goRegion(regionId);
@@ -1147,7 +1737,7 @@ function goCountry(countryId){
   const introStatic = document.getElementById('country-intro-static');
   const introEdit = document.getElementById('country-intro-edit');
 
-  nameStatic.innerHTML = escapeHtml(detail.name) + (!editMode && !detail.translated ? ' <span class="untranslated-badge" style="vertical-align:middle;">Ej översatt</span>' : '');
+  nameStatic.innerHTML = escapeHtml(detail.name) + (!editMode && !detail.translated ? ' <span class="untranslated-badge" style="vertical-align:middle;">' + escapeHtml(T('untranslated')) + '</span>' : '');
   nameEdit.value = detail.name;
   introStatic.textContent = detail.intro;
   introEdit.value = detail.intro;
@@ -1158,7 +1748,7 @@ function goCountry(countryId){
   introEdit.style.display = editMode ? 'block' : 'none';
 
   if(editMode){
-    nameEdit.onchange = () => upsertCountryName(countryId, currentLang, nameEdit.value.trim() || '(namnlös)');
+    nameEdit.onchange = () => upsertCountryName(countryId, currentLang, nameEdit.value.trim() || T('nameless'));
     introEdit.onchange = () => upsertCountryIntro(countryId, currentLang, introEdit.value);
   }
 
@@ -1170,16 +1760,16 @@ function goCountry(countryId){
     grid.innerHTML = '';
     emptyState.innerHTML = `
       <div class="empty-country">
-        <h3>Innehåll på väg</h3>
-        <p>Det finns ännu ingen landinfo för ${escapeHtml(detail.name)} på ${currentLang.toUpperCase()}. ${region ? 'Kom tillbaka snart, eller välj ett annat land i ' + escapeHtml(region.name) + '.' : ''}</p>
+        <h3>${escapeHtml(T('empty_title'))}</h3>
+        <p>${escapeHtml(Tf('empty_body_p1', detail.name, currentLang.toUpperCase()))} ${region ? escapeHtml(Tf('empty_body_p2', region.name)) : ''}</p>
       </div>`;
     disclaimer.style.display = 'none';
   } else {
     emptyState.innerHTML = '';
     grid.innerHTML = detail.cards.map(c => renderTopicCard(c, countryId)).join('')
-      + (editMode ? `<div class="add-topic-card" id="add-card-btn">+ Nytt kort</div>` : '');
+      + (editMode ? `<div class="add-topic-card" id="add-card-btn">${escapeHtml(T('add_card'))}</div>` : '');
     disclaimer.style.display = editMode ? 'none' : 'block';
-    disclaimer.textContent = `Innehållet för ${detail.name} är sammanställt från Migrationsverkets landinfo-underlag (2026) och kan komma att uppdateras.`;
+    disclaimer.textContent = Tf('disclaimer_body', detail.name);
     bindTopicCardEvents(countryId);
     const addCardBtn = document.getElementById('add-card-btn');
     if(addCardBtn) addCardBtn.addEventListener('click', ()=>{ addCard(countryId, currentLang); goCountry(countryId); });
@@ -1195,16 +1785,16 @@ function renderNgoList(countryId){
 
   if(!editMode){
     if(!ngos.length){
-      el.innerHTML = `<p class="ngo-empty">Inga lokala organisationer inlagda ännu för det här landet.</p>`;
+      el.innerHTML = `<p class="ngo-empty">${escapeHtml(T('ngo_empty'))}</p>`;
       return;
     }
     el.innerHTML = ngos.map(n => `
       <div class="ngo-item">
         <div>
-          <div class="ngo-name">${escapeHtml(n.name || '(namnlös organisation)')}</div>
+          <div class="ngo-name">${escapeHtml(n.name || T('unnamed_org'))}</div>
           ${n.note ? `<div class="ngo-note">${escapeHtml(n.note)}</div>` : ''}
         </div>
-        ${n.url ? `<a href="${escapeHtml(n.url)}" target="_blank" rel="noopener">Besök webbplats →</a>` : ''}
+        ${renderExternalLink(n.url, T('visit_site'))}
       </div>
     `).join('');
     return;
@@ -1212,12 +1802,12 @@ function renderNgoList(countryId){
 
   el.innerHTML = ngos.map(n => `
     <div class="ngo-edit-row" data-ngo-id="${n.id}">
-      <input class="edit-field" placeholder="Namn" value="${escapeHtml(n.name)}">
-      <input class="edit-field" placeholder="URL (https://...)" value="${escapeHtml(n.url)}">
-      <textarea class="edit-field" placeholder="Kort beskrivning">${escapeHtml(n.note)}</textarea>
+      <input class="edit-field" placeholder="${escapeHtml(T('ngo_name_placeholder'))}" value="${escapeHtml(n.name)}">
+      <input class="edit-field" placeholder="${escapeHtml(T('ngo_url_placeholder'))}" value="${escapeHtml(n.url)}">
+      <textarea class="edit-field" placeholder="${escapeHtml(T('ngo_note_placeholder'))}">${escapeHtml(n.note)}</textarea>
       <button class="row-del" data-del-ngo="${n.id}">×</button>
     </div>
-  `).join('') + `<button class="mini-btn add-ngo-btn" id="add-ngo-btn">+ Lägg till organisation</button>`;
+  `).join('') + `<button class="mini-btn add-ngo-btn" id="add-ngo-btn">${escapeHtml(T('add_ngo'))}</button>`;
 
   el.querySelectorAll('[data-ngo-id]').forEach(row=>{
     const id = parseInt(row.getAttribute('data-ngo-id'),10);
@@ -1234,79 +1824,215 @@ function renderNgoList(countryId){
   if(addBtn) addBtn.addEventListener('click', ()=>{ addNgo(countryId, currentLang); renderNgoList(countryId); });
 }
 
-function renderTopicCard(t, countryId){
-  if(!editMode){
-    const icon = pickIcon(t.title);
-    let inner = '';
-    (t.body || []).forEach(p=>{ if(p) inner += `<p class="body-text">${escapeHtml(p)}</p>`; });
-    if(t.kv && t.kv.length){
-      inner += `<div class="kv">` + t.kv.map(row=>`<div class="kv-row"><span class="k">${escapeHtml(row.k)}</span><span class="v">${escapeHtml(row.v)}</span></div>`).join('') + `</div>`;
+/* =====================================================================
+   CONSERVATIVE RICH-TEXT SANITIZER
+   Whitelist-only: keeps text formatting, lists, links and headings.
+   Everything else (scripts, styles, media, event handlers, weird URIs)
+   is stripped. Runs at save time AND at render time (defense in depth).
+   ===================================================================== */
+const RICH_ALLOWED = new Set(['P','BR','STRONG','EM','B','I','U','UL','OL','LI','A','H3','H4','BLOCKQUOTE','SPAN']);
+const RICH_DROP_TAGS = ['SCRIPT','STYLE','IFRAME','OBJECT','EMBED','FORM','INPUT','BUTTON','SELECT','TEXTAREA','META','LINK','BASE','TITLE','HEAD','TEMPLATE','SVG','MATH','VIDEO','AUDIO','SOURCE','CANVAS'];
+function sanitizeRichHtml(html){
+  const doc = new DOMParser().parseFromString(html || '', 'text/html');
+  const body = doc.body;
+  // 1. drop dangerous elements entirely (with their content)
+  body.querySelectorAll(RICH_DROP_TAGS.join(',')).forEach(n => n.remove());
+  // 2. drop comments
+  const comments = [];
+  const walker = doc.createTreeWalker(body, NodeFilter.SHOW_COMMENT);
+  while(walker.nextNode()) comments.push(walker.currentNode);
+  comments.forEach(c => c.remove());
+  // 3. clean attributes: allow only safe links on <a>, nothing anywhere else
+  body.querySelectorAll('*').forEach(el => {
+    const tag = el.tagName.toUpperCase();
+    const attrs = [...el.attributes];
+    for(const a of attrs){
+      const n = a.name.toLowerCase();
+      if(n.startsWith('on') || n === 'style' || n === 'class' || n === 'id'){ el.removeAttribute(a.name); continue; }
+      if(tag === 'A' && n === 'href'){
+        if(!safeUrl(el.getAttribute('href'))) el.removeAttribute('href');
+      } else {
+        el.removeAttribute(a.name);
+      }
     }
+    if(tag === 'A' && el.hasAttribute('href')){
+      el.setAttribute('rel','noopener');
+      if(/^https?:/i.test(el.getAttribute('href') || '')) el.setAttribute('target','_blank');
+    }
+  });
+  // 4. unwrap disallowed container elements (e.g. DIV, FONT, SECTION) — keep their text
+  for(let i=0; i<20; i++){
+    let changed = false;
+    body.querySelectorAll('*').forEach(el => {
+      if(!RICH_ALLOWED.has(el.tagName.toUpperCase()) && el.parentNode){
+        changed = true;
+        while(el.firstChild) el.parentNode.insertBefore(el.firstChild, el);
+        el.remove();
+      }
+    });
+    if(!changed) break;
+  }
+  // 5. remove empty anchors
+  body.querySelectorAll('a').forEach(a => { if(!a.textContent.trim()) a.remove(); });
+  return body.innerHTML;
+}
+function sanitizeRichFragment(fragmentHtml){
+  // same whitelist applied to a single stored fragment (render-time re-check)
+  return sanitizeRichHtml(fragmentHtml);
+}
+function sanitizeRichText(html){
+  // split cleaned HTML into paragraph fragments for card_body rows
+  const clean = sanitizeRichHtml(html);
+  const doc = new DOMParser().parseFromString(`<div id="rich-root">${clean}</div>`, 'text/html');
+  const root = doc.getElementById('rich-root');
+  const units = [];
+  let current = null;
+  const flush = () => { if(current !== null && current.trim()) units.push(current.trim()); current = null; };
+  const walk = (node) => {
+    for(const child of node.childNodes){
+      if(child.nodeType === Node.TEXT_NODE){ current = (current || '') + child.textContent; }
+      else if(child.nodeType === Node.ELEMENT_NODE){
+        const tag = child.tagName.toUpperCase();
+        if(tag === 'P' || tag === 'UL' || tag === 'OL' || tag === 'BLOCKQUOTE' || tag === 'H3' || tag === 'H4'){
+          flush();
+          const inner = child.innerHTML.trim();
+          if(inner) units.push(inner);
+        } else if(tag === 'BR'){
+          flush();
+        } else {
+          current = (current || '') + child.outerHTML;
+        }
+      }
+    }
+  };
+  walk(root);
+  flush();
+  return units;
+}
+
+/* =====================================================================
+   CKEDITOR MODAL (replaces the old inline paragraph/KV edit UI)
+   ===================================================================== */
+let activeEditCardId = null;
+let activeEditCountryId = null;
+let ckEditorInstance = null;
+
+function openEditModal(cardId, countryId){
+  const detail = getCountryDetail(countryId, currentLang);
+  const card = detail.cards.find(c => c.id === cardId);
+  if(!card) return;
+  activeEditCardId = cardId;
+  activeEditCountryId = countryId;
+
+  document.getElementById('modal-card-title').value = card.title || '';
+
+  const kvList = document.getElementById('modal-kv-list');
+  kvList.innerHTML = card.kv.map((row, i) => `
+    <div class="kv-edit-row" data-mkv-idx="${i}">
+      <input class="edit-field" placeholder="${escapeHtml(T('kv_label_placeholder'))}" value="${escapeHtml(row.k)}">
+      <textarea class="edit-field" placeholder="${escapeHtml(T('kv_value_placeholder'))}">${escapeHtml(row.v)}</textarea>
+      <button class="row-del" data-del-mkv="${i}" type="button">×</button>
+    </div>
+  `).join('');
+
+  const host = document.getElementById('modal-editor-host');
+  host.innerHTML = '';
+  // Stored body fragments are already-sanitized rich HTML; pass them through
+  // the same conservative sanitizer (not escapeHtml) so bold/links/lists
+  // preload as formatted content while any legacy/hostile markup is still
+  // stripped before it ever reaches CKEditor.
+  const initialHtml = (card.body || []).filter(p => p && p.trim()).map(p => `<p>${sanitizeRichHtml(p)}</p>`).join('') || '<p></p>';
+
+  document.getElementById('edit-modal').hidden = false;
+  document.body.style.overflow = 'hidden';
+  document.getElementById('modal-close').focus();
+
+  if(window.ClassicEditor){
+    ClassicEditor.create(host, {
+      initialData: initialHtml,
+      placeholder: T('modal_editor_placeholder'),
+      // Toolbar intentionally limited to conservative text formatting.
+      // Media/images/tables are not exposed here; the sanitizer strips them
+      // from pasted content at save and at render regardless.
+      toolbar: ['heading','bold','italic','underline','bulletedList','numberedList','blockQuote','link','removeFormat','|','undo','redo'],
+      link: { addTargetToExternalLinks: true },
+    }).then(editor => { ckEditorInstance = editor; host._ckInstance = editor; })
+      .catch(err => {
+        console.error('CKEditor init failed:', err);
+        host.innerHTML = `<p class="hint" style="margin-bottom:6px;">${escapeHtml(T('modal_editor_fallback'))}</p><textarea class="edit-field" id="modal-editor-fallback" style="min-height:220px;">${escapeHtml(initialHtml)}</textarea>`;
+      });
+  } else {
+    host.innerHTML = `<p class="hint" style="margin-bottom:6px;">${escapeHtml(T('modal_editor_fallback'))}</p><textarea class="edit-field" id="modal-editor-fallback" style="min-height:220px;">${escapeHtml(initialHtml)}</textarea>`;
+  }
+}
+
+function getModalEditorHtml(){
+  if(ckEditorInstance) return ckEditorInstance.getData();
+  const ta = document.getElementById('modal-editor-fallback');
+  return ta ? ta.value : '';
+}
+
+function closeEditModal(){
+  if(ckEditorInstance){
+    try{ ckEditorInstance.destroy(); }catch(e){}
+    ckEditorInstance = null;
+  }
+  activeEditCardId = null;
+  document.getElementById('edit-modal').hidden = true;
+  document.body.style.overflow = '';
+}
+
+function saveEditModal(){
+  const cardId = activeEditCardId;
+  const countryId = activeEditCountryId;
+  if(cardId == null || countryId == null) return;
+  const title = document.getElementById('modal-card-title').value.trim();
+  updateCardTitle(cardId, title);
+  replaceCardBody(cardId, sanitizeRichText(getModalEditorHtml()));
+  const kvRows = [...document.querySelectorAll('#modal-kv-list [data-mkv-idx]')].map(row => {
+    const [k, v] = row.querySelectorAll('input, textarea');
+    return { k: k.value.trim(), v: v.value.trim() };
+  }).filter(r => r.k || r.v);
+  replaceCardKv(cardId, kvRows);
+  closeEditModal();
+  goCountry(countryId);
+}
+
+function renderTopicCard(t, countryId){
+  const icon = pickIcon(t.title);
+  let inner = '';
+  (t.body || []).forEach(p => { if(p) inner += `<p class="body-text">${sanitizeRichFragment(p)}</p>`; });
+  if(t.kv && t.kv.length){
+    inner += `<div class="kv">` + t.kv.map(row=>`<div class="kv-row"><span class="k">${escapeHtml(row.k)}</span><span class="v">${escapeHtml(row.v)}</span></div>`).join('') + `</div>`;
+  }
+  if(!editMode){
     const plainCls = t.title ? '' : 'plain';
     return `<div class="topic-card ${plainCls}">
       ${t.title ? `<div class="icon">${ICONS[icon]}</div><h3>${escapeHtml(t.title)}</h3>` : ''}
       ${inner}
     </div>`;
   }
-  // editing markup
-  const bodyRowsHtml = (t.body||[]).map((p, idx) => {
-    const bodyId = t._bodyIds ? t._bodyIds[idx] : null;
-    return '';
-  }).join('');
   return `<div class="topic-card editing" data-card-id="${t.id}">
-    <button class="del-x" data-del-card="${t.id}" title="Ta bort kort">×</button>
-    <input class="edit-field" data-card-title="${t.id}" placeholder="Rubrik (lämna tomt för textstycke utan rubrik)" value="${escapeHtml(t.title||'')}" style="margin-bottom:12px; font-family:'Fraunces',serif; font-weight:600;">
-    <div data-body-list="${t.id}"></div>
+    <button class="del-x" data-del-card="${t.id}" title="${escapeHtml(T('del_card'))}">×</button>
+    ${t.title ? `<h3>${escapeHtml(t.title)}</h3>` : ''}
+    ${inner}
     <div class="card-toolbar">
-      <button class="mini-btn" data-add-para="${t.id}">+ Stycke</button>
-      <button class="mini-btn" data-add-kv="${t.id}">+ Rad (etikett: text)</button>
-      <button class="mini-btn danger" data-del-card2="${t.id}">Ta bort kort</button>
+      <button class="mini-btn" data-edit-card="${t.id}">✎ ${escapeHtml(T('edit_card'))}</button>
+      <button class="mini-btn danger" data-del-card2="${t.id}">${escapeHtml(T('del_card'))}</button>
     </div>
-    <div data-kv-list="${t.id}" style="margin-top:10px;"></div>
   </div>`;
 }
 
 function bindTopicCardEvents(countryId){
-  document.querySelectorAll('[data-card-id]').forEach(cardEl=>{
-    const cardId = parseInt(cardEl.getAttribute('data-card-id'),10);
-    const cardData = getCountryDetail(countryId, currentLang).cards.find(c=>c.id===cardId);
-    if(!cardData) return;
-
-    const bodyList = cardEl.querySelector(`[data-body-list="${cardId}"]`);
-    bodyList.innerHTML = q(`SELECT id, text FROM card_body WHERE card_id=? ORDER BY sort_order`, [cardId]).map(row => `
-      <div class="para-edit-row" data-body-id="${row.id}">
-        <textarea class="edit-field">${escapeHtml(row.text)}</textarea>
-        <button class="row-del" data-del-para="${row.id}">×</button>
-      </div>`).join('');
-
-    const kvList = cardEl.querySelector(`[data-kv-list="${cardId}"]`);
-    kvList.innerHTML = q(`SELECT id, k, v FROM card_kv WHERE card_id=? ORDER BY sort_order`, [cardId]).map(row => `
-      <div class="kv-edit-row" data-kv-id="${row.id}">
-        <input class="edit-field" placeholder="Etikett" value="${escapeHtml(row.k)}">
-        <textarea class="edit-field" placeholder="Text">${escapeHtml(row.v)}</textarea>
-        <button class="row-del" data-del-kv="${row.id}">×</button>
-      </div>`).join('');
-
-    cardEl.querySelector(`[data-card-title="${cardId}"]`).addEventListener('change', e=> updateCardTitle(cardId, e.target.value));
-    cardEl.querySelectorAll('[data-body-id] textarea').forEach(ta=>{
-      const row = ta.closest('[data-body-id]');
-      ta.addEventListener('change', ()=> updateParagraph(parseInt(row.getAttribute('data-body-id'),10), ta.value));
+  document.querySelectorAll('[data-edit-card]').forEach(btn => {
+    btn.addEventListener('click', ()=>{
+      openEditModal(parseInt(btn.getAttribute('data-edit-card'),10), countryId);
     });
-    cardEl.querySelectorAll('[data-del-para]').forEach(btn=> btn.addEventListener('click', ()=>{ deleteParagraph(parseInt(btn.getAttribute('data-del-para'),10)); goCountry(countryId); }));
-    cardEl.querySelectorAll('[data-kv-id]').forEach(row=>{
-      const kvId = parseInt(row.getAttribute('data-kv-id'),10);
-      const [kInput, vInput] = row.querySelectorAll('input, textarea');
-      const save = ()=> updateKvRow(kvId, kInput.value, vInput.value);
-      kInput.addEventListener('change', save);
-      vInput.addEventListener('change', save);
-    });
-    cardEl.querySelectorAll('[data-del-kv]').forEach(btn=> btn.addEventListener('click', ()=>{ deleteKvRow(parseInt(btn.getAttribute('data-del-kv'),10)); goCountry(countryId); }));
-    const addParaBtn = cardEl.querySelector(`[data-add-para="${cardId}"]`);
-    if(addParaBtn) addParaBtn.addEventListener('click', ()=>{ addParagraph(cardId); goCountry(countryId); });
-    const addKvBtn = cardEl.querySelector(`[data-add-kv="${cardId}"]`);
-    if(addKvBtn) addKvBtn.addEventListener('click', ()=>{ addKvRow(cardId); goCountry(countryId); });
-    cardEl.querySelectorAll(`[data-del-card="${cardId}"], [data-del-card2="${cardId}"]`).forEach(btn=>{
-      btn.addEventListener('click', ()=>{ if(confirm('Ta bort hela kortet?')){ deleteCard(cardId); goCountry(countryId); } });
+  });
+  document.querySelectorAll('[data-del-card], [data-del-card2]').forEach(btn => {
+    btn.addEventListener('click', ()=>{
+      const cardId = parseInt(btn.getAttribute('data-del-card') || btn.getAttribute('data-del-card2'),10);
+      if(confirm(T('delete_confirm_card'))){ deleteCard(cardId); goCountry(countryId); }
     });
   });
 }
@@ -1325,14 +2051,14 @@ function goResources(){
   const el = document.getElementById('resources-list');
   el.innerHTML = RESOURCE_LINKS.map(group => `
     <div class="topic-card" style="margin-bottom:16px;">
-      <h3>${escapeHtml(group.group)}</h3>
+      <h3>${escapeHtml(T(group.group))}</h3>
       <div class="kv" style="margin-top:14px;">
         ${group.items.map(item => `
           <div class="kv-row" style="align-items:flex-start;">
             <span class="k" style="min-width:0;"></span>
             <span class="v">
               <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener" style="color:var(--paper); font-weight:600; text-decoration:none;">${escapeHtml(item.name)} →</a>
-              <div style="color:var(--sand-2); margin-top:2px;">${escapeHtml(item.note)}</div>
+              <div style="color:var(--sand-2); margin-top:2px;">${escapeHtml(T(item.note))}</div>
             </span>
           </div>
         `).join('')}
@@ -1344,7 +2070,7 @@ function goResources(){
 
 function goAbout(){
   const photoGrid = document.getElementById('about-photo-grid');
-  const captions = ['Verksamheten på plats', 'Rådgivning &amp; vägledning', 'Lokala samarbeten'];
+  const captions = [T('about_photo_1'), T('about_photo_2'), T('about_photo_3')];
   photoGrid.innerHTML = captions.map(cap => `
     <div class="about-photo">
       <div style="text-align:center; color:var(--muted); padding:20px;">
@@ -1366,29 +2092,29 @@ function renderOrgDirectory(){
     el.innerHTML = orgs.map(o => `
       <div class="org-item">
         <div>
-          <div class="org-name">${escapeHtml(o.name || '(namnlös)')}</div>
+          <div class="org-name">${escapeHtml(o.name || T('unnamed_org'))}</div>
           ${o.description ? `<div class="org-desc">${escapeHtml(o.description)}</div>` : ''}
           ${o.contact ? `<div class="org-contact">${escapeHtml(o.contact)}</div>` : ''}
         </div>
-        ${o.url ? `<a href="${escapeHtml(o.url)}" target="_blank" rel="noopener">Besök webbplats →</a>` : ''}
+        ${renderExternalLink(o.url, T('visit_site'))}
       </div>
-    `).join('') + (orgs.length ? '' : `<p class="ngo-empty">Inga organisationer inlagda ännu.</p>`);
+    `).join('') + (orgs.length ? '' : `<p class="ngo-empty">${escapeHtml(T('org_empty'))}</p>`);
     return;
   }
 
   el.innerHTML = orgs.map(o => `
     <div class="org-item" data-org-id="${o.id}" style="display:block;">
       <div class="org-edit-grid">
-        <input class="edit-field" placeholder="Namn" value="${escapeHtml(o.name)}" data-f="name">
-        <input class="edit-field" placeholder="URL (https://...)" value="${escapeHtml(o.url)}" data-f="url">
+        <input class="edit-field" placeholder="${escapeHtml(T('org_name_placeholder'))}" value="${escapeHtml(o.name)}" data-f="name">
+        <input class="edit-field" placeholder="${escapeHtml(T('org_url_placeholder'))}" value="${escapeHtml(o.url)}" data-f="url">
       </div>
       <div class="org-edit-grid">
-        <input class="edit-field" placeholder="Kontakt (telefon/e-post)" value="${escapeHtml(o.contact)}" data-f="contact">
-        <textarea class="edit-field" placeholder="Beskrivning" data-f="description">${escapeHtml(o.description)}</textarea>
+        <input class="edit-field" placeholder="${escapeHtml(T('org_contact_placeholder'))}" value="${escapeHtml(o.contact)}" data-f="contact">
+        <textarea class="edit-field" placeholder="${escapeHtml(T('org_desc_placeholder'))}" data-f="description">${escapeHtml(o.description)}</textarea>
       </div>
-      <button class="mini-btn danger" data-del-org="${o.id}" style="margin-top:8px;">Ta bort</button>
+      <button class="mini-btn danger" data-del-org="${o.id}" style="margin-top:8px;">${escapeHtml(T('org_delete'))}</button>
     </div>
-  `).join('') + `<button class="mini-btn add-ngo-btn" id="add-org-btn">+ Lägg till organisation</button>`;
+  `).join('') + `<button class="mini-btn add-ngo-btn" id="add-org-btn">${escapeHtml(T('add_ngo'))}</button>`;
 
   el.querySelectorAll('[data-org-id]').forEach(card=>{
     const id = parseInt(card.getAttribute('data-org-id'),10);
@@ -1415,7 +2141,7 @@ document.getElementById('btn-edit-toggle').addEventListener('click', ()=>{
   editMode = !editMode;
   const btn = document.getElementById('btn-edit-toggle');
   btn.classList.toggle('on', editMode);
-  document.getElementById('edit-toggle-label').textContent = editMode ? 'Klar' : 'Redigera';
+  document.getElementById('edit-toggle-label').textContent = editMode ? T('btn_done') : T('btn_edit');
   rerenderAll();
 });
 
@@ -1435,17 +2161,46 @@ document.getElementById('import-file').addEventListener('change', async (e)=>{
   if(!file) return;
   const buf = new Uint8Array(await file.arrayBuffer());
   try{
-    db = new SQLLib.Database(buf);
+    const candidate = new SQLLib.Database(buf);
+    validateImportedDb(candidate);
+    db = candidate;
     await persistDB();
     goStart();
     initGlobe();
     renderLangSwitch();
-    alert('Databasen har importerats.');
+    alert(T('import_ok'));
   }catch(err){
-    alert('Kunde inte läsa filen som en SQLite-databas.');
+    alert(T('import_fail'));
     console.error(err);
   }
   e.target.value = '';
+});
+
+/* =====================================================================
+   EDIT MODAL WIRING (close / cancel / save / esc / overlay / kv rows)
+   ===================================================================== */
+document.getElementById('modal-close').addEventListener('click', closeEditModal);
+document.getElementById('modal-cancel').addEventListener('click', closeEditModal);
+document.getElementById('modal-save').addEventListener('click', saveEditModal);
+document.getElementById('edit-modal').addEventListener('click', e => {
+  if(e.target === e.currentTarget) closeEditModal();
+});
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape' && !document.getElementById('edit-modal').hidden) closeEditModal();
+});
+document.getElementById('modal-add-kv').addEventListener('click', ()=>{
+  const kvList = document.getElementById('modal-kv-list');
+  const idx = kvList.querySelectorAll('[data-mkv-idx]').length;
+  kvList.insertAdjacentHTML('beforeend', `
+    <div class="kv-edit-row" data-mkv-idx="${idx}">
+      <input class="edit-field" placeholder="${escapeHtml(T('kv_label_placeholder'))}">
+      <textarea class="edit-field" placeholder="${escapeHtml(T('kv_value_placeholder'))}"></textarea>
+      <button class="row-del" data-del-mkv="${idx}" type="button">×</button>
+    </div>`);
+});
+document.getElementById('modal-kv-list').addEventListener('click', e => {
+  const btn = e.target.closest('[data-del-mkv]');
+  if(btn) btn.closest('[data-mkv-idx]').remove();
 });
 
 /* =====================================================================
@@ -1453,6 +2208,7 @@ document.getElementById('import-file').addEventListener('change', async (e)=>{
    ===================================================================== */
 window.addEventListener('DOMContentLoaded', async ()=>{
   await initDatabase();
+  applyStaticI18n();
   renderLangSwitch();
   goStart();
   initGlobe();
