@@ -6,318 +6,399 @@
 <title>GeoBas — Landinfo för återvändare</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Noto+Naskh+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/globe.gl"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/sql-wasm.js"></script>
 <script src="https://cdn.ckeditor.com/ckeditor5/40.0.0/classic/ckeditor.js" defer></script>
 <style>
   :root{
-    --bg:#221610; --bg-2:#2e1e15; --panel:#3a271b;
-    --accent:#c1652f; --accent-2:#8fa06a;
-    --sand:#ecdfc4; --sand-2:#dccda8; --ink:#231509; --paper:#f5ecd9; --muted:#b7a288;
-    --line:rgba(236,223,196,0.14);
-    --edit:#5b8dae;
-    --danger:#b34a3d;
-    --shadow: 0 20px 50px rgba(0,0,0,0.35);
+    /* ---- civic wayfinding palette: deep ink-navy signage boards ---- */
+    --bg:#0a0f1c; --bg-2:#0e1526; --panel:#141d33; --panel-2:#1a2440; --panel-3:#0f1729;
+    --ink:#0a0f1c;
+    --paper:#eef2fb; --paper-2:#c7d2ea; --muted:#8b9bc0; --dim:#5c6b92;
+    --line:rgba(139,160,205,0.18); --line-strong:rgba(139,160,205,0.34);
+    --accent:#ffc857; --accent-ink:#1a1506;
+    --edit:#59c2ff; --danger:#ff5d6c; --ok:#45d6a0;
+    --shadow:0 24px 60px rgba(0,0,0,0.45);
+    /* legacy aliases referenced by inline styles in JS-rendered markup */
+    --sand-2:#c7d2ea;
+    /* transit line colors (world regions) */
+    --c1:#ff5d5d; --c2:#ff9f1c; --c3:#4da3ff; --c4:#3ecf8e; --c5:#b18cff;
+    --c6:#35d0d0; --c7:#ffd23f; --c8:#5fd4ff; --c9:#ff7ac8;
+    --line-act:var(--c3);   /* color of the currently selected line */
+    --font-display:'Barlow Condensed','Noto Naskh Arabic','Segoe UI',Tahoma,sans-serif;
+    --font-body:'Inter','Noto Naskh Arabic','Segoe UI',Tahoma,sans-serif;
+    --font-mono:'JetBrains Mono','Noto Naskh Arabic','Segoe UI',Tahoma,monospace;
   }
+  /* current-line theming, driven by the region slug the app is showing */
+  html[data-region="sydamerika"]{--line-act:var(--c1);}
+  html[data-region="centralamerika"]{--line-act:var(--c2);}
+  html[data-region="europa"]{--line-act:var(--c3);}
+  html[data-region="centralasien"]{--line-act:var(--c4);}
+  html[data-region="sydasien"]{--line-act:var(--c5);}
+  html[data-region="asien"]{--line-act:var(--c6);}
+  html[data-region="afrika"]{--line-act:var(--c7);}
+  html[data-region="nordafrika"]{--line-act:var(--c8);}
+  html[data-region="mellanostern"]{--line-act:var(--c9);}
+
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
     background:
-      radial-gradient(ellipse 900px 500px at 15% -10%, #4a3020 0%, transparent 60%),
-      radial-gradient(ellipse 800px 600px at 110% 10%, #3a2818 0%, transparent 55%),
-      linear-gradient(180deg, var(--bg) 0%, #1b110c 100%);
-    color:var(--paper); font-family:'Inter','Noto Naskh Arabic','Segoe UI',Tahoma,sans-serif; min-height:100vh; overflow-x:hidden;
+      radial-gradient(1100px 520px at 90% -12%, rgba(77,163,255,0.10) 0%, transparent 60%),
+      linear-gradient(180deg, var(--bg) 0%, #070b14 100%);
+    color:var(--paper); font-family:var(--font-body); min-height:100vh; overflow-x:hidden;
   }
-  ::selection{background:var(--accent); color:var(--paper);}
+  ::selection{background:var(--accent); color:var(--accent-ink);}
   a{color:inherit;}
-  h1,h2,h3{font-family:'Fraunces','Noto Naskh Arabic','Segoe UI',Tahoma,serif; margin:0; font-weight:600; letter-spacing:-0.01em;}
-  .eyebrow{font-family:'JetBrains Mono','Noto Naskh Arabic','Segoe UI',Tahoma,monospace; text-transform:uppercase; letter-spacing:0.14em; font-size:0.72rem; color:var(--accent);}
+  h1,h2,h3{font-family:var(--font-display); margin:0; font-weight:700; letter-spacing:0.01em; text-transform:uppercase;}
+  .eyebrow{font-family:var(--font-mono); text-transform:uppercase; letter-spacing:0.16em; font-size:0.70rem; color:var(--accent); display:inline-flex; align-items:center; gap:8px;}
+  .eyebrow-dot{width:8px; height:8px; background:var(--accent); display:inline-block;}
   button, input, textarea{font-family:inherit;}
   :focus-visible{outline:2px solid var(--accent); outline-offset:3px;}
 
-  .grat-wash{
+  .grid-wash{
     position:fixed; inset:0; pointer-events:none; z-index:0; opacity:0.05;
     background-image:
-      repeating-linear-gradient(0deg, var(--paper) 0 1px, transparent 1px 64px),
-      repeating-linear-gradient(90deg, var(--paper) 0 1px, transparent 1px 64px);
+      repeating-linear-gradient(0deg, #c7d2ea 0 1px, transparent 1px 56px),
+      repeating-linear-gradient(90deg, #c7d2ea 0 1px, transparent 1px 56px);
   }
 
-  .shell{position:relative; z-index:1; max-width:1180px; margin:0 auto; padding:0 28px 100px;}
-  header.topbar{display:flex; align-items:center; justify-content:space-between; padding:22px 0 8px; gap:14px; flex-wrap:wrap;}
-  .brand{display:flex; align-items:baseline; gap:10px; cursor:pointer; user-select:none;}
-  .brand .mark{font-family:'Fraunces',serif; font-weight:700; font-size:1.35rem; letter-spacing:-0.02em;}
+  .shell{position:relative; z-index:1; max-width:1240px; margin:0 auto; padding:0 28px 90px;}
+
+  /* ---- top bar ---- */
+  header.topbar{display:flex; align-items:center; justify-content:space-between; padding:20px 0 6px; gap:14px; flex-wrap:wrap;}
+  .brand{display:flex; align-items:baseline; gap:12px; cursor:pointer; user-select:none;}
+  .brand .mark{font-family:var(--font-display); font-weight:700; font-size:1.6rem; text-transform:uppercase; letter-spacing:0.02em;}
   .brand .mark em{font-style:normal; color:var(--accent);}
-  .brand .sub{font-family:'JetBrains Mono',monospace; font-size:0.66rem; color:var(--muted); letter-spacing:0.08em;}
-
+  .brand .sub{font-family:var(--font-mono); font-size:0.64rem; color:var(--muted); letter-spacing:0.12em; text-transform:uppercase;}
   .topbar-right{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
-  .lang-switch{display:flex; gap:2px; background:var(--panel); border:1px solid var(--line); border-radius:100px; padding:3px;}
+
+  .lang-switch{display:flex; gap:2px; background:var(--panel-3); border:1px solid var(--line-strong); border-radius:6px; padding:3px;}
   .lang-pill{
-    border:none; background:none; color:var(--muted); font-family:'JetBrains Mono',monospace;
-    font-size:0.68rem; letter-spacing:0.05em; padding:6px 12px; border-radius:100px; cursor:pointer; text-transform:uppercase;
+    border:none; background:none; color:var(--muted); font-family:var(--font-mono);
+    font-size:0.66rem; letter-spacing:0.06em; padding:6px 11px; border-radius:4px; cursor:pointer; text-transform:uppercase;
   }
-  .lang-pill.active{background:var(--accent); color:var(--paper);}
+  .lang-pill.active{background:var(--accent); color:var(--accent-ink); font-weight:600;}
   .lang-pill.add{color:var(--accent); font-size:0.9rem; padding:6px 9px;}
 
   .icon-btn{
-    display:inline-flex; align-items:center; gap:6px; background:var(--panel); border:1px solid var(--line);
-    color:var(--sand-2); padding:8px 13px; border-radius:100px; cursor:pointer; font-size:0.72rem;
-    font-family:'JetBrains Mono',monospace; letter-spacing:0.04em; text-transform:uppercase; transition:.2s ease;
+    display:inline-flex; align-items:center; gap:6px; background:var(--panel-3); border:1px solid var(--line-strong);
+    color:var(--paper-2); padding:8px 13px; border-radius:6px; cursor:pointer; font-size:0.70rem;
+    font-family:var(--font-mono); letter-spacing:0.08em; text-transform:uppercase; transition:.2s ease;
   }
   .icon-btn:hover{border-color:var(--accent); color:var(--paper);}
   .icon-btn svg{width:13px; height:13px;}
-  .icon-btn.on{background:var(--edit); border-color:var(--edit); color:#fff;}
-  .status-dot{
-    width:7px; height:7px; border-radius:50%; background:var(--accent-2); display:inline-block; margin-right:2px;
-    animation: pulse-dot 1.4s ease infinite;
-  }
+  .icon-btn.on{background:var(--edit); border-color:var(--edit); color:#04121f;}
+  .status-dot{width:7px; height:7px; border-radius:50%; background:var(--ok); display:inline-block; margin-right:2px; animation:pulse-dot 1.4s ease infinite;}
   @keyframes pulse-dot{ 0%,100%{opacity:1;} 50%{opacity:0.3;} }
-  #save-status{font-family:'JetBrains Mono',monospace; font-size:0.66rem; color:var(--muted); display:flex; align-items:center; gap:6px; min-width:90px;}
+  #save-status{font-family:var(--font-mono); font-size:0.64rem; color:var(--muted); display:flex; align-items:center; gap:6px; min-width:96px;}
 
-  .crumbs{font-family:'JetBrains Mono',monospace; font-size:0.74rem; color:var(--muted); display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:6px;}
-  .crumbs button{background:none; border:none; color:var(--muted); cursor:pointer; padding:4px 2px; font-family:inherit; font-size:inherit; border-bottom:1px solid transparent;}
+  /* ---- maintenance banner (shown only in edit mode) ---- */
+  .edit-banner{display:none; margin:12px 0 0; align-items:center; gap:10px; padding:9px 14px; border-radius:6px;
+    background:rgba(255,200,87,0.10); border:1px solid rgba(255,200,87,0.45); color:#ffd97a;
+    font-family:var(--font-mono); font-size:0.70rem; letter-spacing:0.10em; text-transform:uppercase;}
+  .edit-banner::before{content:"⚠"; font-size:0.9rem;}
+  body.edit-mode .edit-banner{display:flex;}
+
+  /* ---- system status strip (FIDS board) ---- */
+  .status-strip{display:flex; flex-wrap:wrap; align-items:center; gap:14px; margin-top:14px; padding:9px 16px;
+    background:var(--panel-3); border:1px solid var(--line); border-radius:6px;
+    font-family:var(--font-mono); font-size:0.66rem; color:var(--muted); letter-spacing:0.08em; text-transform:uppercase;}
+  .ss-item{display:inline-flex; align-items:center; gap:7px;}
+  .ss-dot{width:7px; height:7px; border-radius:50%; background:var(--ok); box-shadow:0 0 8px var(--ok);}
+  .ss-k{color:var(--dim);}
+  .ss-v{color:var(--accent); font-weight:600; font-size:0.78rem; margin:0;}
+  .ss-sep{width:1px; height:14px; background:var(--line-strong);}
+
+  .crumbs{font-family:var(--font-mono); font-size:0.72rem; color:var(--muted); display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:12px;}
+  .crumbs button{background:none; border:none; color:var(--muted); cursor:pointer; padding:4px 2px; font-family:inherit; font-size:inherit; text-transform:uppercase; letter-spacing:0.06em; border-bottom:1px solid transparent;}
   .crumbs button:hover{color:var(--paper); border-color:var(--accent);}
   .crumbs .current{color:var(--paper);}
-  .crumbs .sep{opacity:0.4;}
+  .crumbs .sep{opacity:0.45;}
 
   .view{display:none; animation:rise .5s ease both;}
   .view.active{display:block;}
   @keyframes rise{from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:translateY(0);}}
   @media (prefers-reduced-motion: reduce){ .view{animation:none;} *{animation-duration:0.001s !important; transition-duration:0.001s !important;} }
 
-  #view-start{padding-top:10px;}
-  .hero{display:grid; grid-template-columns: 1.05fr 1fr; gap:20px; align-items:center; min-height:74vh;}
-  .hero-copy{position:relative; z-index:2;}
-  .hero-copy h1{font-size:clamp(2.6rem, 5.4vw, 4.4rem); line-height:0.98; margin:14px 0 22px;}
-  .hero-copy h1 .stroke{-webkit-text-stroke:1.5px var(--paper); color:transparent;}
-  .hero-copy p.lede{font-size:1.05rem; color:var(--sand-2); max-width:46ch; line-height:1.6; margin:0 0 30px;}
-  .cta-row{display:flex; align-items:center; gap:18px; flex-wrap:wrap;}
+  /* ---- START: wayfinding board ---- */
+  .start-board{display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,1fr); gap:40px; align-items:center; padding:34px 0 10px;}
+  @media (max-width:980px){ .start-board{grid-template-columns:1fr; gap:26px;} }
+  .wf-title{margin:18px 0 20px; font-size:clamp(3rem, 7vw, 5.2rem); line-height:0.94;}
+  .wf-line{display:block;}
+  .wf-accent{color:var(--accent); display:flex; align-items:center; gap:14px;}
+  .wf-accent svg{width:34px; height:34px; flex-shrink:0;}
+  .lede{font-size:1.02rem; color:var(--paper-2); max-width:46ch; line-height:1.65; margin:0 0 26px;}
+  .cta-row{display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
   .cta{
-    appearance:none; border:none; cursor:pointer; background:var(--accent); color:var(--paper);
-    font-family:'JetBrains Mono',monospace; font-size:0.82rem; letter-spacing:0.06em; text-transform:uppercase;
-    padding:16px 26px; border-radius:100px; display:inline-flex; align-items:center; gap:10px;
-    box-shadow: var(--shadow); transition: transform .25s ease, box-shadow .25s ease;
+    appearance:none; border:none; cursor:pointer; background:var(--accent); color:var(--accent-ink);
+    font-family:var(--font-mono); font-size:0.80rem; font-weight:600; letter-spacing:0.10em; text-transform:uppercase;
+    padding:15px 24px; border-radius:6px; display:inline-flex; align-items:center; gap:10px;
+    box-shadow:var(--shadow); transition: transform .25s ease, box-shadow .25s ease;
   }
-  .cta:hover{transform:translateY(-2px); box-shadow:0 24px 60px rgba(193,101,47,0.35);}
+  .cta:hover{transform:translateY(-2px); box-shadow:0 24px 60px rgba(255,200,87,0.28);}
   .cta svg{width:16px; height:16px;}
-  .cta-secondary{background:transparent; border:1px solid var(--line); color:var(--sand-2); box-shadow:none;}
+  .cta-secondary{background:transparent; border:1px solid var(--line-strong); color:var(--paper-2); box-shadow:none;}
   .cta-secondary:hover{border-color:var(--accent); color:var(--paper); box-shadow:none;}
-  .hint{font-size:0.78rem; color:var(--muted);}
+  .hint{font-size:0.74rem; color:var(--muted);}
 
-  .globe-stage{position:relative; height:min(74vh, 600px); z-index:1;}
-  #globe-canvas-wrap{position:absolute; inset:0; cursor:grab;}
-  #globe-canvas-wrap:active{cursor:grabbing;}
-  .globe-loading{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:var(--muted); letter-spacing:0.08em;}
+  .route-steps{display:flex; gap:10px; margin-top:34px; flex-wrap:wrap;}
+  .rstep{display:flex; align-items:center; gap:12px; background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:12px 16px 12px 12px; min-width:0;}
+  .rstep-n{width:30px; height:30px; border-radius:6px; background:var(--panel-2); border:1px solid var(--line-strong);
+    color:var(--accent); font-family:var(--font-mono); font-weight:600; font-size:0.85rem;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .rstep-c{display:flex; flex-direction:column; gap:2px;}
+  .rstep-t{font-family:var(--font-display); font-weight:600; font-size:1.02rem; text-transform:uppercase; letter-spacing:0.03em; white-space:nowrap;}
+  .rstep-s{font-family:var(--font-mono); font-size:0.62rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em;}
 
-  .page-head{margin:8px 0 34px; max-width:640px; display:flex; align-items:flex-start; justify-content:space-between; gap:20px;}
-  .page-head h2{font-size:clamp(1.8rem,3.4vw,2.5rem);}
-  .page-head p{color:var(--sand-2); margin-top:10px; line-height:1.6;}
+  /* system map plate */
+  .map-col{min-width:0;}
+  .map-plate{background:var(--panel-3); border:1px solid var(--line-strong); border-radius:12px; overflow:hidden; box-shadow:var(--shadow);}
+  .map-head{display:flex; align-items:center; justify-content:space-between; padding:10px 16px; border-bottom:1px solid var(--line);
+    font-family:var(--font-mono); font-size:0.66rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--muted);}
+  .map-code{color:var(--accent);}
+  .system-map{display:block; width:100%; height:auto;}
+  .mline{fill:none; stroke-width:5; stroke-linecap:round; opacity:0.92;}
+  .map-label{fill:#c7d2ea; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.02em;}
+  .map-hub{fill:#ffc857; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600; letter-spacing:0.1em; text-anchor:middle;}
 
-  .region-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:16px;}
+  /* fact board */
+  .fact-board{display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-top:36px;}
+  @media (max-width:900px){ .fact-board{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:540px){ .fact-board{grid-template-columns:1fr;} }
+  .fact-block{background:var(--panel); border:1px solid var(--line); border-top:3px solid var(--line-strong); border-radius:8px; padding:16px 16px 14px; display:flex; flex-direction:column; gap:7px;}
+  .fact-k{font-family:var(--font-mono); font-size:0.66rem; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent);}
+  .fact-d{font-size:0.80rem; line-height:1.5; color:var(--paper-2);}
+
+  /* ---- route rail (step indicator) ---- */
+  .view-head{margin-bottom:26px;}
+  .route-rail{display:flex; align-items:center; gap:0; margin-bottom:22px; font-family:var(--font-mono);}
+  .rail-seg{display:inline-flex; align-items:center; gap:9px; padding:8px 16px 8px 8px; color:var(--dim); font-size:0.68rem; letter-spacing:0.10em; text-transform:uppercase; position:relative;}
+  .rail-seg::after{content:""; position:absolute; right:-8px; top:50%; transform:translateY(-50%); width:16px; height:2px; background:var(--line-strong);}
+  .rail-seg:last-child::after{display:none;}
+  .rail-n{width:24px; height:24px; border-radius:50%; border:1px solid var(--line-strong); color:var(--dim); font-size:0.72rem; font-weight:600;
+    display:inline-flex; align-items:center; justify-content:center;}
+  .rail-seg.current{color:var(--paper);}
+  .rail-seg.current .rail-n{background:var(--accent); border-color:var(--accent); color:var(--accent-ink); box-shadow:0 0 14px rgba(255,200,87,0.4);}
+  .rail-seg.done{color:var(--muted);}
+  .rail-seg.done .rail-n{background:var(--line-act); border-color:var(--line-act); color:#04121f;}
+
+  .page-head{margin:4px 0 26px; max-width:680px; display:flex; align-items:flex-start; justify-content:space-between; gap:20px;}
+  .page-head h2{font-size:clamp(1.9rem,3.6vw,2.7rem); margin-top:10px;}
+  .page-head p{color:var(--paper-2); margin-top:10px; line-height:1.6;}
+  .line-swatch{width:10px; height:10px; background:var(--line-act); display:inline-block; box-shadow:0 0 10px var(--line-act);}
+
+  /* ---- REGIONS: line cards ---- */
+  .region-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; counter-reset:line;}
   @media (max-width:900px){ .region-grid{grid-template-columns:repeat(2, 1fr);} }
   @media (max-width:540px){ .region-grid{grid-template-columns:1fr;} }
-
   .region-card{
-    background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:22px 18px 20px; text-align:center; cursor:pointer;
-    display:flex; flex-direction:column; align-items:center; gap:14px; transition:transform .25s ease, border-color .25s ease, background .25s ease;
-    position:relative; overflow:hidden;
+    background:var(--panel); border:1px solid var(--line); border-left:6px solid var(--line); border-radius:10px;
+    padding:18px 18px 16px 20px; cursor:pointer; position:relative; overflow:hidden; counter-increment:line;
+    display:flex; flex-direction:column; gap:10px; transition:transform .25s ease, border-color .25s ease, background .25s ease;
   }
-  .region-card:hover{transform:translateY(-4px); border-color:var(--accent); background:#432c1e;}
-  .region-card.add-card{cursor:pointer; border-style:dashed; justify-content:center; min-height:150px; color:var(--accent);}
-  .mini-globe{
-    width:84px; height:84px; border-radius:50%;
-    background-image:url('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-blue-marble.jpg');
-    background-size:220% 110%;
-    box-shadow: inset -10px -10px 24px rgba(0,0,0,0.45), inset 6px 6px 14px rgba(255,255,255,0.08);
-    animation: spin-bg 22s linear infinite; border:1px solid rgba(0,0,0,0.4);
+  .region-card:nth-child(1){--line:var(--c1);} .region-card:nth-child(2){--line:var(--c2);}
+  .region-card:nth-child(3){--line:var(--c3);} .region-card:nth-child(4){--line:var(--c4);}
+  .region-card:nth-child(5){--line:var(--c5);} .region-card:nth-child(6){--line:var(--c6);}
+  .region-card:nth-child(7){--line:var(--c7);} .region-card:nth-child(8){--line:var(--c8);}
+  .region-card:nth-child(9){--line:var(--c9);}
+  .region-card:hover{transform:translateY(-3px); border-color:var(--line-strong); background:var(--panel-2);}
+  .region-card::before{content:counter(line, decimal-leading-zero); position:absolute; top:12px; right:14px;
+    font-family:var(--font-mono); font-size:0.72rem; color:var(--dim); letter-spacing:0.08em;}
+  .region-card .mini-globe{
+    width:36px; height:36px; border-radius:50%; background:var(--line);
+    box-shadow:0 0 0 5px rgba(255,255,255,0.05), 0 0 18px var(--line); position:relative;
   }
-  @keyframes spin-bg{ from{background-position:0% 50%;} to{background-position:200% 50%;} }
-  .region-card .name{font-family:'Fraunces',serif; font-weight:600; font-size:1.05rem;}
-  .region-card .count{font-family:'JetBrains Mono',monospace; font-size:0.68rem; color:var(--muted);}
+  .region-card .mini-globe::after{content:""; position:absolute; inset:0; border-radius:50%; border:2px solid rgba(4,7,14,0.35);}
+  .region-card .name{font-family:var(--font-display); font-weight:600; font-size:1.22rem; text-transform:uppercase; letter-spacing:0.02em;}
+  .region-card .count{font-family:var(--font-mono); font-size:0.64rem; color:var(--paper-2); background:rgba(255,255,255,0.06);
+    border:1px solid var(--line); border-radius:4px; padding:3px 8px; display:inline-block; width:fit-content; letter-spacing:0.06em;}
+  .region-card.add-card{cursor:pointer; border-style:dashed; border-left-style:dashed; justify-content:center; min-height:140px;
+    color:var(--accent); font-family:var(--font-mono); font-size:0.76rem; text-transform:uppercase; letter-spacing:0.08em;}
   .name-input{
-    font-family:'Fraunces',serif; font-weight:600; font-size:1.05rem; text-align:center; background:rgba(0,0,0,0.25);
-    border:1px solid var(--edit); border-radius:8px; color:var(--paper); padding:4px 8px; width:100%;
+    font-family:var(--font-display); font-weight:600; font-size:1.05rem; text-align:center; background:rgba(4,7,14,0.55);
+    border:1px dashed var(--edit); border-radius:6px; color:var(--paper); padding:4px 8px; width:100%;
   }
-  .untranslated-badge{font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:#e0a96d; letter-spacing:0.05em; text-transform:uppercase;}
-  .del-x{
-    position:absolute; top:8px; right:8px; width:22px; height:22px; border-radius:50%; background:var(--danger); color:#fff;
-    border:none; cursor:pointer; font-size:0.8rem; line-height:1; display:flex; align-items:center; justify-content:center;
-  }
+  .untranslated-badge{font-family:var(--font-mono); font-size:0.58rem; color:#ffd97a; letter-spacing:0.08em; text-transform:uppercase;}
+  .del-x{position:absolute; top:8px; right:8px; width:22px; height:22px; border-radius:6px; background:var(--danger); color:#fff;
+    border:none; cursor:pointer; font-size:0.8rem; line-height:1; display:flex; align-items:center; justify-content:center; z-index:2;}
 
-  .country-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:14px;}
-  @media (max-width:760px){ .country-grid{grid-template-columns:repeat(2, 1fr);} }
-  @media (max-width:480px){ .country-grid{grid-template-columns:1fr;} }
-
+  /* ---- COUNTRIES: stations on the line ---- */
+  .country-grid{position:relative; display:flex; flex-direction:column; padding-left:8px;}
+  .country-grid::before{content:""; position:absolute; left:22px; top:10px; bottom:10px; width:2px; background:var(--line-act); opacity:0.35;}
   .country-card{
-    background:var(--sand); color:var(--ink); border:1px solid rgba(0,0,0,0.15); border-radius:14px; padding:20px 18px; cursor:pointer;
-    display:flex; align-items:center; justify-content:space-between; gap:10px; transition:transform .2s ease, background .2s ease;
-    font-family:'Fraunces',serif; font-weight:600; font-size:1.08rem; position:relative;
+    background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:15px 18px 15px 44px; cursor:pointer; position:relative;
+    display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px;
+    font-family:var(--font-display); font-weight:600; font-size:1.15rem; text-transform:uppercase; letter-spacing:0.02em;
+    transition:transform .2s ease, background .2s ease, border-color .2s ease;
   }
-  .country-card:hover{transform:translateX(4px); background:var(--paper);}
-  .country-card .arrow{opacity:0.5; transition:transform .2s ease, opacity .2s ease;}
+  .country-card::before{content:""; position:absolute; left:13px; top:50%; transform:translateY(-50%);
+    width:12px; height:12px; border-radius:50%; background:var(--line-act); box-shadow:0 0 0 4px rgba(255,255,255,0.05), 0 0 12px var(--line-act);}
+  .country-card:hover{transform:translateX(6px); background:var(--panel-2); border-color:var(--line-strong);}
+  .country-card .arrow{opacity:0.5; transition:transform .2s ease, opacity .2s ease; color:var(--paper-2);}
   .country-card:hover .arrow{opacity:1; transform:translateX(3px);}
-  .country-card.stub{opacity:0.55;}
-  .country-card.stub .stub-tag{font-family:'JetBrains Mono',monospace; font-size:0.62rem; text-transform:uppercase; letter-spacing:0.05em; color:#8a6c4a;}
-  .country-card.add-card{background:transparent; border-style:dashed; color:var(--sand-2); justify-content:center;}
-  .country-card .name-input{color:var(--ink); border-color:var(--edit); text-align:left;}
+  .country-card.stub{opacity:0.6;}
+  .country-card.stub::before{background:var(--dim); box-shadow:none;}
+  .country-card.stub .stub-tag{font-family:var(--font-mono); font-size:0.62rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted);}
+  .country-card.add-card{background:transparent; border-style:dashed; color:var(--paper-2); justify-content:center; font-family:var(--font-mono); font-size:0.76rem; letter-spacing:0.08em;}
+  .country-card .name-input{color:var(--paper); border-color:var(--edit); text-align:left;}
 
-  .country-hero{display:grid; grid-template-columns:180px 1fr; gap:34px; align-items:start; padding:8px 0 30px; border-bottom:1px solid var(--line); margin-bottom:34px;}
-  @media (max-width:640px){ .country-hero{grid-template-columns:1fr; gap:18px;} }
-  .country-hero .badge-globe{
-    width:150px; height:150px; border-radius:50%; background-image:url('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-blue-marble.jpg');
-    background-size:220% 110%; box-shadow: inset -14px -14px 30px rgba(0,0,0,0.5), inset 8px 8px 16px rgba(255,255,255,0.08), var(--shadow);
-    animation: spin-bg 30s linear infinite;
-  }
-  .country-hero h2{font-size:clamp(2.1rem,4vw,3.2rem); margin-bottom:14px;}
-  .country-hero .region-tag{margin-bottom:10px; display:block;}
-  .country-hero .lede{color:var(--sand-2); line-height:1.7; font-size:1rem; max-width:70ch;}
-  .edit-field{width:100%; background:rgba(0,0,0,0.25); border:1px solid var(--edit); border-radius:8px; color:var(--paper); padding:8px 10px; font-family:inherit;}
+  /* ---- COUNTRY: destination board ---- */
+  .country-hero{display:grid; grid-template-columns:120px 1fr; gap:28px; align-items:start; padding:6px 0 26px; border-bottom:2px solid var(--line-act); margin-bottom:30px;}
+  @media (max-width:640px){ .country-hero{grid-template-columns:1fr; gap:16px;} }
+  .badge-globe{width:110px; height:110px; border-radius:50%; background:var(--panel-2); border:2px solid var(--line-strong);
+    position:relative; flex-shrink:0; box-shadow:var(--shadow);}
+  .badge-globe::before{content:""; position:absolute; inset:13px; border-radius:50%; border:2px dashed var(--line-act);}
+  .badge-globe::after{content:""; position:absolute; inset:33px; border-radius:50%; background:var(--line-act);
+    box-shadow:0 0 26px var(--line-act);}
+  .dest-copy{min-width:0; width:100%;}
+  .chip-row{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;}
+  .chip{display:inline-flex; align-items:center; gap:8px; background:var(--panel-3); border:1px solid var(--line); border-radius:6px; padding:6px 10px; font-size:0.70rem;}
+  .chip-k{font-family:var(--font-mono); text-transform:uppercase; letter-spacing:0.10em; color:var(--dim);}
+  .chip-v{font-family:var(--font-mono); color:var(--paper-2); letter-spacing:0.03em;}
+  .chip-v.ready{color:var(--ok);}
+  .dest-copy h2{font-size:clamp(2.2rem,4.4vw,3.4rem); margin-bottom:12px; line-height:1;}
+  .dest-copy .lede{color:var(--paper-2); line-height:1.7; font-size:0.98rem; max-width:70ch;}
+  .edit-field{width:100%; background:rgba(4,7,14,0.55); border:1px solid var(--edit); border-radius:6px; color:var(--paper); padding:8px 10px; font-family:inherit;}
   textarea.edit-field{resize:vertical; min-height:60px; line-height:1.5;}
-  input.edit-field.title-field{font-family:'Fraunces',serif; font-size:2rem; font-weight:600; margin-bottom:10px;}
+  input.edit-field.title-field{font-family:var(--font-display); font-size:2.2rem; font-weight:700; text-transform:uppercase; margin-bottom:10px;}
 
+  /* information boards (topic cards) */
   .topics-grid{display:grid; grid-template-columns:repeat(2, 1fr); gap:16px;}
   @media (max-width:760px){ .topics-grid{grid-template-columns:1fr;} }
-
-  .topic-card{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:24px 24px 22px; position:relative;}
-  .topic-card.plain{background:transparent; border-style:dashed;}
-  .topic-card.editing{border-color:var(--edit); background:#2a3540;}
-  .topic-card .icon{width:34px; height:34px; border-radius:9px; background:rgba(193,101,47,0.15); display:flex; align-items:center; justify-content:center; margin-bottom:14px; color:var(--accent);}
+  .topic-card{background:var(--panel); border:1px solid var(--line); border-left:5px solid var(--line-act); border-radius:10px; padding:22px 22px 20px; position:relative;}
+  .topic-card.plain{background:transparent; border-style:dashed; border-left-style:dashed; border-left-color:var(--line-act);}
+  .topic-card.editing{border-color:var(--edit); background:var(--panel-3);}
+  .topic-card .icon{width:34px; height:34px; border-radius:7px; background:rgba(255,255,255,0.05); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; margin-bottom:14px; color:var(--line-act);}
   .topic-card .icon svg{width:18px; height:18px;}
-  .topic-card h3{font-size:1.12rem; margin-bottom:8px; line-height:1.25;}
-  .topic-card .body-text{color:var(--sand-2); font-size:0.92rem; line-height:1.6; margin-bottom:12px;}
+  .topic-card h3{font-size:1.15rem; margin-bottom:8px; line-height:1.25;}
+  .topic-card .body-text{color:var(--paper-2); font-size:0.92rem; line-height:1.62; margin-bottom:12px;}
   .topic-card .body-text:last-child{margin-bottom:0;}
-  .kv{margin-top:10px;}
-  .kv-row{display:flex; gap:8px; margin-bottom:8px; font-size:0.88rem; line-height:1.55;}
-  .kv-row .k{font-family:'JetBrains Mono',monospace; font-size:0.66rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--accent); white-space:nowrap; padding-top:2px;}
-  .kv-row .v{color:var(--sand-2);}
+  .kv{margin-top:12px; border-top:1px dashed var(--line); padding-top:10px;}
+  .kv-row{display:flex; gap:10px; margin-bottom:8px; font-size:0.88rem; line-height:1.55;}
+  .kv-row .k{font-family:var(--font-mono); font-size:0.64rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--accent); white-space:nowrap; padding-top:2px;}
+  .kv-row .v{color:var(--paper-2);}
 
-  .empty-country{padding:60px 20px; text-align:center; border:1px dashed var(--line); border-radius:18px; color:var(--muted);}
-  .empty-country h3{color:var(--sand-2); margin-bottom:10px; font-size:1.3rem;}
+  .empty-country{padding:60px 20px; text-align:center; border:1px dashed var(--line-strong); border-radius:10px; color:var(--muted);}
+  .empty-country h3{color:var(--paper-2); margin-bottom:10px; font-size:1.3rem;}
 
-  .disclaimer{margin-top:40px; padding:16px 18px; border-radius:12px; background:rgba(0,0,0,0.2); border:1px dashed var(--line); font-size:0.78rem; color:var(--muted); line-height:1.6;}
+  .disclaimer{margin-top:40px; padding:14px 16px; border-radius:8px; background:rgba(4,7,14,0.45); border:1px dashed var(--line-strong); font-size:0.76rem; color:var(--muted); line-height:1.6;}
 
-  .sources-panel{margin-top:32px; padding:20px 22px; border-radius:16px; background:var(--panel); border:1px solid var(--line);}
+  /* sources + NGO panels */
+  .sources-panel{margin-top:32px; padding:18px 20px; border-radius:10px; background:var(--panel); border:1px solid var(--line);}
   .sources-links{display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;}
   .source-chip{
-    display:inline-flex; align-items:center; gap:6px; background:rgba(193,101,47,0.12); border:1px solid rgba(193,101,47,0.35);
-    color:var(--paper); padding:8px 14px; border-radius:100px; font-size:0.78rem; text-decoration:none; transition:.2s ease;
+    display:inline-flex; align-items:center; gap:6px; background:var(--panel-3); border:1px solid var(--line-strong);
+    color:var(--paper); padding:8px 14px; border-radius:6px; font-size:0.76rem; text-decoration:none; transition:.2s ease; font-family:var(--font-mono);
   }
-  .source-chip:hover{background:rgba(193,101,47,0.22); border-color:var(--accent);}
-  .sources-note{margin-top:12px; font-size:0.74rem; color:var(--muted); line-height:1.6;}
-
-  .ngo-panel{margin-top:28px; padding:20px 22px; border-radius:16px; border:1px dashed var(--line);}
-  .ngo-item{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px solid var(--line);}
+  .source-chip:hover{background:rgba(255,200,87,0.10); border-color:var(--accent);}
+  .sources-note{margin-top:12px; font-size:0.72rem; color:var(--muted); line-height:1.6;}
+  .ngo-panel{margin-top:26px; padding:18px 20px; border-radius:10px; border:1px dashed var(--line-strong);}
+  .ngo-item{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:12px 0 12px 18px; border-bottom:1px solid var(--line); position:relative;}
+  .ngo-item::before{content:""; position:absolute; left:2px; top:20px; width:8px; height:8px; border-radius:50%; background:var(--line-act); opacity:0.8;}
   .ngo-item:last-child{border-bottom:none;}
-  .ngo-item .ngo-name{font-family:'Fraunces',serif; font-weight:600; font-size:1rem;}
-  .ngo-item .ngo-note{color:var(--sand-2); font-size:0.85rem; line-height:1.5; margin-top:2px;}
-  .ngo-item a{color:var(--accent); font-size:0.82rem; text-decoration:none;}
+  .ngo-item .ngo-name{font-family:var(--font-display); font-weight:600; font-size:1rem; text-transform:uppercase; letter-spacing:0.02em;}
+  .ngo-item .ngo-note{color:var(--paper-2); font-size:0.85rem; line-height:1.5; margin-top:2px;}
+  .ngo-item a{color:var(--accent); font-size:0.80rem; text-decoration:none; font-family:var(--font-mono); text-transform:uppercase; letter-spacing:0.05em;}
   .ngo-item a:hover{text-decoration:underline;}
   .ngo-empty{color:var(--muted); font-size:0.85rem; font-style:italic;}
   .ngo-edit-row{display:grid; grid-template-columns:1fr 1fr 1.4fr auto; gap:8px; padding:10px 0; border-bottom:1px solid var(--line); align-items:start;}
   @media (max-width:700px){ .ngo-edit-row{grid-template-columns:1fr;} }
   .add-ngo-btn{margin-top:14px;}
 
+  /* about + org directory */
   .about-photo-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:14px;}
   @media (max-width:760px){ .about-photo-grid{grid-template-columns:1fr;} }
-  .about-photo{
-    border-radius:16px; overflow:hidden; aspect-ratio:4/3; background:var(--panel); border:1px solid var(--line);
-    display:flex; align-items:center; justify-content:center;
-  }
+  .about-photo{border-radius:10px; overflow:hidden; aspect-ratio:4/3; background:var(--panel); border:1px solid var(--line); display:flex; align-items:center; justify-content:center;}
   .about-photo img{width:100%; height:100%; object-fit:cover; display:block;}
-
-  .org-item{
-    background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:18px 20px; margin-bottom:12px;
-    display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap;
-  }
-  .org-item .org-name{font-family:'Fraunces',serif; font-weight:600; font-size:1.05rem; margin-bottom:4px;}
-  .org-item .org-desc{color:var(--sand-2); font-size:0.88rem; line-height:1.55; max-width:60ch;}
-  .org-item .org-contact{color:var(--muted); font-size:0.8rem; margin-top:6px;}
-  .org-item a{color:var(--accent); text-decoration:none; font-size:0.85rem;}
+  .org-item{background:var(--panel); border:1px solid var(--line); border-left:5px solid var(--line-strong); border-radius:10px; padding:18px 20px; margin-bottom:12px;
+    display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap;}
+  .org-item .org-name{font-family:var(--font-display); font-weight:600; font-size:1.05rem; text-transform:uppercase; margin-bottom:4px;}
+  .org-item .org-desc{color:var(--paper-2); font-size:0.88rem; line-height:1.55; max-width:60ch;}
+  .org-item .org-contact{color:var(--muted); font-size:0.80rem; margin-top:6px;}
+  .org-item a{color:var(--accent); text-decoration:none; font-size:0.82rem;}
   .org-item a:hover{text-decoration:underline;}
   .org-edit-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;}
   @media (max-width:700px){ .org-edit-grid{grid-template-columns:1fr;} }
 
-  .back-strip{margin-top:44px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;}
-  .link-btn{background:none; border:1px solid var(--line); color:var(--sand-2); padding:11px 18px; border-radius:100px; cursor:pointer; font-size:0.82rem; display:inline-flex; align-items:center; gap:8px; transition:.2s ease;}
+  .back-strip{margin-top:40px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;}
+  .link-btn{background:none; border:1px solid var(--line-strong); color:var(--paper-2); padding:11px 18px; border-radius:6px; cursor:pointer;
+    font-size:0.76rem; display:inline-flex; align-items:center; gap:8px; transition:.2s ease;
+    font-family:var(--font-mono); text-transform:uppercase; letter-spacing:0.07em;}
   .link-btn:hover{border-color:var(--accent); color:var(--paper);}
   .link-btn svg{width:14px; height:14px;}
 
-  /* --- edit-mode chrome --- */
-  .edit-toolbar{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px;}
+  /* ---- edit-mode chrome ---- */
   .mini-btn{
-    border:1px dashed var(--line); background:none; color:var(--sand-2); padding:8px 12px; border-radius:10px; cursor:pointer;
-    font-size:0.76rem; font-family:'JetBrains Mono',monospace; display:inline-flex; align-items:center; gap:6px;
+    border:1px dashed var(--line-strong); background:none; color:var(--paper-2); padding:8px 12px; border-radius:6px; cursor:pointer;
+    font-size:0.70rem; font-family:var(--font-mono); display:inline-flex; align-items:center; gap:6px; text-transform:uppercase; letter-spacing:0.06em;
   }
-  .mini-btn:hover{border-color:var(--accent); color:var(--paper);}
-  .mini-btn.danger{color:#e08c7d;}
-  .mini-btn.danger:hover{border-color:var(--danger); color:#ff9a8a;}
+  .mini-btn:hover{border-color:var(--edit); color:var(--paper);}
+  .mini-btn.danger{color:#ff9aa4;}
+  .mini-btn.danger:hover{border-color:var(--danger); color:#ffb9c0;}
   .card-toolbar{display:flex; gap:6px; flex-wrap:wrap; margin-top:14px; padding-top:12px; border-top:1px dashed var(--line);}
   .kv-edit-row{display:flex; gap:6px; margin-bottom:8px; align-items:flex-start;}
   .kv-edit-row input{flex:0 0 140px;}
   .kv-edit-row textarea{flex:1; min-height:44px;}
-  .para-edit-row{display:flex; gap:6px; margin-bottom:8px; align-items:flex-start;}
-  .para-edit-row textarea{flex:1;}
   .row-del{background:var(--danger); border:none; color:#fff; width:26px; height:26px; border-radius:6px; cursor:pointer; flex-shrink:0; font-size:0.8rem;}
-  .add-topic-card{
-    display:flex; align-items:center; justify-content:center; min-height:140px; border:1px dashed var(--edit); border-radius:16px;
-    color:var(--edit); cursor:pointer; font-family:'JetBrains Mono',monospace; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em;
-  }
-  .add-topic-card:hover{background:rgba(91,141,174,0.1);}
+  .add-topic-card{display:flex; align-items:center; justify-content:center; min-height:140px; border:1px dashed var(--edit); border-radius:10px;
+    color:var(--edit); cursor:pointer; font-family:var(--font-mono); font-size:0.78rem; text-transform:uppercase; letter-spacing:0.06em;}
+  .add-topic-card:hover{background:rgba(89,194,255,0.08);}
 
-  footer.foot{max-width:1180px; margin:60px auto 0; padding:24px 28px; border-top:1px solid var(--line); display:flex; justify-content:space-between; color:var(--muted); font-size:0.72rem; font-family:'JetBrains Mono',monospace; flex-wrap:wrap; gap:14px; align-items:center;}
+  footer.foot{max-width:1240px; margin:56px auto 0; padding:22px 28px; border-top:1px solid var(--line); display:flex; justify-content:space-between;
+    color:var(--muted); font-size:0.68rem; font-family:var(--font-mono); flex-wrap:wrap; gap:14px; align-items:center; letter-spacing:0.04em;}
   footer.foot .data-actions{display:flex; gap:8px;}
   #import-file{display:none;}
 
-  /* --- Globe Focus hero: side-by-side with ~35% larger globe --- */
-  .hero-globe{grid-template-columns:minmax(0,1fr) minmax(0,1.55fr); gap:36px; min-height:88vh;}
-  .hero-globe .globe-stage{height:min(86vh, 810px);}
-  .hero-globe .hero-copy h1{font-size:clamp(2.2rem,3.6vw,3.4rem);}
-  @media (max-width:940px){
-    .hero-globe{grid-template-columns:1fr; min-height:auto; gap:24px;}
-    .hero-globe .globe-stage{height:min(60vh, 480px);}
-  }
-
-  /* --- RTL (Arabic) --- */
+  /* ---- RTL (Arabic) ---- */
   [dir="rtl"] .topbar{flex-direction:row-reverse;}
   [dir="rtl"] .crumbs{flex-direction:row-reverse;}
   [dir="rtl"] .back-strip{flex-direction:row-reverse;}
-  [dir="rtl"] .country-card:hover{transform:translateX(-4px);}
+  [dir="rtl"] .country-card:hover{transform:translateX(-6px);}
   [dir="rtl"] .country-card:hover .arrow{transform:translateX(-3px);}
   [dir="rtl"] .country-card .arrow svg,[dir="rtl"] .cta svg,[dir="rtl"] .link-btn svg{transform:scaleX(-1);}
   [dir="rtl"] .del-x{right:auto; left:8px;}
+  [dir="rtl"] .region-card::before{right:auto; left:14px;}
   [dir="rtl"] .country-hero{text-align:right;}
+  [dir="rtl"] .country-grid::before{left:auto; right:22px;}
+  [dir="rtl"] .country-card{padding-left:18px; padding-right:44px;}
+  [dir="rtl"] .country-card::before{left:auto; right:13px;}
+  [dir="rtl"] .route-steps{flex-direction:row-reverse;}
+  [dir="rtl"] .route-rail{flex-direction:row-reverse;}
+  [dir="rtl"] .rail-seg::after{right:auto; left:-8px;}
+  [dir="rtl"] .wf-accent svg{transform:scaleX(-1);}
   [dir="rtl"] .kv-edit-row input{flex-basis:auto;}
 
-  /* --- CKEditor edit modal --- */
-  .modal-overlay{position:fixed; inset:0; background:rgba(15,9,6,0.75); z-index:60; display:flex; align-items:center; justify-content:center; padding:22px;}
+  /* ---- CKEditor edit modal ---- */
+  .modal-overlay{position:fixed; inset:0; background:rgba(4,7,14,0.82); z-index:60; display:flex; align-items:center; justify-content:center; padding:22px; backdrop-filter:blur(3px);}
   .modal-overlay[hidden]{display:none;}
-  .modal{background:var(--panel); border:1px solid var(--line); border-radius:18px; width:min(880px, 96vw); max-height:92vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:var(--shadow);}
-  .modal-head{display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--line);}
-  .modal-head h3{font-size:1.15rem;}
-  .modal-close{background:none; border:none; color:var(--muted); font-size:1.5rem; line-height:1; cursor:pointer; padding:2px 8px; border-radius:8px;}
-  .modal-close:hover{color:var(--paper); background:rgba(0,0,0,0.25);}
+  .modal{background:var(--panel); border:1px solid var(--line-strong); border-radius:12px; width:min(880px, 96vw); max-height:92vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:var(--shadow);}
+  .modal-head{display:flex; align-items:center; justify-content:space-between; padding:14px 20px; border-bottom:1px solid var(--line); background:var(--bg-2);}
+  .modal-head h3{font-size:0.95rem; letter-spacing:0.12em;}
+  .modal-close{background:none; border:none; color:var(--muted); font-size:1.5rem; line-height:1; cursor:pointer; padding:2px 8px; border-radius:6px;}
+  .modal-close:hover{color:var(--paper); background:rgba(255,255,255,0.06);}
   .modal-body{overflow-y:auto; padding:18px 20px; display:flex; flex-direction:column; gap:16px;}
-  .modal-card-title{font-family:'Fraunces','Noto Naskh Arabic',serif; font-weight:600; font-size:1.25rem;}
+  .modal-card-title{font-family:var(--font-display); font-weight:600; font-size:1.3rem; text-transform:uppercase; letter-spacing:0.02em;}
   .modal-actions{display:flex; justify-content:flex-end; gap:12px; padding:16px 20px; border-top:1px solid var(--line);}
-  .modal-actions .cta{padding:12px 22px; font-size:0.78rem;}
+  .modal-actions .cta{padding:12px 22px; font-size:0.76rem;}
   .modal-kv{border-top:1px dashed var(--line); padding-top:14px;}
   .modal-kv .eyebrow{display:block; margin-bottom:10px;}
   #modal-editor-host{min-height:0;}
   .modal-body .ck-editor__editable{min-height:230px; max-height:40vh; overflow-y:auto; border-radius:0 0 8px 8px;}
   .ck.ck-editor{
-    --ck-color-base-background:#3a271b; --ck-color-base-border:#6b4a2e; --ck-color-base-text:#f5ecd9;
-    --ck-color-toolbar-background:#2e1e15; --ck-color-toolbar-border:#6b4a2e;
-    --ck-color-button-default-background:#2e1e15; --ck-color-button-default-hover-background:#4a3020; --ck-color-button-default-active-background:#4a3020;
-    --ck-color-panel-background:#3a271b; --ck-color-input-background:#3a271b; --ck-color-input-text:#f5ecd9;
-    --ck-color-dropdown-panel-background:#3a271b; --ck-color-link-default:#8fb7d4; --ck-color-editor-background:#2a1a11;
-    --ck-color-focus-border:#c1652f; --ck-color-widget-hover-border:#c1652f;
+    --ck-color-base-background:#141d33; --ck-color-base-border:#2b3a63; --ck-color-base-text:#eef2fb;
+    --ck-color-toolbar-background:#0e1526; --ck-color-toolbar-border:#2b3a63;
+    --ck-color-button-default-background:#0e1526; --ck-color-button-default-hover-background:#1a2440; --ck-color-button-default-active-background:#1a2440;
+    --ck-color-panel-background:#141d33; --ck-color-input-background:#141d33; --ck-color-input-text:#eef2fb;
+    --ck-color-dropdown-panel-background:#141d33; --ck-color-link-default:#8fc7ff; --ck-color-editor-background:#0c1220;
+    --ck-color-focus-border:#ffc857; --ck-color-widget-hover-border:#ffc857;
   }
   .ck.ck-editor .ck-content{color:var(--paper);}
 </style>
 </head>
 <body>
-
-<div class="grat-wash"></div>
+<div class="grid-wash"></div>
 
 <div class="shell">
   <header class="topbar">
@@ -336,48 +417,140 @@
       </button>
     </div>
   </header>
+
+  <div class="edit-banner" role="status"><span data-i18n="wf_edit_banner">Underhållsläge · Ändringar sparas lokalt i webbläsaren</span></div>
+
+  <div class="status-strip" aria-label="system status">
+    <span class="ss-item"><span class="ss-dot"></span><span data-i18n="wf_status_online">Systemet är aktivt</span></span>
+    <span class="ss-sep"></span>
+    <span class="ss-item"><span class="ss-k" data-i18n="wf_status_lines">Världsdelar</span><b class="ss-v" data-fact="regions">9</b></span>
+    <span class="ss-item"><span class="ss-k" data-i18n="wf_status_countries">Länder</span><b class="ss-v" data-fact="countries">44</b></span>
+    <span class="ss-item"><span class="ss-k" data-i18n="wf_status_langs">Språk</span><b class="ss-v" data-fact="langs">4</b></span>
+    <span class="ss-sep"></span>
+    <span class="ss-item" data-i18n="wf_status_storage">Lagring: SQLite i webbläsaren</span>
+  </div>
+
   <nav class="crumbs" id="crumbs"></nav>
 
   <section id="view-start" class="view active">
-    <div class="hero hero-globe">
-      <div class="hero-copy">
-        <span class="eyebrow" data-i18n="hero_eyebrow">Migrationsverket · organiserad sysselsättning</span>
-        <h1 data-i18n-html="hero_h1">Var vill du bygga<br><span class="stroke">ditt nästa kapitel</span>?</h1>
-        <p class="lede" data-i18n="hero_lede">En samlad guide till affärsmöjligheter, stödprogram och praktiska första steg — oavsett vilket land du är på väg tillbaka till.</p>
+    <div class="start-board">
+      <div class="signage">
+        <span class="eyebrow"><span class="eyebrow-dot"></span><span data-i18n="wf_eyebrow">GeoBas · systemkarta för återetablering</span></span>
+        <h1 class="wf-title">
+          <span class="wf-line" data-i18n="wf_title_a">Din rutt</span>
+          <span class="wf-line wf-accent">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            <span data-i18n="wf_title_b">börjar här</span>
+          </span>
+        </h1>
+        <p class="lede" data-i18n="wf_lede">Välj världsdel och land — här finns affärsmöjligheter, stödprogram och praktiska första steg, steg för steg.</p>
         <div class="cta-row">
           <button class="cta" id="btn-start" type="button">
-            <span data-i18n="hero_cta">Tryck här för att gå vidare</span>
+            <span data-i18n="wf_cta">Börja din rutt</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </button>
-          <button class="cta cta-secondary" data-nav="about" data-i18n="hero_cta_secondary" type="button">
-            Om oss &amp; våra samarbeten
-          </button>
+          <button class="cta cta-secondary" data-nav="about" data-i18n="hero_cta_secondary" type="button">Om oss &amp; våra samarbeten</button>
         </div>
-        <p class="hint" data-i18n="hero_hint">Dra i globen för att rotera · håll musen över den för att pausa · tryck på en prick för att välja region</p>
+        <p class="hint" data-i18n="wf_hint">Kartan är en översikt — välj din linje i steg 1.</p>
+        <div class="route-steps">
+          <div class="rstep">
+            <span class="rstep-n">1</span>
+            <div class="rstep-c"><span class="rstep-t" data-i18n="wf_step1_label">Välj region</span><span class="rstep-s" data-i18n="wf_step1_sub">9 världsdelar</span></div>
+          </div>
+          <div class="rstep">
+            <span class="rstep-n">2</span>
+            <div class="rstep-c"><span class="rstep-t" data-i18n="wf_step2_label">Välj land</span><span class="rstep-s" data-i18n="wf_step2_sub">Destinationer på linjen</span></div>
+          </div>
+          <div class="rstep">
+            <span class="rstep-n">3</span>
+            <div class="rstep-c"><span class="rstep-t" data-i18n="wf_step3_label">Läs &amp; planera</span><span class="rstep-s" data-i18n="wf_step3_sub">Affärsidéer, stöd &amp; organisationer</span></div>
+          </div>
+        </div>
       </div>
-      <div class="globe-stage">
-        <div id="globe-canvas-wrap"><div class="globe-loading" data-i18n="globe_loading">Laddar databas &amp; jordglob…</div></div>
+      <div class="map-col">
+        <div class="map-plate">
+          <div class="map-head">
+            <span class="map-title" data-i18n="wf_map_title">Systemkarta</span>
+            <span class="map-code">GB·01</span>
+          </div>
+          <svg class="system-map" viewBox="0 0 560 360" role="img" data-i18n-aria="wf_map_aria" aria-label="Systemkarta över världsdelarna">
+            <defs>
+              <pattern id="mggrid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M40 0H0V40" fill="none" stroke="rgba(139,160,205,0.08)" stroke-width="1"/>
+              </pattern>
+            </defs>
+            <rect width="560" height="360" fill="url(#mggrid)"/>
+            <circle cx="100" cy="190" r="13" fill="none" stroke="#eef2fb" stroke-width="2" opacity="0.85"/>
+            <circle cx="100" cy="190" r="5" fill="#eef2fb"/>
+            <text x="100" y="166" class="map-hub" data-i18n="wf_map_hub">Här · Sverige</text>
+            <path class="mline" d="M100 190 Q 120 300, 150 330" stroke="var(--c1)"/>
+            <path class="mline" d="M100 190 Q 100 260, 120 272" stroke="var(--c2)"/>
+            <path class="mline" d="M100 190 Q 170 110, 250 78" stroke="var(--c3)"/>
+            <path class="mline" d="M100 190 Q 220 120, 322 100" stroke="var(--c4)"/>
+            <path class="mline" d="M100 190 Q 240 170, 352 162" stroke="var(--c5)"/>
+            <path class="mline" d="M100 190 Q 280 140, 424 120" stroke="var(--c6)"/>
+            <path class="mline" d="M100 190 Q 190 230, 268 242" stroke="var(--c7)"/>
+            <path class="mline" d="M100 190 Q 170 190, 232 178" stroke="var(--c8)"/>
+            <path class="mline" d="M100 190 Q 210 210, 312 214" stroke="var(--c9)"/>
+            <g class="mstation"><circle cx="150" cy="330" r="7.5" fill="var(--c1)" stroke="#0a0f1c" stroke-width="2.5"/><text x="166" y="334" class="map-label" data-i18n="wf_map_sydamerika">Syd Amerika</text></g>
+            <g class="mstation"><circle cx="120" cy="272" r="7.5" fill="var(--c2)" stroke="#0a0f1c" stroke-width="2.5"/><text x="136" y="276" class="map-label" data-i18n="wf_map_centralamerika">Central Amerika</text></g>
+            <g class="mstation"><circle cx="250" cy="78" r="7.5" fill="var(--c3)" stroke="#0a0f1c" stroke-width="2.5"/><text x="266" y="82" class="map-label" data-i18n="wf_map_europa">Europa</text></g>
+            <g class="mstation"><circle cx="322" cy="100" r="7.5" fill="var(--c4)" stroke="#0a0f1c" stroke-width="2.5"/><text x="338" y="104" class="map-label" data-i18n="wf_map_centralasien">Centralasien</text></g>
+            <g class="mstation"><circle cx="352" cy="162" r="7.5" fill="var(--c5)" stroke="#0a0f1c" stroke-width="2.5"/><text x="368" y="166" class="map-label" data-i18n="wf_map_sydasien">Syd Asien</text></g>
+            <g class="mstation"><circle cx="424" cy="120" r="7.5" fill="var(--c6)" stroke="#0a0f1c" stroke-width="2.5"/><text x="440" y="124" class="map-label" data-i18n="wf_map_asien">Asien</text></g>
+            <g class="mstation"><circle cx="268" cy="242" r="7.5" fill="var(--c7)" stroke="#0a0f1c" stroke-width="2.5"/><text x="284" y="246" class="map-label" data-i18n="wf_map_afrika">Afrika</text></g>
+            <g class="mstation"><circle cx="232" cy="178" r="7.5" fill="var(--c8)" stroke="#0a0f1c" stroke-width="2.5"/><text x="248" y="182" class="map-label" data-i18n="wf_map_nordafrika">Nord Afrika</text></g>
+            <g class="mstation"><circle cx="312" cy="214" r="7.5" fill="var(--c9)" stroke="#0a0f1c" stroke-width="2.5"/><text x="328" y="218" class="map-label" data-i18n="wf_map_mellanostern">Mellanöstern</text></g>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div class="fact-board">
+      <div class="fact-block">
+        <span class="fact-k" data-i18n="wf_fact_a_t">Tydlig vägvisning</span>
+        <span class="fact-d" data-i18n="wf_fact_a_d">Regioner som linjer, länder som stationer och steg som hållplatser.</span>
+      </div>
+      <div class="fact-block">
+        <span class="fact-k" data-i18n="wf_fact_b_t">Fyra språk</span>
+        <span class="fact-d" data-i18n="wf_fact_b_d">Svenska, engelska, spanska och arabiska — med RTL-stöd.</span>
+      </div>
+      <div class="fact-block">
+        <span class="fact-k" data-i18n="wf_fact_c_t">Säker lagring</span>
+        <span class="fact-d" data-i18n="wf_fact_c_d">Allt sparas lokalt i webbläsaren (SQLite) med export &amp; import.</span>
+      </div>
+      <div class="fact-block">
+        <span class="fact-k" data-i18n="wf_fact_d_t">Enkelt att redigera</span>
+        <span class="fact-d" data-i18n="wf_fact_d_d">Uppdatera innehållet direkt i portalen med CKEditor.</span>
       </div>
     </div>
   </section>
 
   <section id="view-regions" class="view">
-    <div class="page-head">
-      <div>
-        <span class="eyebrow" data-i18n="regions_eyebrow">Steg 1 av 3</span>
-        <h2 data-i18n="regions_title">Var kommer du ifrån?</h2>
-        <p data-i18n="regions_sub">Tryck på den världsdelen som du ska återvända till.</p>
+    <div class="view-head">
+      <div class="route-rail" aria-hidden="true">
+        <span class="rail-seg current"><span class="rail-n">1</span><span data-i18n="wf_rail_region">Region</span></span>
+        <span class="rail-seg"><span class="rail-n">2</span><span data-i18n="wf_rail_country">Land</span></span>
+        <span class="rail-seg"><span class="rail-n">3</span><span data-i18n="wf_rail_plan">Planera</span></span>
+      </div>
+      <div class="page-head">
+        <div>
+          <span class="eyebrow"><span class="eyebrow-dot"></span><span data-i18n="regions_eyebrow">Steg 1 av 3</span></span>
+          <h2 data-i18n="regions_title">Var kommer du ifrån?</h2>
+          <p data-i18n="regions_sub">Tryck på den världsdel du ska återvända till.</p>
+        </div>
       </div>
     </div>
     <div class="region-grid" id="region-grid"></div>
   </section>
 
   <section id="view-about" class="view">
-    <div class="page-head">
-      <div>
-        <span class="eyebrow" data-i18n="about_eyebrow">Om oss</span>
-        <h2 data-i18n="about_title">Vilka vi är &amp; vad vi erbjuder</h2>
-        <p data-i18n="about_sub">Allt material nedan finns även samlat i vår folder, tillsammans med fullständiga kontaktuppgifter.</p>
+    <div class="view-head">
+      <div class="page-head">
+        <div>
+          <span class="eyebrow"><span class="eyebrow-dot"></span><span data-i18n="about_eyebrow">Om oss</span></span>
+          <h2 data-i18n="about_title">Vilka vi är &amp; vad vi erbjuder</h2>
+          <p data-i18n="about_sub">Allt material nedan finns även samlat i vår folder, tillsammans med fullständiga kontaktuppgifter.</p>
+        </div>
       </div>
     </div>
     <div class="about-photo-grid" id="about-photo-grid"></div>
@@ -389,10 +562,12 @@
         <p class="body-text" data-i18n="about_offer_p2">Genom våra samarbetspartners kan du få hjälp med allt från ekonomiskt återetableringsstöd till praktisk vägledning på plats i ditt hemland.</p>
       </div>
     </div>
-    <div class="page-head" style="margin-top:44px;">
-      <div>
-        <span class="eyebrow" data-i18n="contact_eyebrow">Kontakt</span>
-        <h2 style="font-size:1.6rem;" data-i18n="contact_title">Lokala organisationer &amp; samarbeten</h2>
+    <div class="view-head" style="margin-top:40px;">
+      <div class="page-head">
+        <div>
+          <span class="eyebrow"><span class="eyebrow-dot"></span><span data-i18n="contact_eyebrow">Kontakt</span></span>
+          <h2 style="font-size:1.5rem;" data-i18n="contact_title">Lokala organisationer &amp; samarbeten</h2>
+        </div>
       </div>
     </div>
     <div id="org-directory-list"></div>
@@ -405,11 +580,13 @@
   </section>
 
   <section id="view-resources" class="view">
-    <div class="page-head">
-      <div>
-        <span class="eyebrow" data-i18n="resources_eyebrow">Egenstudier</span>
-        <h2 data-i18n="resources_title">Studera på egen hand</h2>
-        <p data-i18n="resources_sub">Gratis och kostnadseffektiva resurser för CV, språk, översättning och vidareutbildning — oavsett var du befinner dig i processen.</p>
+    <div class="view-head">
+      <div class="page-head">
+        <div>
+          <span class="eyebrow"><span class="eyebrow-dot"></span><span data-i18n="resources_eyebrow">Egenstudier</span></span>
+          <h2 data-i18n="resources_title">Studera på egen hand</h2>
+          <p data-i18n="resources_sub">Gratis och kostnadseffektiva resurser för CV, språk, översättning och vidareutbildning — oavsett var du befinner dig i processen.</p>
+        </div>
       </div>
     </div>
     <div id="resources-list"></div>
@@ -422,11 +599,18 @@
   </section>
 
   <section id="view-countries" class="view">
-    <div class="page-head">
-      <div>
-        <span class="eyebrow" id="countries-eyebrow" data-i18n="countries_eyebrow">Steg 2 av 3</span>
-        <h2 id="countries-title">Region</h2>
-        <p data-i18n="countries_sub">Välj land för att läsa affärsmöjligheter, stödprogram och hur du kommer igång.</p>
+    <div class="view-head">
+      <div class="route-rail" aria-hidden="true">
+        <span class="rail-seg done"><span class="rail-n">1</span><span data-i18n="wf_rail_region">Region</span></span>
+        <span class="rail-seg current"><span class="rail-n">2</span><span data-i18n="wf_rail_country">Land</span></span>
+        <span class="rail-seg"><span class="rail-n">3</span><span data-i18n="wf_rail_plan">Planera</span></span>
+      </div>
+      <div class="page-head">
+        <div>
+          <span class="eyebrow"><span class="line-swatch"></span><span id="countries-eyebrow" data-i18n="countries_eyebrow">Steg 2 av 3</span></span>
+          <h2 id="countries-title">Region</h2>
+          <p data-i18n="countries_sub">Välj land för att läsa affärsmöjligheter, stödprogram och hur du kommer igång.</p>
+        </div>
       </div>
     </div>
     <div class="country-grid" id="country-grid"></div>
@@ -439,14 +623,25 @@
   </section>
 
   <section id="view-country" class="view">
-    <div class="country-hero">
-      <div class="badge-globe" id="country-badge-globe"></div>
-      <div style="width:100%;">
-        <span class="eyebrow region-tag" id="country-region-tag">Region</span>
-        <h2 id="country-name-static"></h2>
-        <input id="country-name-edit" class="edit-field title-field" style="display:none;" />
-        <p class="lede" id="country-intro-static"></p>
-        <textarea id="country-intro-edit" class="edit-field" style="display:none;"></textarea>
+    <div class="view-head">
+      <div class="route-rail" aria-hidden="true">
+        <span class="rail-seg done"><span class="rail-n">1</span><span data-i18n="wf_rail_region">Region</span></span>
+        <span class="rail-seg done"><span class="rail-n">2</span><span data-i18n="wf_rail_country">Land</span></span>
+        <span class="rail-seg current"><span class="rail-n">3</span><span data-i18n="wf_rail_plan">Planera</span></span>
+      </div>
+      <div class="country-hero">
+        <div class="badge-globe" id="country-badge-globe"></div>
+        <div class="dest-copy">
+          <div class="chip-row">
+            <span class="chip"><span class="chip-k" data-i18n="wf_k_region">Region</span><span class="chip-v" id="country-region-tag">Region</span></span>
+            <span class="chip"><span class="chip-k" data-i18n="wf_k_source">Källa</span><span class="chip-v" data-i18n="wf_k_source_v">Migrationsverket · landinfo 2026</span></span>
+            <span class="chip"><span class="chip-k" data-i18n="wf_k_ready">Status</span><span class="chip-v ready" data-i18n="wf_k_ready_v">Klar att läsa</span></span>
+          </div>
+          <h2 id="country-name-static"></h2>
+          <input id="country-name-edit" class="edit-field title-field" style="display:none;" />
+          <p class="lede" id="country-intro-static"></p>
+          <textarea id="country-intro-edit" class="edit-field" style="display:none;"></textarea>
+        </div>
       </div>
     </div>
     <div class="topics-grid" id="topics-grid"></div>
@@ -464,7 +659,7 @@
 
     <div class="ngo-panel">
       <div class="page-head" style="margin:0 0 16px;">
-        <div><span class="eyebrow" data-i18n="ngo_eyebrow">Lokala organisationer</span><h2 style="font-size:1.3rem;" data-i18n="ngo_title">NGOs i landet</h2></div>
+        <div><span class="eyebrow" data-i18n="ngo_eyebrow">Lokala organisationer</span><h2 style="font-size:1.25rem;" data-i18n="ngo_title">NGOs i landet</h2></div>
       </div>
       <div id="ngo-list"></div>
     </div>
@@ -510,7 +705,6 @@
     </div>
   </div>
 </div>
-
 <script>
 /* =====================================================================
    SEED DATA (Swedish, extracted from source PPTX)
@@ -716,6 +910,30 @@ const STRINGS = {
     modal_editor_placeholder:'Skriv eller klistra in innehåll här…',
     modal_editor_fallback:'Rich-text-editorn kunde inte laddas — du kan fortfarande redigera som vanlig text.',
     kv_label_placeholder:'Etikett', kv_value_placeholder:'Text',
+    wf_eyebrow:'GeoBas · systemkarta för återetablering',
+    wf_title_a:'Din rutt', wf_title_b:'börjar här',
+    wf_lede:'Välj världsdel och land — här finns affärsmöjligheter, stödprogram och praktiska första steg, steg för steg.',
+    wf_cta:'Börja din rutt',
+    wf_hint:'Kartan är en översikt — välj din linje i steg 1.',
+    wf_edit_banner:'Underhållsläge · Ändringar sparas lokalt i webbläsaren',
+    wf_status_online:'Systemet är aktivt', wf_status_lines:'Världsdelar',
+    wf_status_countries:'Länder', wf_status_langs:'Språk',
+    wf_status_storage:'Lagring: SQLite i webbläsaren',
+    wf_rail_region:'Region', wf_rail_country:'Land', wf_rail_plan:'Planera',
+    wf_step1_label:'Välj region', wf_step1_sub:'9 världsdelar',
+    wf_step2_label:'Välj land', wf_step2_sub:'Destinationer på linjen',
+    wf_step3_label:'Läs & planera', wf_step3_sub:'Affärsidéer, stöd & organisationer',
+    wf_map_title:'Systemkarta', wf_map_aria:'Systemkarta över världsdelarna, med startpunkt i Sverige',
+    wf_map_hub:'Här · Sverige',
+    wf_map_sydamerika:'Syd Amerika', wf_map_centralamerika:'Central Amerika', wf_map_europa:'Europa',
+    wf_map_centralasien:'Centralasien', wf_map_sydasien:'Syd Asien', wf_map_asien:'Asien',
+    wf_map_afrika:'Afrika', wf_map_nordafrika:'Nord Afrika', wf_map_mellanostern:'Mellanöstern',
+    wf_fact_a_t:'Tydlig vägvisning', wf_fact_a_d:'Regioner som linjer, länder som stationer och steg som hållplatser.',
+    wf_fact_b_t:'Fyra språk', wf_fact_b_d:'Svenska, engelska, spanska och arabiska — med RTL-stöd.',
+    wf_fact_c_t:'Säker lagring', wf_fact_c_d:'Allt sparas lokalt i webbläsaren (SQLite) med export & import.',
+    wf_fact_d_t:'Enkelt att redigera', wf_fact_d_d:'Uppdatera innehållet direkt i portalen med CKEditor.',
+    wf_k_region:'Region', wf_k_source:'Källa', wf_k_source_v:'Migrationsverket · landinfo 2026',
+    wf_k_ready:'Status', wf_k_ready_v:'Klar att läsa',
   },
   en: {
     doc_title:'GeoBas — Country information for returnees',
@@ -791,6 +1009,30 @@ const STRINGS = {
     modal_editor_placeholder:'Type or paste content here…',
     modal_editor_fallback:'The rich-text editor could not be loaded — you can still edit as plain text.',
     kv_label_placeholder:'Label', kv_value_placeholder:'Text',
+    wf_eyebrow:'GeoBas · wayfinding system for return',
+    wf_title_a:'Your route', wf_title_b:'starts here',
+    wf_lede:'Pick a region and a country — business opportunities, support programmes and practical first steps, step by step.',
+    wf_cta:'Start your route',
+    wf_hint:'The map is an overview — choose your line in step 1.',
+    wf_edit_banner:'Maintenance mode · Changes are saved locally in the browser',
+    wf_status_online:'System online', wf_status_lines:'Regions',
+    wf_status_countries:'Countries', wf_status_langs:'Languages',
+    wf_status_storage:'Storage: SQLite in the browser',
+    wf_rail_region:'Region', wf_rail_country:'Country', wf_rail_plan:'Plan',
+    wf_step1_label:'Choose region', wf_step1_sub:'9 world regions',
+    wf_step2_label:'Choose country', wf_step2_sub:'Destinations on the line',
+    wf_step3_label:'Read & plan', wf_step3_sub:'Business ideas, support & organisations',
+    wf_map_title:'System map', wf_map_aria:'System map of world regions, starting from Sweden',
+    wf_map_hub:'Here · Sweden',
+    wf_map_sydamerika:'South America', wf_map_centralamerika:'Central America', wf_map_europa:'Europe',
+    wf_map_centralasien:'Central Asia', wf_map_sydasien:'South Asia', wf_map_asien:'Asia',
+    wf_map_afrika:'Africa', wf_map_nordafrika:'North Africa', wf_map_mellanostern:'Middle East',
+    wf_fact_a_t:'Clear wayfinding', wf_fact_a_d:'Regions as lines, countries as stations, steps as stops.',
+    wf_fact_b_t:'Four languages', wf_fact_b_d:'Swedish, English, Spanish and Arabic — with RTL support.',
+    wf_fact_c_t:'Secure storage', wf_fact_c_d:'Everything is stored locally in the browser (SQLite) with export & import.',
+    wf_fact_d_t:'Easy to edit', wf_fact_d_d:'Update content directly in the portal with CKEditor.',
+    wf_k_region:'Region', wf_k_source:'Source', wf_k_source_v:'Swedish Migration Agency · country info 2026',
+    wf_k_ready:'Status', wf_k_ready_v:'Ready to read',
   },
   es: {
     doc_title:'GeoBas — Información de países para retornados',
@@ -866,6 +1108,30 @@ const STRINGS = {
     modal_editor_placeholder:'Escribe o pega contenido aquí…',
     modal_editor_fallback:'No se pudo cargar el editor de texto enriquecido — aún puedes editar como texto plano.',
     kv_label_placeholder:'Etiqueta', kv_value_placeholder:'Texto',
+    wf_eyebrow:'GeoBas · sistema de orientación para el retorno',
+    wf_title_a:'Tu ruta', wf_title_b:'empieza aquí',
+    wf_lede:'Elige una región y un país: oportunidades de negocio, programas de apoyo y primeros pasos prácticos, paso a paso.',
+    wf_cta:'Inicia tu ruta',
+    wf_hint:'El mapa es una vista general: elige tu línea en el paso 1.',
+    wf_edit_banner:'Modo mantenimiento · Los cambios se guardan localmente en el navegador',
+    wf_status_online:'Sistema activo', wf_status_lines:'Regiones',
+    wf_status_countries:'Países', wf_status_langs:'Idiomas',
+    wf_status_storage:'Almacenamiento: SQLite en el navegador',
+    wf_rail_region:'Región', wf_rail_country:'País', wf_rail_plan:'Planifica',
+    wf_step1_label:'Elige región', wf_step1_sub:'9 regiones del mundo',
+    wf_step2_label:'Elige país', wf_step2_sub:'Destinos en la línea',
+    wf_step3_label:'Lee y planifica', wf_step3_sub:'Ideas, apoyo y organizaciones',
+    wf_map_title:'Mapa del sistema', wf_map_aria:'Mapa del sistema de regiones del mundo, desde Suecia',
+    wf_map_hub:'Aquí · Suecia',
+    wf_map_sydamerika:'Sudamérica', wf_map_centralamerika:'Centroamérica', wf_map_europa:'Europa',
+    wf_map_centralasien:'Asia Central', wf_map_sydasien:'Asia del Sur', wf_map_asien:'Asia',
+    wf_map_afrika:'África', wf_map_nordafrika:'Norte de África', wf_map_mellanostern:'Oriente Medio',
+    wf_fact_a_t:'Señalización clara', wf_fact_a_d:'Regiones como líneas, países como estaciones y pasos como paradas.',
+    wf_fact_b_t:'Cuatro idiomas', wf_fact_b_d:'Sueco, inglés, español y árabe, con soporte RTL.',
+    wf_fact_c_t:'Almacenamiento seguro', wf_fact_c_d:'Todo se guarda localmente en el navegador (SQLite) con exportación e importación.',
+    wf_fact_d_t:'Fácil de editar', wf_fact_d_d:'Actualiza el contenido directamente en el portal con CKEditor.',
+    wf_k_region:'Región', wf_k_source:'Fuente', wf_k_source_v:'Agencia de Migración · información 2026',
+    wf_k_ready:'Estado', wf_k_ready_v:'Listo para leer',
   },
   ar: {
     doc_title:'GeoBas — معلومات بلدية للعائدين',
@@ -941,6 +1207,30 @@ const STRINGS = {
     modal_editor_placeholder:'اكتب أو ألصق المحتوى هنا…',
     modal_editor_fallback:'تعذر تحميل محرر النصوص المنسقة — لا يزال بإمكانك التعديل كنص عادي.',
     kv_label_placeholder:'التسمية', kv_value_placeholder:'نص',
+    wf_eyebrow:'جيو باس · نظام إرشاد للعودة',
+    wf_title_a:'مسارك', wf_title_b:'يبدأ هنا',
+    wf_lede:'اختر منطقة وبلداً — فرص الأعمال وبرامج الدعم والخطوات العملية الأولى، خطوة بخطوة.',
+    wf_cta:'ابدأ مسارك',
+    wf_hint:'الخريطة نظرة عامة — اختر خطك في الخطوة 1.',
+    wf_edit_banner:'وضع الصيانة · تُحفظ التغييرات محلياً في المتصفح',
+    wf_status_online:'النظام يعمل', wf_status_lines:'المناطق',
+    wf_status_countries:'البلدان', wf_status_langs:'اللغات',
+    wf_status_storage:'التخزين: SQLite في المتصفح',
+    wf_rail_region:'المنطقة', wf_rail_country:'البلد', wf_rail_plan:'خطط',
+    wf_step1_label:'اختر المنطقة', wf_step1_sub:'9 مناطق عالمية',
+    wf_step2_label:'اختر البلد', wf_step2_sub:'وجهات على الخط',
+    wf_step3_label:'اقرأ وخطط', wf_step3_sub:'أفكار ودعم ومنظمات',
+    wf_map_title:'خريطة النظام', wf_map_aria:'خريطة نظام لمناطق العالم، بدءاً من السويد',
+    wf_map_hub:'هنا · السويد',
+    wf_map_sydamerika:'أمريكا الجنوبية', wf_map_centralamerika:'أمريكا الوسطى', wf_map_europa:'أوروبا',
+    wf_map_centralasien:'آسيا الوسطى', wf_map_sydasien:'جنوب آسيا', wf_map_asien:'آسيا',
+    wf_map_afrika:'أفريقيا', wf_map_nordafrika:'شمال أفريقيا', wf_map_mellanostern:'الشرق الأوسط',
+    wf_fact_a_t:'إرشاد واضح', wf_fact_a_d:'مناطق كخطوط، وبلدان كمحطات، وخطوات كمحطات توقف.',
+    wf_fact_b_t:'أربع لغات', wf_fact_b_d:'السويدية والإنجليزية والإسبانية والعربية — مع دعم RTL.',
+    wf_fact_c_t:'تخزين آمن', wf_fact_c_d:'يُحفظ كل شيء محلياً في المتصفح (SQLite) مع تصدير واستيراد.',
+    wf_fact_d_t:'سهل التحرير', wf_fact_d_d:'حدّث المحتوى مباشرة في البوابة باستخدام CKEditor.',
+    wf_k_region:'المنطقة', wf_k_source:'المصدر', wf_k_source_v:'وكالة الهجرة · معلومات 2026',
+    wf_k_ready:'الحالة', wf_k_ready_v:'جاهز للقراءة',
   },
 };
 
@@ -1502,11 +1792,16 @@ function validateImportedDb(database){
 }
 
 /* =====================================================================
-   THREE-GLOBE HERO (via globe.gl)
+   THREE-GLOBE HERO — RETIRED FROM THE HOMEPAGE
+   The start view now uses the SVG system map; the globe is kept only as
+   a guarded legacy feature (initGlobe no-ops when #globe-canvas-wrap is
+   absent) so imports and any custom builds that still carry the element
+   keep working.
    ===================================================================== */
 let world;
 function initGlobe(){
   const wrap = document.getElementById('globe-canvas-wrap');
+  if(!wrap) return;   // globe hero replaced by the SVG system map; keep init safe
   wrap.innerHTML = '';
   const w = wrap.clientWidth, h = wrap.clientHeight;
   const regions = getRegions(currentLang);
@@ -1570,13 +1865,13 @@ function renderCrumbs(){
   let parts = [`<button data-nav="start">${escapeHtml(T('crumb_start'))}</button>`];
   if(state.regionId){
     const region = getRegionById(state.regionId);
-    parts.push(`<span class="sep">/</span>`);
+    parts.push(`<span class="sep">›</span>`);
     if(state.countryId) parts.push(`<button data-nav="region:${state.regionId}">${escapeHtml(region.name)}</button>`);
     else parts.push(`<span class="current">${escapeHtml(region.name)}</span>`);
   }
   if(state.countryId){
     const c = getCountryDetail(state.countryId, currentLang);
-    parts.push(`<span class="sep">/</span>`);
+    parts.push(`<span class="sep">›</span>`);
     parts.push(`<span class="current">${escapeHtml(c.name)}</span>`);
   }
   el.innerHTML = parts.join('');
@@ -1603,6 +1898,7 @@ function renderLangSwitch(){
 
 function rerenderAll(){
   applyStaticI18n();
+  updateFacts();
   renderLangSwitch();
   renderCrumbs();
   refreshGlobePoints();
@@ -1612,6 +1908,19 @@ function rerenderAll(){
   else if(activeView === 'view-country' && state.countryId) goCountry(state.countryId);
   else if(activeView === 'view-about') goAbout();
   else if(activeView === 'view-resources') goResources();
+}
+
+function updateFacts(){
+  // Live counts for the status strip. Safe no-op when db is not ready (or in
+  // sandboxed test contexts where db is mocked without a working prepare()).
+  if(!db || typeof db.prepare !== 'function') return;
+  const set = (sel, n) => { const el = document.querySelector(sel); if(el) el.textContent = String(n); };
+  try{
+    set('[data-fact="regions"]', getRegions(currentLang).length);
+    const c = q('SELECT COUNT(*) AS c FROM countries');
+    set('[data-fact="countries"]', c.length ? c[0].c : 0);
+    set('[data-fact="langs"]', getLanguages().length);
+  }catch(e){ /* non-fatal: static fallback numbers remain */ }
 }
 
 function goStart(){
@@ -1668,12 +1977,14 @@ function goRegions(){
     goRegions();
   });
 
+  updateFacts();
   setActive('view-regions');
 }
 
 function goRegion(regionId){
   const region = getRegionById(regionId);
   if(!region) return goRegions();
+  document.documentElement.setAttribute('data-region', region.slug);
   state.regionId = regionId; state.countryId=null;
   renderCrumbs();
   document.getElementById('countries-title').textContent = region.name;
@@ -1726,6 +2037,7 @@ function goRegion(regionId){
 function goCountry(countryId){
   const region = findRegionForCountry(countryId);
   state.regionId = region ? region.id : state.regionId;
+  document.documentElement.setAttribute('data-region', region ? region.slug : '');
   state.countryId = countryId;
   renderCrumbs();
 
@@ -2141,6 +2453,7 @@ document.getElementById('btn-edit-toggle').addEventListener('click', ()=>{
   editMode = !editMode;
   const btn = document.getElementById('btn-edit-toggle');
   btn.classList.toggle('on', editMode);
+  document.body.classList.toggle('edit-mode', editMode);
   document.getElementById('edit-toggle-label').textContent = editMode ? T('btn_done') : T('btn_edit');
   rerenderAll();
 });
@@ -2210,6 +2523,7 @@ window.addEventListener('DOMContentLoaded', async ()=>{
   await initDatabase();
   applyStaticI18n();
   renderLangSwitch();
+  updateFacts();
   goStart();
   initGlobe();
   document.getElementById('btn-start').addEventListener('click', goRegions);
