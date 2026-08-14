@@ -1,4 +1,5 @@
-// Focused regression checks for the Globe Focus portal (geobas-portal.html).
+// Focused regression checks for the GeoBas service-workspace portal
+// (geobas-portal.html).
 //
 // Runs the REAL inline script from the HTML inside a pure-Node sandbox with a
 // small browser-DOM compatibility layer backed by parse5 (the HTML5 parser that
@@ -6,8 +7,8 @@
 // bridge compat), imported-SQLite trust boundary (tables + columns + types),
 // language-code attribute injection, javascript:/unsafe URL rejection,
 // rich-text sanitization + CKEditor modal preload round-trip (formatted,
-// not over-escaped, hostile markup still stripped), and a Globe/i18n
-// interaction smoke test.
+// not over-escaped, hostile markup still stripped), and a home task-desk /
+// i18n interaction smoke test (the globe.gl hero was removed in this IA).
 //
 // Requires parse5 from /opt/hermes/node_modules (jsdom is not installable here:
 // no outbound DNS). Run: node tests/regression.test.mjs
@@ -468,27 +469,18 @@ currentLang = 'sv';
 applyStaticI18n();
 __check('i18n: applyStaticI18n sets ltr for sv', document.documentElement.dir === 'ltr');
 
-// Globe interactions: stub the globe.gl factory with a recording chain
-const globeCalls = [];
-window._globeControls = { autoRotate: true, autoRotateSpeed: 0, enableZoom: true, enablePan: true, addEventListener() {} };
-window._globeChain = new Proxy(function () {}, {
-  get(t, prop) {
-    if (prop === 'controls') return () => window._globeControls;
-    return (...a) => { globeCalls.push([String(prop), a]); return window._globeChain; };
-  },
-  apply() { return window._globeChain; },
-});
-Globe = () => window._globeChain;
+// Home task-desk + region directory rendering (globe.gl removed in this IA)
 getRegions = () => [{ id: 1, slug: 'eu', lat: 50, lng: 15, name: 'Europa', translated: true, countryCount: 6 }];
-initGlobe();
-__check('globe: initGlobe runs and wires points', globeCalls.some((c) => c[0] === 'pointsData') && !!world);
-const n0 = globeCalls.length;
-refreshGlobePoints();
-__check('globe: refreshGlobePoints re-emits points',
-  globeCalls.length > n0 && globeCalls[globeCalls.length - 1][0] === 'pointsData');
+goHome();
+const homeHtml = document.getElementById('home-region-table').innerHTML;
+__check('home: region index renders rows from getRegions()',
+  homeHtml.indexOf('Europa') >= 0 && homeHtml.indexOf('data-region-id="1"') >= 0);
+__check('home: stepper rendered with 3 steps',
+  (document.getElementById('stepper').innerHTML.match(/step-no/g) || []).length === 3);
+__check('home: region index attribute-safe (no raw quotes)', homeHtml.indexOf('" onclick="') < 0);
 goRegions();
 const gridHtml = document.getElementById('region-grid').innerHTML;
-__check('regions view: renders region card with i18n name',
+__check('regions view: renders region row with i18n name',
   gridHtml.indexOf('Europa') >= 0 && gridHtml.indexOf('data-region-id="1"') >= 0);
 __check('regions view: region name attribute-safe (no raw quotes)', gridHtml.indexOf('" onclick="') < 0);
 
@@ -564,7 +556,7 @@ const sourceChecks = [
   ['url guard wiring: org save sanitizes url', /\[name, safeUrl\(url\), contact, description, id\]/.test(inlineScript)],
   ['sanitizer wiring: href check uses safeUrl', /if\(!safeUrl\(el\.getAttribute\('href'\)\)\)/.test(inlineScript)],
   ['lang-switch wiring: code escaped into data-lang attr', /data-lang="\$\{escapeHtml\(l\.code\)\}"/.test(inlineScript)],
-  ['no new innerHTML sinks (baseline 25)', (inlineScript.match(/innerHTML/g) || []).length === 25],
+  ['no new innerHTML sinks (baseline 29)', (inlineScript.match(/innerHTML/g) || []).length === 29],
   ['no new outerHTML sinks (baseline 1)', (inlineScript.match(/outerHTML/g) || []).length === 1],
   ['no insertAdjacentHTML growth (baseline 1)', (inlineScript.match(/insertAdjacentHTML/g) || []).length === 1],
   ['no document.write usage', !/document\.write/.test(inlineScript)],
@@ -582,7 +574,7 @@ for (const c of sourceChecks) {
   else { fail++; failures.push({ name: c[0], pass: false, detail: 'source wiring missing' }); }
 }
 
-console.log('=== Globe Focus regression checks ===');
+console.log('=== GeoBas service-workspace regression checks ===');
 console.log('inline script size:', inlineScript.length, 'bytes');
 console.log('runtime checks:', runtime.length, '| source checks:', sourceChecks.length);
 console.log('PASS:', pass, ' FAIL:', fail);
