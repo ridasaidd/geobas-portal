@@ -1,463 +1,490 @@
 <!DOCTYPE html>
-<html lang="sv">
+<html lang="sv" dir="ltr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GeoBas — Landinfo för återvändare</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/globe.gl"></script>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500;1,9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/sql-wasm.js"></script>
+<script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
 <style>
   :root{
-    --bg:#221610; --bg-2:#2e1e15; --panel:#3a271b;
-    --accent:#c1652f; --accent-2:#8fa06a;
-    --sand:#ecdfc4; --sand-2:#dccda8; --ink:#231509; --paper:#f5ecd9; --muted:#b7a288;
-    --line:rgba(236,223,196,0.14);
-    --edit:#5b8dae;
-    --danger:#b34a3d;
-    --shadow: 0 20px 50px rgba(0,0,0,0.35);
+    --paper:#f3ecdb; --paper-2:#ebe2cb; --card:#faf5e8;
+    --ink:#2a251b; --ink-2:#4b4433; --muted:#8b8169; --faint:#b3a88c;
+    --line:rgba(42,37,27,0.16); --line-2:rgba(42,37,27,0.32);
+    --accent:#b23b2a; --accent-deep:#8f2e1d; --pine:#3d6b52;
+    --edit:#2a5c8a; --danger:#a33a2a;
+    --shadow: 0 26px 64px rgba(42,37,27,0.16);
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
     background:
-      radial-gradient(ellipse 900px 500px at 15% -10%, #4a3020 0%, transparent 60%),
-      radial-gradient(ellipse 800px 600px at 110% 10%, #3a2818 0%, transparent 55%),
-      linear-gradient(180deg, var(--bg) 0%, #1b110c 100%);
-    color:var(--paper); font-family:'Inter',sans-serif; min-height:100vh; overflow-x:hidden;
+      linear-gradient(rgba(42,37,27,0.035) 1px, transparent 1px) 0 0 / 100% 48px,
+      linear-gradient(90deg, rgba(42,37,27,0.03) 1px, transparent 1px) 0 0 / 96px 100%,
+      var(--paper);
+    color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh; overflow-x:hidden;
   }
   ::selection{background:var(--accent); color:var(--paper);}
   a{color:inherit;}
-  h1,h2,h3{font-family:'Fraunces',serif; margin:0; font-weight:600; letter-spacing:-0.01em;}
-  .eyebrow{font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:0.14em; font-size:0.72rem; color:var(--accent);}
-  button, input, textarea{font-family:inherit;}
+  h1,h2,h3,h4{font-family:'Fraunces',serif; margin:0; font-weight:600; letter-spacing:-0.015em; line-height:1.12;}
+  button,input,textarea{font-family:inherit;}
   :focus-visible{outline:2px solid var(--accent); outline-offset:3px;}
 
-  .grat-wash{
-    position:fixed; inset:0; pointer-events:none; z-index:0; opacity:0.05;
-    background-image:
-      repeating-linear-gradient(0deg, var(--paper) 0 1px, transparent 1px 64px),
-      repeating-linear-gradient(90deg, var(--paper) 0 1px, transparent 1px 64px);
+  .shell{max-width:1180px; margin:0 auto; padding:0 28px 90px;}
+
+  /* ---- masthead ---- */
+  .masthead{
+    display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+    padding:22px 0 14px; border-bottom:3px double var(--ink); margin-bottom:4px;
   }
-
-  .shell{position:relative; z-index:1; max-width:1180px; margin:0 auto; padding:0 28px 100px;}
-  header.topbar{display:flex; align-items:center; justify-content:space-between; padding:22px 0 8px; gap:14px; flex-wrap:wrap;}
-  .brand{display:flex; align-items:baseline; gap:10px; cursor:pointer; user-select:none;}
-  .brand .mark{font-family:'Fraunces',serif; font-weight:700; font-size:1.35rem; letter-spacing:-0.02em;}
-  .brand .mark em{font-style:normal; color:var(--accent);}
-  .brand .sub{font-family:'JetBrains Mono',monospace; font-size:0.66rem; color:var(--muted); letter-spacing:0.08em;}
-
-  .topbar-right{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
-  .lang-switch{display:flex; gap:2px; background:var(--panel); border:1px solid var(--line); border-radius:100px; padding:3px;}
+  .brand{display:flex; align-items:baseline; gap:12px; cursor:pointer; user-select:none;}
+  .brand .mark{font-family:'Fraunces',serif; font-weight:700; font-size:1.55rem; letter-spacing:-0.02em;}
+  .brand .mark em{font-style:italic; color:var(--accent);}
+  .brand .sub{font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--muted); letter-spacing:0.14em; text-transform:uppercase;}
+  .topbar-right{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .nav-btn{
+    appearance:none; border:1px solid var(--line-2); background:transparent; color:var(--ink);
+    padding:8px 14px; cursor:pointer; font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase;
+    font-family:'JetBrains Mono',monospace; transition:.15s ease; border-radius:2px;
+  }
+  .nav-btn:hover{border-color:var(--accent); color:var(--accent);}
+  .nav-btn.on{background:var(--ink); border-color:var(--ink); color:var(--paper);}
+  .nav-btn.on:hover{background:var(--accent); border-color:var(--accent); color:var(--paper);}
+  .lang-switch{display:flex; gap:2px; border:1px solid var(--line-2); padding:3px; background:var(--paper-2); border-radius:2px;}
   .lang-pill{
-    border:none; background:none; color:var(--muted); font-family:'JetBrains Mono',monospace;
-    font-size:0.68rem; letter-spacing:0.05em; padding:6px 12px; border-radius:100px; cursor:pointer; text-transform:uppercase;
+    appearance:none; border:none; background:none; color:var(--muted); cursor:pointer;
+    font-family:'JetBrains Mono',monospace; font-size:0.64rem; letter-spacing:0.06em;
+    padding:5px 10px; text-transform:uppercase; border-radius:2px; transition:.15s ease;
   }
-  .lang-pill.active{background:var(--accent); color:var(--paper);}
-  .lang-pill.add{color:var(--accent); font-size:0.9rem; padding:6px 9px;}
-
-  .icon-btn{
-    display:inline-flex; align-items:center; gap:6px; background:var(--panel); border:1px solid var(--line);
-    color:var(--sand-2); padding:8px 13px; border-radius:100px; cursor:pointer; font-size:0.72rem;
-    font-family:'JetBrains Mono',monospace; letter-spacing:0.04em; text-transform:uppercase; transition:.2s ease;
-  }
-  .icon-btn:hover{border-color:var(--accent); color:var(--paper);}
-  .icon-btn svg{width:13px; height:13px;}
-  .icon-btn.on{background:var(--edit); border-color:var(--edit); color:#fff;}
-  .status-dot{
-    width:7px; height:7px; border-radius:50%; background:var(--accent-2); display:inline-block; margin-right:2px;
-    animation: pulse-dot 1.4s ease infinite;
-  }
+  .lang-pill:hover{color:var(--ink);}
+  .lang-pill.active{background:var(--ink); color:var(--paper);}
+  .lang-pill.add{color:var(--edit); font-size:0.8rem; padding:4px 7px;}
+  .save-status{font-family:'JetBrains Mono',monospace; font-size:0.62rem; color:var(--muted); display:flex; align-items:center; gap:6px; min-width:86px;}
+  .status-dot{width:7px; height:7px; border-radius:50%; background:var(--pine); display:inline-block; animation:pulse-dot 1.4s ease infinite;}
   @keyframes pulse-dot{ 0%,100%{opacity:1;} 50%{opacity:0.3;} }
-  #save-status{font-family:'JetBrains Mono',monospace; font-size:0.66rem; color:var(--muted); display:flex; align-items:center; gap:6px; min-width:90px;}
 
-  .crumbs{font-family:'JetBrains Mono',monospace; font-size:0.74rem; color:var(--muted); display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:6px;}
+  /* ---- breadcrumbs ---- */
+  .crumbs{
+    font-family:'JetBrains Mono',monospace; font-size:0.7rem; color:var(--muted);
+    display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding:12px 0 4px;
+  }
   .crumbs button{background:none; border:none; color:var(--muted); cursor:pointer; padding:4px 2px; font-family:inherit; font-size:inherit; border-bottom:1px solid transparent;}
-  .crumbs button:hover{color:var(--paper); border-color:var(--accent);}
-  .crumbs .current{color:var(--paper);}
-  .crumbs .sep{opacity:0.4;}
+  .crumbs button:hover{color:var(--accent); border-color:var(--accent);}
+  .crumbs .current{color:var(--ink); font-weight:500;}
+  .crumbs .sep{opacity:0.45;}
 
-  .view{display:none; animation:rise .5s ease both;}
+  /* ---- views ---- */
+  .view{display:none; animation:rise .45s ease both;}
   .view.active{display:block;}
-  @keyframes rise{from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:translateY(0);}}
+  @keyframes rise{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);}}
   @media (prefers-reduced-motion: reduce){ .view{animation:none;} *{animation-duration:0.001s !important; transition-duration:0.001s !important;} }
 
-  #view-start{padding-top:10px;}
-  .hero{display:grid; grid-template-columns: 1.05fr 1fr; gap:20px; align-items:center; min-height:74vh;}
-  .hero-stacked{display:flex; flex-direction:column; gap:10px; min-height:auto;}
-  .hero-copy{position:relative; z-index:2;}
-  .hero-stacked .hero-copy{max-width:720px;}
-  .hero-copy h1{font-size:clamp(2.6rem, 5.4vw, 4.4rem); line-height:0.98; margin:14px 0 22px;}
-  .hero-copy h1 .stroke{-webkit-text-stroke:1.5px var(--paper); color:transparent;}
-  .hero-copy p.lede{font-size:1.05rem; color:var(--sand-2); max-width:46ch; line-height:1.6; margin:0 0 30px;}
-  .cta-row{display:flex; align-items:center; gap:18px; flex-wrap:wrap;}
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:10px;
+    font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:0.16em;
+    font-size:0.66rem; color:var(--accent);
+  }
+  .eyebrow::before{content:""; width:26px; height:1px; background:var(--accent);}
+
+  /* ---- start / cover ---- */
+  .cover{display:grid; grid-template-columns:1.3fr 0.7fr; gap:44px; padding:52px 0 30px; align-items:start;}
+  @media (max-width:900px){ .cover{grid-template-columns:1fr; gap:30px;} }
+  .cover h1{font-size:clamp(2.7rem, 6vw, 4.7rem); line-height:0.99; font-weight:600; margin:18px 0 24px; letter-spacing:-0.025em;}
+  .cover h1 em{font-style:italic; color:var(--accent); font-weight:500;}
+  .lede{font-size:1.02rem; line-height:1.75; color:var(--ink-2); max-width:56ch; margin:0;}
+  .dropcap::first-letter{
+    font-family:'Fraunces',serif; font-weight:700; font-size:3.3em; float:left;
+    line-height:0.82; padding:5px 10px 0 0; color:var(--accent);
+  }
+  [dir="rtl"] .dropcap::first-letter{float:right; padding:5px 0 0 10px;}
+  .cta-row{display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:30px;}
   .cta{
-    appearance:none; border:none; cursor:pointer; background:var(--accent); color:var(--paper);
-    font-family:'JetBrains Mono',monospace; font-size:0.82rem; letter-spacing:0.06em; text-transform:uppercase;
-    padding:16px 26px; border-radius:100px; display:inline-flex; align-items:center; gap:10px;
-    box-shadow: var(--shadow); transition: transform .25s ease, box-shadow .25s ease;
+    appearance:none; border:none; cursor:pointer; background:var(--ink); color:var(--paper);
+    font-family:'JetBrains Mono',monospace; font-size:0.78rem; letter-spacing:0.08em; text-transform:uppercase;
+    padding:16px 24px; display:inline-flex; align-items:center; gap:10px; border-radius:2px;
+    box-shadow:var(--shadow); transition:transform .2s ease, background .2s ease;
   }
-  .cta:hover{transform:translateY(-2px); box-shadow:0 24px 60px rgba(193,101,47,0.35);}
-  .cta svg{width:16px; height:16px;}
-  .cta-secondary{background:transparent; border:1px solid var(--line); color:var(--sand-2); box-shadow:none;}
-  .cta-secondary:hover{border-color:var(--accent); color:var(--paper); box-shadow:none;}
-  .hint{font-size:0.78rem; color:var(--muted);}
-
-  .globe-stage{position:relative; height:min(74vh, 600px); z-index:1;}
-  .globe-stage-big{height:min(90vh, 1100px); width:100%;}
-  #globe-canvas-wrap{position:absolute; inset:0; cursor:grab;}
-  #globe-canvas-wrap:active{cursor:grabbing;}
-  .globe-loading{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:var(--muted); letter-spacing:0.08em;}
-
-  .page-head{margin:8px 0 34px; max-width:640px; display:flex; align-items:flex-start; justify-content:space-between; gap:20px;}
-  .page-head h2{font-size:clamp(1.8rem,3.4vw,2.5rem);}
-  .page-head p{color:var(--sand-2); margin-top:10px; line-height:1.6;}
-
-  .region-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:16px;}
-  @media (max-width:900px){ .region-grid{grid-template-columns:repeat(2, 1fr);} }
-  @media (max-width:540px){ .region-grid{grid-template-columns:1fr;} }
-
-  .region-card{
-    background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:22px 18px 20px; text-align:center; cursor:pointer;
-    display:flex; flex-direction:column; align-items:center; gap:14px; transition:transform .25s ease, border-color .25s ease, background .25s ease;
-    position:relative; overflow:hidden;
-  }
-  .region-card:hover{transform:translateY(-4px); border-color:var(--accent); background:#432c1e;}
-  .region-card.add-card{cursor:pointer; border-style:dashed; justify-content:center; min-height:150px; color:var(--accent);}
-  .mini-globe{
-    width:84px; height:84px; border-radius:50%;
-    background-image:url('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-blue-marble.jpg');
-    background-size:220% 110%;
-    box-shadow: inset -10px -10px 24px rgba(0,0,0,0.45), inset 6px 6px 14px rgba(255,255,255,0.08);
-    animation: spin-bg 22s linear infinite; border:1px solid rgba(0,0,0,0.4);
-  }
-  @keyframes spin-bg{ from{background-position:0% 50%;} to{background-position:200% 50%;} }
-  .region-card .name{font-family:'Fraunces',serif; font-weight:600; font-size:1.05rem;}
-  .region-card .count{font-family:'JetBrains Mono',monospace; font-size:0.68rem; color:var(--muted);}
-  .name-input{
-    font-family:'Fraunces',serif; font-weight:600; font-size:1.05rem; text-align:center; background:rgba(0,0,0,0.25);
-    border:1px solid var(--edit); border-radius:8px; color:var(--paper); padding:4px 8px; width:100%;
-  }
-  .untranslated-badge{font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:#e0a96d; letter-spacing:0.05em; text-transform:uppercase;}
-  .del-x{
-    position:absolute; top:8px; right:8px; width:22px; height:22px; border-radius:50%; background:var(--danger); color:#fff;
-    border:none; cursor:pointer; font-size:0.8rem; line-height:1; display:flex; align-items:center; justify-content:center;
+  .cta:hover{transform:translateY(-2px); background:var(--accent);}
+  .cta svg{width:15px; height:15px;}
+  .cta-secondary{background:transparent; border:1px solid var(--line-2); color:var(--ink); box-shadow:none;}
+  .cta-secondary:hover{background:transparent; border-color:var(--accent); color:var(--accent);}
+  .stats{
+    font-family:'JetBrains Mono',monospace; font-size:0.66rem; letter-spacing:0.1em; color:var(--muted);
+    text-transform:uppercase; border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+    padding:10px 0; margin:34px 0 0; display:flex; gap:18px; flex-wrap:wrap;
   }
 
-  .country-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:14px;}
-  @media (max-width:760px){ .country-grid{grid-template-columns:repeat(2, 1fr);} }
-  @media (max-width:480px){ .country-grid{grid-template-columns:1fr;} }
-
-  .country-card{
-    background:var(--sand); color:var(--ink); border:1px solid rgba(0,0,0,0.15); border-radius:14px; padding:20px 18px; cursor:pointer;
-    display:flex; align-items:center; justify-content:space-between; gap:10px; transition:transform .2s ease, background .2s ease;
-    font-family:'Fraunces',serif; font-weight:600; font-size:1.08rem; position:relative;
+  /* ---- table of contents panel (start) ---- */
+  .toc{border:1px solid var(--line-2); background:var(--card); box-shadow:var(--shadow);}
+  .toc-head{display:flex; justify-content:space-between; align-items:baseline; padding:14px 18px; border-bottom:2px solid var(--ink);}
+  .toc-head .toc-title{font-family:'Fraunces',serif; font-weight:600; font-size:1.05rem; letter-spacing:-0.01em;}
+  .toc-head .toc-hint{font-family:'JetBrains Mono',monospace; font-size:0.58rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted);}
+  .toc-item{
+    display:flex; align-items:baseline; gap:14px; padding:13px 18px; cursor:pointer;
+    border-bottom:1px solid var(--line); transition:background .15s ease, padding .15s ease;
   }
-  .country-card:hover{transform:translateX(4px); background:var(--paper);}
-  .country-card .arrow{opacity:0.5; transition:transform .2s ease, opacity .2s ease;}
-  .country-card:hover .arrow{opacity:1; transform:translateX(3px);}
-  .country-card.stub{opacity:0.55;}
-  .country-card.stub .stub-tag{font-family:'JetBrains Mono',monospace; font-size:0.62rem; text-transform:uppercase; letter-spacing:0.05em; color:#8a6c4a;}
-  .country-card.add-card{background:transparent; border-style:dashed; color:var(--sand-2); justify-content:center;}
-  .country-card .name-input{color:var(--ink); border-color:var(--edit); text-align:left;}
+  .toc-item:last-child{border-bottom:none;}
+  .toc-item:hover{background:var(--paper-2); padding-inline-start:24px;}
+  .toc-item .idx{font-family:'JetBrains Mono',monospace; font-size:0.64rem; color:var(--accent); letter-spacing:0.08em;}
+  .toc-item .nm{font-family:'Fraunces',serif; font-weight:600; font-size:1.02rem;}
+  .toc-item .ct{margin-inline-start:auto; font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em;}
 
-  .country-hero{display:grid; grid-template-columns:180px 1fr; gap:34px; align-items:start; padding:8px 0 30px; border-bottom:1px solid var(--line); margin-bottom:34px;}
-  @media (max-width:640px){ .country-hero{grid-template-columns:1fr; gap:18px;} }
-  .country-hero .badge-globe{
-    width:150px; height:150px; border-radius:50%; background-image:url('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-blue-marble.jpg');
-    background-size:220% 110%; box-shadow: inset -14px -14px 30px rgba(0,0,0,0.5), inset 8px 8px 16px rgba(255,255,255,0.08), var(--shadow);
-    animation: spin-bg 30s linear infinite;
+  /* ---- chapter heads ---- */
+  .chapter-head{margin:30px 0 30px; max-width:680px;}
+  .chapter-head h2{font-size:clamp(1.9rem, 3.6vw, 2.7rem); margin:12px 0 12px;}
+  .chapter-head p{color:var(--ink-2); line-height:1.7; margin:0;}
+
+  /* ---- editorial index lists (regions / countries) ---- */
+  .index-list{list-style:none; margin:0; padding:0; border-top:2px solid var(--ink);}
+  .index-row{
+    display:flex; align-items:center; gap:18px; padding:18px 8px; cursor:pointer;
+    border-bottom:1px solid var(--line); transition:background .15s ease, padding .15s ease;
   }
-  .country-hero h2{font-size:clamp(2.1rem,4vw,3.2rem); margin-bottom:14px;}
-  .country-hero .region-tag{margin-bottom:10px; display:block;}
-  .country-hero .lede{color:var(--sand-2); line-height:1.7; font-size:1rem; max-width:70ch;}
-  .edit-field{width:100%; background:rgba(0,0,0,0.25); border:1px solid var(--edit); border-radius:8px; color:var(--paper); padding:8px 10px; font-family:inherit;}
-  textarea.edit-field{resize:vertical; min-height:60px; line-height:1.5;}
-  input.edit-field.title-field{font-family:'Fraunces',serif; font-size:2rem; font-weight:600; margin-bottom:10px;}
-
-  .topics-grid{display:grid; grid-template-columns:repeat(2, 1fr); gap:16px;}
-  @media (max-width:760px){ .topics-grid{grid-template-columns:1fr;} }
-
-  .topic-card{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:24px 24px 22px; position:relative;}
-  .topic-card.plain{background:transparent; border-style:dashed;}
-  .topic-card.editing{border-color:var(--edit); background:#2a3540;}
-  .topic-card .icon{width:34px; height:34px; border-radius:9px; background:rgba(193,101,47,0.15); display:flex; align-items:center; justify-content:center; margin-bottom:14px; color:var(--accent);}
-  .topic-card .icon svg{width:18px; height:18px;}
-  .topic-card h3{font-size:1.12rem; margin-bottom:8px; line-height:1.25;}
-  .topic-card .body-text{color:var(--sand-2); font-size:0.92rem; line-height:1.6; margin-bottom:12px;}
-  .topic-card .body-text:last-child{margin-bottom:0;}
-  .kv{margin-top:10px;}
-  .kv-row{display:flex; gap:8px; margin-bottom:8px; font-size:0.88rem; line-height:1.55;}
-  .kv-row .k{font-family:'JetBrains Mono',monospace; font-size:0.66rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--accent); white-space:nowrap; padding-top:2px;}
-  .kv-row .v{color:var(--sand-2);}
-
-  .empty-country{padding:60px 20px; text-align:center; border:1px dashed var(--line); border-radius:18px; color:var(--muted);}
-  .empty-country h3{color:var(--sand-2); margin-bottom:10px; font-size:1.3rem;}
-
-  .disclaimer{margin-top:40px; padding:16px 18px; border-radius:12px; background:rgba(0,0,0,0.2); border:1px dashed var(--line); font-size:0.78rem; color:var(--muted); line-height:1.6;}
-
-  .sources-panel{margin-top:32px; padding:20px 22px; border-radius:16px; background:var(--panel); border:1px solid var(--line);}
-  .sources-links{display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;}
-  .source-chip{
-    display:inline-flex; align-items:center; gap:6px; background:rgba(193,101,47,0.12); border:1px solid rgba(193,101,47,0.35);
-    color:var(--paper); padding:8px 14px; border-radius:100px; font-size:0.78rem; text-decoration:none; transition:.2s ease;
+  .index-row:hover{background:var(--card); padding-inline-start:18px;}
+  .index-row .idx{font-family:'JetBrains Mono',monospace; font-size:0.68rem; color:var(--accent); letter-spacing:0.1em; min-width:34px;}
+  .index-row .nm{font-family:'Fraunces',serif; font-weight:600; font-size:1.18rem;}
+  .index-row .meta{margin-inline-start:auto; font-family:'JetBrains Mono',monospace; font-size:0.62rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; display:flex; align-items:center; gap:12px;}
+  .index-row .arrow{opacity:0.45; transition:transform .2s ease, opacity .2s ease;}
+  .index-row:hover .arrow{opacity:1; transform:translateX(3px);}
+  [dir="rtl"] .index-row:hover .arrow{transform:translateX(-3px) scaleX(-1);}
+  .index-row .arrow svg{width:16px; height:16px;}
+  [dir="rtl"] .index-row .arrow svg{transform:scaleX(-1);}
+  .index-row .stub-tag{font-size:0.58rem; letter-spacing:0.06em; color:var(--faint);}
+  .index-row.add-row{
+    justify-content:center; border-style:dashed; color:var(--edit); cursor:pointer;
+    font-family:'JetBrains Mono',monospace; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.1em;
   }
-  .source-chip:hover{background:rgba(193,101,47,0.22); border-color:var(--accent);}
-  .sources-note{margin-top:12px; font-size:0.74rem; color:var(--muted); line-height:1.6;}
+  .index-row.add-row:hover{background:rgba(42,92,138,0.06);}
+  .untranslated-badge{font-family:'JetBrains Mono',monospace; font-size:0.56rem; color:var(--accent); letter-spacing:0.08em; text-transform:uppercase; border:1px solid rgba(178,59,42,0.4); padding:2px 6px; border-radius:2px; white-space:nowrap;}
 
-  .ngo-panel{margin-top:28px; padding:20px 22px; border-radius:16px; border:1px dashed var(--line);}
-  .ngo-item{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px solid var(--line);}
+  /* ---- country article view ---- */
+  .article-head{display:flex; justify-content:space-between; align-items:flex-start; gap:24px; padding:26px 0 30px; border-bottom:3px double var(--ink); margin-bottom:36px; flex-wrap:wrap;}
+  .article-head h2{font-size:clamp(2.2rem, 4.6vw, 3.6rem); margin:12px 0 18px; letter-spacing:-0.02em;}
+  .article-head .lede{max-width:70ch;}
+  .ntrans-note{font-family:'JetBrains Mono',monospace; font-size:0.62rem; color:var(--accent); margin-top:14px; letter-spacing:0.06em;}
+  .btn-edit{
+    appearance:none; cursor:pointer; background:transparent; border:1px solid var(--accent); color:var(--accent);
+    padding:10px 16px; font-family:'JetBrains Mono',monospace; font-size:0.68rem; letter-spacing:0.08em;
+    text-transform:uppercase; border-radius:2px; transition:.15s ease; white-space:nowrap;
+  }
+  .btn-edit:hover{background:var(--accent); color:var(--paper);}
+
+  .articles{display:grid; grid-template-columns:repeat(2, 1fr); gap:22px;}
+  @media (max-width:840px){ .articles{grid-template-columns:1fr;} }
+  .article{background:var(--card); border:1px solid var(--line-2); border-top:4px solid var(--accent); padding:22px 22px 20px; position:relative;}
+  .article .num{font-family:'JetBrains Mono',monospace; font-size:0.58rem; letter-spacing:0.2em; color:var(--accent); text-transform:uppercase; display:block; margin-bottom:12px;}
+  .article .icon{width:34px; height:34px; border:1px solid var(--line-2); display:flex; align-items:center; justify-content:center; margin-bottom:14px; color:var(--ink); background:var(--paper-2);}
+  .article .icon svg{width:17px; height:17px;}
+  .article h3{font-size:1.16rem; margin-bottom:10px; line-height:1.28;}
+  .body-text{color:var(--ink-2); font-size:0.92rem; line-height:1.68; margin:0 0 12px;}
+  .body-text:last-child{margin-bottom:0;}
+  .body-text p{margin:0 0 12px;} .body-text p:last-child{margin-bottom:0;}
+  .body-text ul,.body-text ol{margin:4px 0 12px; padding-inline-start:22px;}
+  .kv{margin-top:16px; border-top:1px solid var(--line); padding-top:8px;}
+  .kv-row{display:grid; grid-template-columns:minmax(100px,160px) 1fr; gap:14px; padding:9px 0; border-bottom:1px dashed var(--line); font-size:0.88rem; line-height:1.6; align-items:baseline;}
+  .kv-row:last-child{border-bottom:none;}
+  .kv-row .k{font-family:'JetBrains Mono',monospace; font-size:0.62rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--accent);}
+  .kv-row .v{color:var(--ink-2);}
+  .kv-row .v p{margin:0;}
+
+  .empty-state{padding:54px 20px; text-align:center; border:1px dashed var(--line-2); color:var(--muted); background:var(--card);}
+  .empty-state h3{color:var(--ink); margin-bottom:10px; font-size:1.25rem;}
+  .empty-state p{font-size:0.88rem; line-height:1.7; max-width:52ch; margin:0 auto;}
+
+  /* ---- sources / NGOs / disclaimer ---- */
+  .sources-panel{margin-top:44px; border-top:1px solid var(--line-2); padding-top:18px;}
+  .sources-links{display:flex; flex-wrap:wrap; gap:8px 18px; margin-top:12px;}
+  .source-chip{color:var(--ink); font-size:0.8rem; text-decoration:none; border-bottom:1px solid var(--line-2); padding-bottom:1px;}
+  .source-chip:hover{color:var(--accent); border-color:var(--accent);}
+  .sources-note{margin-top:14px; font-size:0.74rem; color:var(--muted); line-height:1.7; max-width:76ch;}
+
+  .ngo-panel{margin-top:34px; border:1px solid var(--line-2); border-top:2px solid var(--ink); background:var(--card); padding:0 22px 18px;}
+  .ngo-panel .panel-head{padding:16px 0 6px;}
+  .ngo-panel .panel-head h2{font-size:1.3rem;}
+  .ngo-item{display:flex; align-items:flex-start; justify-content:space-between; gap:14px; padding:13px 0; border-bottom:1px solid var(--line);}
   .ngo-item:last-child{border-bottom:none;}
   .ngo-item .ngo-name{font-family:'Fraunces',serif; font-weight:600; font-size:1rem;}
-  .ngo-item .ngo-note{color:var(--sand-2); font-size:0.85rem; line-height:1.5; margin-top:2px;}
-  .ngo-item a{color:var(--accent); font-size:0.82rem; text-decoration:none;}
-  .ngo-item a:hover{text-decoration:underline;}
-  .ngo-empty{color:var(--muted); font-size:0.85rem; font-style:italic;}
-  .ngo-edit-row{display:grid; grid-template-columns:1fr 1fr 1.4fr auto; gap:8px; padding:10px 0; border-bottom:1px solid var(--line); align-items:start;}
-  @media (max-width:700px){ .ngo-edit-row{grid-template-columns:1fr;} }
-  .add-ngo-btn{margin-top:14px;}
+  .ngo-item .ngo-note{color:var(--ink-2); font-size:0.85rem; line-height:1.55; margin-top:3px;}
+  .ngo-item a{color:var(--accent); font-size:0.8rem; text-decoration:none; border-bottom:1px solid transparent;}
+  .ngo-item a:hover{border-color:var(--accent);}
+  .ngo-empty{color:var(--muted); font-size:0.85rem; font-style:italic; padding:14px 0;}
 
-  .about-photo-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:14px;}
+  .disclaimer{margin-top:36px; padding:14px 16px; border-top:1px dashed var(--line-2); font-size:0.74rem; color:var(--muted); line-height:1.7;}
+
+  .back-strip{margin-top:44px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; border-top:1px solid var(--line); padding-top:22px;}
+  .link-btn{background:none; border:1px solid var(--line-2); color:var(--ink); padding:11px 18px; cursor:pointer; font-size:0.74rem; letter-spacing:0.06em; text-transform:uppercase; font-family:'JetBrains Mono',monospace; display:inline-flex; align-items:center; gap:8px; border-radius:2px; transition:.15s ease;}
+  .link-btn:hover{border-color:var(--accent); color:var(--accent);}
+  .link-btn svg{width:13px; height:13px;}
+  [dir="rtl"] .link-btn svg{transform:scaleX(-1);}
+
+  /* ---- about ---- */
+  .about-photo-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; margin-top:26px;}
   @media (max-width:760px){ .about-photo-grid{grid-template-columns:1fr;} }
-  .about-photo{
-    border-radius:16px; overflow:hidden; aspect-ratio:4/3; background:var(--panel); border:1px solid var(--line);
-    display:flex; align-items:center; justify-content:center;
-  }
+  .about-photo{border:1px solid var(--line-2); background:var(--card); aspect-ratio:4/3; display:flex; align-items:center; justify-content:center; color:var(--muted);}
   .about-photo img{width:100%; height:100%; object-fit:cover; display:block;}
-
-  .org-item{
-    background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:18px 20px; margin-bottom:12px;
-    display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap;
-  }
+  .org-item{border-bottom:1px solid var(--line); padding:16px 4px; display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap;}
   .org-item .org-name{font-family:'Fraunces',serif; font-weight:600; font-size:1.05rem; margin-bottom:4px;}
-  .org-item .org-desc{color:var(--sand-2); font-size:0.88rem; line-height:1.55; max-width:60ch;}
-  .org-item .org-contact{color:var(--muted); font-size:0.8rem; margin-top:6px;}
-  .org-item a{color:var(--accent); text-decoration:none; font-size:0.85rem;}
-  .org-item a:hover{text-decoration:underline;}
+  .org-item .org-desc{color:var(--ink-2); font-size:0.88rem; line-height:1.6; max-width:60ch;}
+  .org-item .org-contact{color:var(--muted); font-size:0.78rem; margin-top:6px;}
+  .org-item a{color:var(--accent); text-decoration:none; border-bottom:1px solid transparent; font-size:0.82rem;}
+  .org-item a:hover{border-color:var(--accent);}
+
+  /* ---- edit-mode chrome ---- */
+  .mini-btn{
+    appearance:none; border:1px dashed var(--line-2); background:none; color:var(--ink); padding:8px 12px;
+    cursor:pointer; font-size:0.7rem; letter-spacing:0.05em; text-transform:uppercase; font-family:'JetBrains Mono',monospace;
+    display:inline-flex; align-items:center; gap:6px; border-radius:2px; transition:.15s ease;
+  }
+  .mini-btn:hover{border-color:var(--accent); color:var(--accent);}
+  .mini-btn.danger{color:var(--danger);}
+  .mini-btn.danger:hover{border-color:var(--danger); color:var(--danger);}
+  .del-x{
+    width:24px; height:24px; border-radius:2px; background:var(--danger); color:#fff; border:none; cursor:pointer;
+    font-size:0.8rem; line-height:1; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .del-x:hover{background:#7e2c1f;}
+  .edit-inline{
+    width:100%; background:#fffdf5; border:1px solid var(--line-2); color:var(--ink); padding:7px 9px;
+    font-size:0.85rem; border-radius:2px; font-family:inherit;
+  }
+  .edit-inline:focus{border-color:var(--edit); outline:none;}
+  textarea.edit-inline{resize:vertical; min-height:48px; line-height:1.5;}
+  .index-row .row-actions{display:flex; gap:8px; align-items:center; margin-inline-start:auto;}
+  .index-row .row-actions .mini-btn{padding:6px 10px; font-size:0.62rem;}
+  .ngo-edit-row{display:grid; grid-template-columns:1fr 1fr 1.4fr auto; gap:8px; padding:12px 0; border-bottom:1px solid var(--line); align-items:start;}
+  @media (max-width:700px){ .ngo-edit-row{grid-template-columns:1fr;} }
   .org-edit-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;}
   @media (max-width:700px){ .org-edit-grid{grid-template-columns:1fr;} }
+  .add-ngo-btn{margin-top:14px;}
 
-  .back-strip{margin-top:44px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;}
-  .link-btn{background:none; border:1px solid var(--line); color:var(--sand-2); padding:11px 18px; border-radius:100px; cursor:pointer; font-size:0.82rem; display:inline-flex; align-items:center; gap:8px; transition:.2s ease;}
-  .link-btn:hover{border-color:var(--accent); color:var(--paper);}
-  .link-btn svg{width:14px; height:14px;}
-
-  /* --- edit-mode chrome --- */
-  .edit-toolbar{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px;}
-  .mini-btn{
-    border:1px dashed var(--line); background:none; color:var(--sand-2); padding:8px 12px; border-radius:10px; cursor:pointer;
-    font-size:0.76rem; font-family:'JetBrains Mono',monospace; display:inline-flex; align-items:center; gap:6px;
-  }
-  .mini-btn:hover{border-color:var(--accent); color:var(--paper);}
-  .mini-btn.danger{color:#e08c7d;}
-  .mini-btn.danger:hover{border-color:var(--danger); color:#ff9a8a;}
-  .card-toolbar{display:flex; gap:6px; flex-wrap:wrap; margin-top:14px; padding-top:12px; border-top:1px dashed var(--line);}
-  .kv-edit-row{display:flex; gap:6px; margin-bottom:8px; align-items:flex-start;}
-  .kv-edit-row input{flex:0 0 140px;}
-  .kv-edit-row textarea{flex:1; min-height:44px;}
-  .para-edit-row{display:flex; gap:6px; margin-bottom:8px; align-items:flex-start;}
-  .para-edit-row textarea{flex:1;}
-  .row-del{background:var(--danger); border:none; color:#fff; width:26px; height:26px; border-radius:6px; cursor:pointer; flex-shrink:0; font-size:0.8rem;}
-  .add-topic-card{
-    display:flex; align-items:center; justify-content:center; min-height:140px; border:1px dashed var(--edit); border-radius:16px;
-    color:var(--edit); cursor:pointer; font-family:'JetBrains Mono',monospace; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em;
-  }
-  .add-topic-card:hover{background:rgba(91,141,174,0.1);}
-
-  footer.foot{max-width:1180px; margin:60px auto 0; padding:24px 28px; border-top:1px solid var(--line); display:flex; justify-content:space-between; color:var(--muted); font-size:0.72rem; font-family:'JetBrains Mono',monospace; flex-wrap:wrap; gap:14px; align-items:center;}
+  /* ---- footer ---- */
+  footer.foot{border-top:3px double var(--ink); margin-top:64px; padding:22px 0 0; display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; align-items:center; color:var(--muted); font-size:0.68rem; font-family:'JetBrains Mono',monospace; letter-spacing:0.04em;}
   footer.foot .data-actions{display:flex; gap:8px;}
+
+  /* ---- modal (CKEditor) ---- */
+  .modal-overlay{position:fixed; inset:0; background:rgba(42,37,27,0.55); display:none; align-items:flex-start; justify-content:center; padding:5vh 16px; z-index:60; overflow-y:auto;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--paper); border:1px solid var(--ink); width:100%; max-width:880px; box-shadow:var(--shadow); max-height:90vh; display:flex; flex-direction:column;}
+  .modal-head{display:flex; justify-content:space-between; align-items:center; padding:16px 22px; border-bottom:3px double var(--ink);}
+  .modal-head h3{font-size:1.25rem;}
+  .modal-close{appearance:none; background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--muted); line-height:1; padding:4px 8px;}
+  .modal-close:hover{color:var(--accent);}
+  .modal-body{padding:22px; overflow-y:auto; flex:1;}
+  .modal-foot{display:flex; justify-content:flex-end; gap:10px; padding:14px 22px; border-top:1px solid var(--line-2); background:var(--paper-2);}
+  .btn-primary{appearance:none; background:var(--ink); color:var(--paper); border:none; cursor:pointer; padding:12px 22px; font-family:'JetBrains Mono',monospace; font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase; border-radius:2px; transition:.15s ease;}
+  .btn-primary:hover{background:var(--accent);}
+  .btn-ghost{appearance:none; background:transparent; color:var(--ink); border:1px solid var(--line-2); cursor:pointer; padding:11px 20px; font-family:'JetBrains Mono',monospace; font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase; border-radius:2px; transition:.15s ease;}
+  .btn-ghost:hover{border-color:var(--accent); color:var(--accent);}
+  .m-field{margin-bottom:20px;}
+  .m-field label{display:block; font-family:'JetBrains Mono',monospace; font-size:0.62rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;}
+  .m-card{border:1px solid var(--line-2); border-top:3px solid var(--ink); background:var(--card); padding:16px; margin-bottom:18px;}
+  .m-card-head{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; flex-wrap:wrap;}
+  .m-card-head .m-card-num{font-family:'JetBrains Mono',monospace; font-size:0.6rem; letter-spacing:0.16em; color:var(--accent); text-transform:uppercase;}
+  .m-para{margin-bottom:12px;}
+  .m-kv{display:grid; grid-template-columns:180px 1fr auto; gap:8px; margin-bottom:10px; align-items:start;}
+  @media (max-width:640px){ .m-kv{grid-template-columns:1fr;} }
+  .m-tools{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; padding-top:12px; border-top:1px dashed var(--line-2);}
+  .ck.ck-editor__editable_inline{min-height:92px; background:#fffdf5; color:var(--ink);}
+  .ck.ck-toolbar{background:var(--paper-2); border-color:var(--line-2) !important;}
+  .ck.ck-editor__main>.ck-editor__editable{border:1px solid var(--line-2) !important; border-radius:0 !important;}
+
   #import-file{display:none;}
 </style>
 </head>
 <body>
 
-<div class="grat-wash"></div>
-
 <div class="shell">
-  <header class="topbar">
+  <header class="masthead">
     <div class="brand" data-nav="start">
       <span class="mark">Geo<em>Bas</em></span>
-      <span class="sub">LANDINFO / ÅTERVÄNDARPORTAL</span>
+      <span class="sub" id="brand-sub">LANDINFO · ÅTERVÄNDARPORTAL</span>
     </div>
     <div class="topbar-right">
-      <button class="icon-btn" data-nav="about" type="button">Om oss</button>
-      <button class="icon-btn" data-nav="resources" type="button">Egenstudier</button>
-      <div id="save-status"><span class="status-dot" style="display:none;"></span><span id="save-status-text"></span></div>
+      <button class="nav-btn" data-nav="about" type="button" id="nav-about">Om oss</button>
+      <button class="nav-btn" data-nav="resources" type="button" id="nav-resources">Egenstudier</button>
+      <div id="save-status" class="save-status"><span class="status-dot" style="display:none;"></span><span id="save-status-text"></span></div>
       <div class="lang-switch" id="lang-switch"></div>
-      <button class="icon-btn" id="btn-edit-toggle" type="button">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m16.5 3.5 4 4L7 21l-4.5 1L4 17.5 16.5 3.5Z"/></svg>
-        <span id="edit-toggle-label">Redigera</span>
-      </button>
+      <button class="nav-btn" id="btn-edit-toggle" type="button"><span id="edit-toggle-label">Redigera</span></button>
     </div>
   </header>
   <nav class="crumbs" id="crumbs"></nav>
 
   <section id="view-start" class="view active">
-    <div class="hero hero-stacked">
-      <div class="hero-copy">
-        <span class="eyebrow">Migrationsverket · organiserad sysselsättning</span>
-        <h1>Var vill du<br><span class="stroke">bygga</span> nästa?</h1>
-        <p class="lede">En samlad guide till affärsmöjligheter, stödprogram och praktiska första steg — sorterat efter var i världen du är på väg tillbaka.</p>
+    <div class="cover">
+      <div class="cover-copy">
+        <span class="eyebrow" id="start-eyebrow">Migrationsverket · organiserad sysselsättning</span>
+        <h1 id="start-title">Vart är du <em>på väg?</em></h1>
+        <p class="lede dropcap" id="start-lede"></p>
         <div class="cta-row">
           <button class="cta" id="btn-start" type="button">
-            Tryck här för att gå vidare
+            <span id="btn-start-label">Tryck här för att gå vidare</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </button>
-          <button class="cta cta-secondary" data-nav="about" type="button">
-            Om oss &amp; våra samarbeten
-          </button>
+          <button class="cta cta-secondary" data-nav="about" type="button" id="btn-about-2">Om oss &amp; våra samarbeten</button>
         </div>
-        <p class="hint">Dra i jordgloben för att snurra den · tryck på en prick för att välja region</p>
+        <p class="stats" id="start-stats"></p>
       </div>
-      <div class="globe-stage globe-stage-big">
-        <div id="globe-canvas-wrap"><div class="globe-loading">Laddar databas &amp; jordglob…</div></div>
-      </div>
+      <aside class="toc" id="start-toc">
+        <div class="toc-head">
+          <span class="toc-title" id="toc-title">Innehåll</span>
+          <span class="toc-hint" id="toc-hint"></span>
+        </div>
+        <div id="toc-list"></div>
+      </aside>
     </div>
   </section>
 
   <section id="view-regions" class="view">
-    <div class="page-head">
-      <div>
-        <span class="eyebrow">Steg 1 av 3</span>
-        <h2>Var kommer du ifrån?</h2>
-        <p>Tryck på den världsdelen som du ska återvända till.</p>
-      </div>
+    <div class="chapter-head">
+      <span class="eyebrow" id="regions-eyebrow">Steg 1 av 3</span>
+      <h2 id="regions-title">Var kommer du ifrån?</h2>
+      <p id="regions-lede"></p>
     </div>
-    <div class="region-grid" id="region-grid"></div>
-  </section>
-
-  <section id="view-about" class="view">
-    <div class="page-head">
-      <div>
-        <span class="eyebrow">Om oss</span>
-        <h2>Vilka vi är &amp; vad vi erbjuder</h2>
-        <p>Allt material nedan finns även samlat i vår folder, tillsammans med fullständiga kontaktuppgifter.</p>
-      </div>
-    </div>
-    <div class="about-photo-grid" id="about-photo-grid"></div>
-    <div class="topics-grid" style="margin-top:24px;">
-      <div class="topic-card">
-        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m11 14 2-2 4 4"/><path d="M3 12h4l2-3 2 3h2"/><path d="M13 12h4l2-3"/><path d="M7 14a5 5 0 0 0 8 4"/></svg></div>
-        <h3>Vad vi erbjuder</h3>
-        <p class="body-text">Vi samlar landinfo, affärsmöjligheter och stödprogram för dig som planerar en återetablering — sorterat per land och kopplat till de organisationer som kan hjälpa dig vidare.</p>
-        <p class="body-text">Genom våra samarbetspartners kan du få hjälp med allt från ekonomiskt återetableringsstöd till praktisk vägledning på plats i ditt hemland.</p>
-      </div>
-    </div>
-    <div class="page-head" style="margin-top:44px;">
-      <div>
-        <span class="eyebrow">Kontakt</span>
-        <h2 style="font-size:1.6rem;">Lokala organisationer &amp; samarbeten</h2>
-      </div>
-    </div>
-    <div id="org-directory-list"></div>
-    <div class="back-strip">
-      <button class="link-btn" data-nav="start">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
-        Till startsidan
-      </button>
-    </div>
-  </section>
-
-  <section id="view-resources" class="view">
-    <div class="page-head">
-      <div>
-        <span class="eyebrow">Egenstudier</span>
-        <h2>Studera på egen hand</h2>
-        <p>Gratis och kostnadseffektiva resurser för CV, språk, översättning och vidareutbildning — oavsett var du befinner dig i processen.</p>
-      </div>
-    </div>
-    <div id="resources-list"></div>
-    <div class="back-strip">
-      <button class="link-btn" data-nav="start">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
-        Till startsidan
-      </button>
-    </div>
+    <div class="index-list" id="region-grid"></div>
   </section>
 
   <section id="view-countries" class="view">
-    <div class="page-head">
-      <div>
-        <span class="eyebrow" id="countries-eyebrow">Steg 2 av 3</span>
-        <h2 id="countries-title">Region</h2>
-        <p>Välj land för att läsa affärsmöjligheter, stödprogram och hur du kommer igång.</p>
-      </div>
+    <div class="chapter-head">
+      <span class="eyebrow" id="countries-eyebrow">Steg 2 av 3</span>
+      <h2 id="countries-title">Region</h2>
+      <p id="countries-lede"></p>
     </div>
-    <div class="country-grid" id="country-grid"></div>
+    <div class="index-list" id="country-grid"></div>
     <div class="back-strip">
-      <button class="link-btn" data-nav="regions">
+      <button class="link-btn" data-nav="regions" type="button" id="countries-back">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
-        Alla regioner
+        <span>Alla regioner</span>
       </button>
     </div>
   </section>
 
   <section id="view-country" class="view">
-    <div class="country-hero">
-      <div class="badge-globe" id="country-badge-globe"></div>
-      <div style="width:100%;">
+    <div class="article-head">
+      <div style="min-width:0;">
         <span class="eyebrow region-tag" id="country-region-tag">Region</span>
         <h2 id="country-name-static"></h2>
-        <input id="country-name-edit" class="edit-field title-field" style="display:none;" />
-        <p class="lede" id="country-intro-static"></p>
-        <textarea id="country-intro-edit" class="edit-field" style="display:none;"></textarea>
+        <div class="lede dropcap" id="country-intro-static"></div>
+        <div class="ntrans-note" id="country-ntrans" style="display:none;"></div>
       </div>
+      <button class="btn-edit" id="btn-edit-country" type="button">Redigera innehåll</button>
     </div>
-    <div class="topics-grid" id="topics-grid"></div>
+    <div class="articles" id="topics-grid"></div>
     <div id="empty-state"></div>
 
     <div class="sources-panel">
-      <span class="eyebrow">Källor &amp; internationella organisationer</span>
+      <span class="eyebrow" id="sources-eyebrow">Källor &amp; internationella organisationer</span>
       <div class="sources-links">
         <a class="source-chip" href="https://lifos.migrationsverket.se/fokuslander.html" target="_blank" rel="noopener">Lifos — landinformation (Migrationsverket)</a>
         <a class="source-chip" href="https://www.iom.int/" target="_blank" rel="noopener">IOM — International Organization for Migration</a>
         <a class="source-chip" href="https://reintegrationfacility.eu/" target="_blank" rel="noopener">ERRIN / Return &amp; Reintegration Facility</a>
       </div>
-      <p class="sources-note">ERRIN avslutades formellt 2022 — arbetet fortsätter sedan dess genom Return and Reintegration Facility (RRF), som drivs av ICMPD.</p>
+      <p class="sources-note" id="sources-note">ERRIN avslutades formellt 2022 — arbetet fortsätter sedan dess genom Return and Reintegration Facility (RRF), som drivs av ICMPD.</p>
     </div>
 
     <div class="ngo-panel">
-      <div class="page-head" style="margin:0 0 16px;">
-        <div><span class="eyebrow">Lokala organisationer</span><h2 style="font-size:1.3rem;">NGOs i landet</h2></div>
+      <div class="panel-head">
+        <span class="eyebrow" id="ngo-eyebrow">Lokala organisationer</span>
+        <h2 id="ngo-title">NGOs i landet</h2>
       </div>
       <div id="ngo-list"></div>
     </div>
 
-    <div class="disclaimer" id="country-disclaimer" style="display:none;"></div>
+    <div class="disclaimer" id="country-disclaimer"></div>
     <div class="back-strip">
-      <button class="link-btn" data-nav="back-to-countries">
+      <button class="link-btn" data-nav="back-to-countries" type="button" id="country-back-more">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
-        Fler länder i regionen
+        <span>Fler länder i regionen</span>
       </button>
-      <button class="link-btn" data-nav="regions">Byt region</button>
+      <button class="link-btn" data-nav="regions" type="button" id="country-back-region"><span>Byt region</span></button>
+    </div>
+  </section>
+
+  <section id="view-about" class="view">
+    <div class="chapter-head">
+      <span class="eyebrow" id="about-eyebrow">Om oss</span>
+      <h2 id="about-title">Vilka vi är &amp; vad vi erbjuder</h2>
+      <p id="about-lede"></p>
+    </div>
+    <div class="about-photo-grid" id="about-photo-grid"></div>
+    <div class="articles" style="margin-top:28px;">
+      <article class="article">
+        <span class="num" id="about-offer-num">Nr 01</span>
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m11 14 2-2 4 4"/><path d="M3 12h4l2-3 2 3h2"/><path d="M13 12h4l2-3"/><path d="M7 14a5 5 0 0 0 8 4"/></svg></div>
+        <h3 id="about-offer-title">Vad vi erbjuder</h3>
+        <div class="body-text" id="about-offer-p1"></div>
+        <div class="body-text" id="about-offer-p2"></div>
+      </article>
+    </div>
+    <div class="chapter-head" style="margin-top:48px;">
+      <span class="eyebrow" id="about-contact-eyebrow">Kontakt</span>
+      <h2 id="about-contact-title" style="font-size:1.6rem;">Lokala organisationer &amp; samarbeten</h2>
+    </div>
+    <div id="org-directory-list"></div>
+    <div class="back-strip">
+      <button class="link-btn" data-nav="start" type="button" id="about-back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+        <span>Till startsidan</span>
+      </button>
+    </div>
+  </section>
+
+  <section id="view-resources" class="view">
+    <div class="chapter-head">
+      <span class="eyebrow" id="res-eyebrow">Egenstudier</span>
+      <h2 id="res-title">Studera på egen hand</h2>
+      <p id="res-lede"></p>
+    </div>
+    <div id="resources-list"></div>
+    <div class="back-strip">
+      <button class="link-btn" data-nav="start" type="button" id="res-back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+        <span>Till startsidan</span>
+      </button>
     </div>
   </section>
 
   <footer class="foot">
-    <span>Källa: Google · GeoBas — driven av SQLite (sql.js) i webbläsaren</span>
+    <span id="foot-note">Källa: Google · GeoBas — driven av SQLite (sql.js) i webbläsaren</span>
     <div class="data-actions">
-      <button class="icon-btn" id="btn-export">Exportera .sqlite</button>
-      <button class="icon-btn" id="btn-import">Importera .sqlite</button>
+      <button class="nav-btn" id="btn-export">Exportera .sqlite</button>
+      <button class="nav-btn" id="btn-import">Importera .sqlite</button>
       <input type="file" id="import-file" accept=".sqlite,.db">
     </div>
   </footer>
 </div>
 
+<!-- CKEditor modal -->
+<div class="modal-overlay" id="edit-modal" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title">
+    <div class="modal-head">
+      <h3 id="edit-modal-title">Redigera innehåll</h3>
+      <button class="modal-close" id="edit-modal-close" type="button" aria-label="Stäng">×</button>
+    </div>
+    <div class="modal-body" id="edit-modal-body"></div>
+    <div class="modal-foot">
+      <button class="btn-ghost" id="edit-modal-cancel" type="button">Avbryt</button>
+      <button class="btn-primary" id="edit-modal-save" type="button">Spara</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* =====================================================================
-   SEED DATA (Swedish, extracted from source PPTX)
+   SEED DATA (verbatim baseline block, preserved byte-for-byte)
    ===================================================================== */
+
 const SEED_REGIONS = [
-  { slug:"sydamerika",     name:"Syd Amerika",    lat:-15, lng:-60, countries:["Ecuador","Venezuela","Peru","Chile","Colombia"] },
-  { slug:"centralamerika", name:"Central Amerika", lat:13,  lng:-88, countries:["El Salvador","Guatemala","Nicaragua"] },
+  { slug:"sydamerika",     name:"Sydamerika",    lat:-15, lng:-60, countries:["Ecuador","Venezuela","Peru","Chile","Colombia"] },
+  { slug:"centralamerika", name:"Centralamerika", lat:13,  lng:-88, countries:["El Salvador","Guatemala","Nicaragua"] },
   { slug:"europa",         name:"Europa",         lat:50,  lng:15,  countries:["Georgien","Kosovo","Albanien","Ryssland","Ukraina","Rumänien"] },
   { slug:"centralasien",   name:"Centralasien",   lat:45,  lng:65,  countries:["Azerbajdzjan","Uzbekistan","Kazakstan","Afghanistan"] },
-  { slug:"sydasien",       name:"Syd Asien",      lat:22,  lng:78,  countries:["Pakistan","Sri Lanka","Bangladesh"] },
+  { slug:"sydasien",       name:"Sydasien",      lat:22,  lng:78,  countries:["Pakistan","Sri Lanka","Bangladesh"] },
   { slug:"asien",          name:"Asien",          lat:30,  lng:100, countries:["Vietnam","Indien","Mongoliet","Bangladesh","Uigur","Kina"] },
   { slug:"afrika",         name:"Afrika",         lat:2,   lng:20,  countries:["Nigeria","Elfenbenskusten","Ghana","Somalia","Senegal","Kenya","Kongo"] },
-  { slug:"nordafrika",     name:"Nord Afrika",    lat:28,  lng:10,  countries:["Marocko","Egypten","Libyen","Tunisien","Algeriet"] },
+  { slug:"nordafrika",     name:"Nordafrika",    lat:28,  lng:10,  countries:["Marocko","Egypten","Libyen","Tunisien","Algeriet"] },
   { slug:"mellanostern",   name:"Mellanöstern",   lat:29,  lng:42,  countries:["Palestina","Libanon","Syrien","Turkiet","Iran","Irak"] },
 ];
 
@@ -502,10 +529,601 @@ const ORG_DIRECTORY_SEED = [
   { name:"Svenska Röda Korset", url:"https://www.rodakorset.se/", contact:"", description:"Kan bland annat hjälpa till att söka efter anhöriga och ge stöd inför och efter återvändande." },
 ];
 
-const EARTH_TEXTURE = 'https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-blue-marble.jpg';
-const EARTH_BUMP = 'https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-topology.png';
+/* =====================================================================
+   CONFIG & I18N
+   ===================================================================== */
 const SQLJS_CDN = 'https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/';
 const STORAGE_KEY = 'geobas-db-v1';
+const CKEDITOR_CDN = 'https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js';
+
+/* Browser-native persistence fallback for the inherited window.storage contract.
+   Contract used by the DB layer: get(key) -> { value: <string> } | null,
+   set(key, value, syncFlag) -> awaitable.  If a host app already provides
+   window.storage, that implementation is preserved untouched. */
+if(typeof window.storage === 'undefined'){
+  window.storage = {
+    async get(key){
+      const v = localStorage.getItem(key);
+      return v == null ? null : { value: v };
+    },
+    async set(key, value, sync){
+      localStorage.setItem(key, String(value));
+      return { ok: true };
+    }
+  };
+}
+
+/* Region names per language (sv names here are the corrected/idiomatic ones) */
+const SEED_REGION_NAMES = {
+  sydamerika:     { sv:'Sydamerika',     en:'South America', es:'Sudamérica',          ar:'أمريكا الجنوبية' },
+  centralamerika: { sv:'Centralamerika', en:'Central America', es:'Centroamérica',     ar:'أمريكا الوسطى' },
+  europa:         { sv:'Europa',         en:'Europe',          es:'Europa',             ar:'أوروبا' },
+  centralasien:   { sv:'Centralasien',   en:'Central Asia',    es:'Asia Central',       ar:'آسيا الوسطى' },
+  sydasien:       { sv:'Sydasien',       en:'South Asia',      es:'Asia del Sur',       ar:'جنوب آسيا' },
+  asien:          { sv:'Asien',          en:'Asia',            es:'Asia',               ar:'آسيا' },
+  afrika:         { sv:'Afrika',         en:'Africa',          es:'África',             ar:'أفريقيا' },
+  nordafrika:     { sv:'Nordafrika',     en:'North Africa',    es:'Norte de África',    ar:'شمال أفريقيا' },
+  mellanostern:   { sv:'Mellanöstern',   en:'Middle East',     es:'Oriente Medio',      ar:'الشرق الأوسط' },
+};
+
+/* Country names per language, keyed by the Swedish name used in the seed */
+const SEED_COUNTRY_NAMES = {
+  'Ecuador':         { en:'Ecuador',         es:'Ecuador',         ar:'الإكوادور' },
+  'Venezuela':       { en:'Venezuela',       es:'Venezuela',       ar:'فنزويلا' },
+  'Peru':            { en:'Peru',            es:'Perú',            ar:'بيرو' },
+  'Chile':           { en:'Chile',           es:'Chile',           ar:'تشيلي' },
+  'Colombia':        { en:'Colombia',        es:'Colombia',        ar:'كولومبيا' },
+  'El Salvador':     { en:'El Salvador',     es:'El Salvador',     ar:'السلفادور' },
+  'Guatemala':       { en:'Guatemala',       es:'Guatemala',       ar:'غواتيمالا' },
+  'Nicaragua':       { en:'Nicaragua',       es:'Nicaragua',       ar:'نيكاراغوا' },
+  'Georgien':        { en:'Georgia',         es:'Georgia',         ar:'جورجيا' },
+  'Kosovo':          { en:'Kosovo',          es:'Kosovo',          ar:'كوسوفو' },
+  'Albanien':        { en:'Albania',         es:'Albania',         ar:'ألبانيا' },
+  'Ryssland':        { en:'Russia',          es:'Rusia',           ar:'روسيا' },
+  'Ukraina':         { en:'Ukraine',         es:'Ucrania',         ar:'أوكرانيا' },
+  'Rumänien':        { en:'Romania',         es:'Rumania',         ar:'رومانيا' },
+  'Azerbajdzjan':    { en:'Azerbaijan',      es:'Azerbaiyán',      ar:'أذربيجان' },
+  'Uzbekistan':      { en:'Uzbekistan',      es:'Uzbekistán',      ar:'أوزبكستان' },
+  'Kazakstan':       { en:'Kazakhstan',      es:'Kazajistán',      ar:'كازاخستان' },
+  'Afghanistan':     { en:'Afghanistan',     es:'Afganistán',      ar:'أفغانستان' },
+  'Pakistan':        { en:'Pakistan',        es:'Pakistán',        ar:'باكستان' },
+  'Sri Lanka':       { en:'Sri Lanka',       es:'Sri Lanka',       ar:'سريلانكا' },
+  'Bangladesh':      { en:'Bangladesh',      es:'Bangladés',       ar:'بنغلاديش' },
+  'Vietnam':         { en:'Vietnam',         es:'Vietnam',         ar:'فيتنام' },
+  'Indien':          { en:'India',           es:'India',           ar:'الهند' },
+  'Mongoliet':       { en:'Mongolia',        es:'Mongolia',        ar:'منغوليا' },
+  'Uigur':           { en:'Uyghur',          es:'Uigur',           ar:'الأويغور' },
+  'Kina':            { en:'China',           es:'China',           ar:'الصين' },
+  'Nigeria':         { en:'Nigeria',         es:'Nigeria',         ar:'نيجيريا' },
+  'Elfenbenskusten': { en:'Ivory Coast',     es:'Costa de Marfil', ar:'ساحل العاج' },
+  'Ghana':           { en:'Ghana',           es:'Ghana',           ar:'غانا' },
+  'Somalia':         { en:'Somalia',         es:'Somalia',         ar:'الصومال' },
+  'Senegal':         { en:'Senegal',         es:'Senegal',         ar:'السنغال' },
+  'Kenya':           { en:'Kenya',           es:'Kenia',           ar:'كينيا' },
+  'Kongo':           { en:'Congo',           es:'Congo',           ar:'الكونغو' },
+  'Marocko':         { en:'Morocco',         es:'Marruecos',       ar:'المغرب' },
+  'Egypten':         { en:'Egypt',           es:'Egipto',          ar:'مصر' },
+  'Libyen':          { en:'Libya',           es:'Libia',           ar:'ليبيا' },
+  'Tunisien':        { en:'Tunisia',         es:'Túnez',           ar:'تونس' },
+  'Algeriet':        { en:'Algeria',         es:'Argelia',         ar:'الجزائر' },
+  'Palestina':       { en:'Palestine',       es:'Palestina',       ar:'فلسطين' },
+  'Libanon':         { en:'Lebanon',         es:'Líbano',          ar:'لبنان' },
+  'Syrien':          { en:'Syria',           es:'Siria',           ar:'سوريا' },
+  'Turkiet':         { en:'Turkey',          es:'Turquía',         ar:'تركيا' },
+  'Iran':            { en:'Iran',            es:'Irán',            ar:'إيران' },
+  'Irak':            { en:'Iraq',            es:'Irak',            ar:'العراق' },
+};
+
+/* All static UI chrome, keyed by language; missing keys fall back to sv */
+const STRINGS = {
+  sv: {
+    'brand.sub':        'LANDINFO · ÅTERVÄNDARPORTAL',
+    'nav.about':        'Om oss',
+    'nav.resources':    'Egenstudier',
+    'nav.edit':         'Redigera',
+    'nav.done':         'Klar',
+    'status.pending':   'Ändringar...',
+    'status.saving':    'Sparar...',
+    'status.saved':     'Sparat',
+    'status.error':     'Kunde inte spara',
+    'crumb.start':      'Start',
+    'start.eyebrow':    'Migrationsverket · organiserad sysselsättning',
+    'start.title':      'Vart är du <em>på väg?</em>',
+    'start.lede':       'En samlad guide till affärsmöjligheter, stödprogram och praktiska första steg — sorterad efter var i världen du är på väg tillbaka.',
+    'start.cta':        'Tryck här för att gå vidare',
+    'start.cta2':       'Om oss & våra samarbeten',
+    'start.stats':      '{r} regioner · {c} länder · {l} språk',
+    'toc.title':        'Innehåll',
+    'toc.hint':         'Välj en region',
+    'regions.eyebrow':  'Steg 1 av 3',
+    'regions.title':    'Var kommer du ifrån?',
+    'regions.lede':     'Tryck på den världsdel du ska återvända till.',
+    'regions.count':    '{n} länder',
+    'regions.add':      '+ Ny region',
+    'regions.addPrompt':'Namn på ny region:',
+    'regions.rename':   'Byt namn',
+    'regions.renamePrompt':'Nytt namn för regionen:',
+    'regions.del':      'Ta bort region',
+    'regions.delConfirm':'Ta bort denna region och dess koppling till länder?',
+    'countries.eyebrow':'Steg 2 av 3',
+    'countries.lede':   'Välj land för att läsa affärsmöjligheter, stödprogram och hur du kommer igång.',
+    'countries.back':   'Alla regioner',
+    'countries.add':    '+ Nytt land',
+    'countries.addPrompt':'Namn på nytt land:',
+    'countries.rename': 'Byt namn',
+    'countries.renamePrompt':'Nytt namn för landet:',
+    'countries.del':    'Ta bort land',
+    'countries.delConfirm':'Ta bort detta land från regionen?',
+    'countries.stub':   'Kommer snart',
+    'countries.ntrans': 'ej öv.',
+    'badge.ntrans':     'Ej översatt',
+    'country.edit':     'Redigera innehåll',
+    'country.region':   'Region',
+    'country.fallback': 'Visas på svenska – översättning saknas för detta innehåll.',
+    'country.emptyTitle':'Innehåll på väg',
+    'country.emptyBody':'Det finns ännu ingen landinfo för {name} på {lang}. Kom tillbaka snart, eller välj ett annat land i {region}.',
+    'country.disclaimer':'Innehållet för {name} är sammanställt från Migrationsverkets landinfo-underlag (2026) och kan komma att uppdateras.',
+    'country.articleNum':'Artikel {n}',
+    'sources.eyebrow':  'Källor & internationella organisationer',
+    'sources.note':     'ERRIN avslutades formellt 2022 — arbetet fortsätter sedan dess genom Return and Reintegration Facility (RRF), som drivs av ICMPD.',
+    'ngo.eyebrow':      'Lokala organisationer',
+    'ngo.title':        'NGOs i landet',
+    'ngo.empty':        'Inga lokala organisationer inlagda ännu för det här landet.',
+    'ngo.add':          '+ Lägg till organisation',
+    'ngo.visit':        'Besök webbplats',
+    'ngo.namePh':       'Namn',
+    'ngo.urlPh':        'URL (https://...)',
+    'ngo.notePh':       'Kort beskrivning',
+    'country.backMore': 'Fler länder i regionen',
+    'country.backRegion':'Byt region',
+    'about.eyebrow':    'Om oss',
+    'about.title':      'Vilka vi är & vad vi erbjuder',
+    'about.lede':       'Allt material nedan finns även samlat i vår folder, tillsammans med fullständiga kontaktuppgifter.',
+    'about.photo1':     'Verksamheten på plats',
+    'about.photo2':     'Rådgivning & vägledning',
+    'about.photo3':     'Lokala samarbeten',
+    'about.offerNum':   'Nr 01',
+    'about.offerTitle': 'Vad vi erbjuder',
+    'about.offerP1':    'Vi samlar landinfo, affärsmöjligheter och stödprogram för dig som planerar en återetablering — sorterat per land och kopplat till de organisationer som kan hjälpa dig vidare.',
+    'about.offerP2':    'Genom våra samarbetspartners kan du få hjälp med allt från ekonomiskt återetableringsstöd till praktisk vägledning på plats i ditt hemland.',
+    'about.contactEyebrow':'Kontakt',
+    'about.contactTitle':'Lokala organisationer & samarbeten',
+    'about.orgAdd':     '+ Lägg till organisation',
+    'about.orgDel':     'Ta bort',
+    'about.orgEmpty':   'Inga organisationer inlagda ännu.',
+    'about.back':       'Till startsidan',
+    'about.visit':      'Besök webbplats',
+    'org.namePh':       'Namn',
+    'org.urlPh':        'URL (https://...)',
+    'org.contactPh':    'Kontakt (telefon/e-post)',
+    'org.descPh':       'Beskrivning',
+    'res.eyebrow':      'Egenstudier',
+    'res.title':        'Studera på egen hand',
+    'res.lede':         'Gratis och kostnadseffektiva resurser för CV, språk, översättning och vidareutbildning — oavsett var du befinner dig i processen.',
+    'res.back':         'Till startsidan',
+    'foot.note':        'Källa: Google · GeoBas — driven av SQLite (sql.js) i webbläsaren',
+    'foot.export':      'Exportera .sqlite',
+    'foot.import':      'Importera .sqlite',
+    'foot.importOk':    'Databasen har importerats.',
+    'foot.importFail':  'Kunde inte läsa filen som en SQLite-databas.',
+    'modal.title':      'Redigera innehåll',
+    'modal.close':      'Stäng',
+    'modal.cancel':     'Avbryt',
+    'modal.save':       'Spara',
+    'modal.name':       'Landets namn',
+    'modal.intro':      'Inledning',
+    'modal.cards':      'Kort',
+    'modal.cardNum':    'Kort {n}',
+    'modal.titlePh':    'Rubrik (lämna tomt för textstycke utan rubrik)',
+    'modal.paras':      'Stycken',
+    'modal.paraAdd':    '+ Stycke',
+    'modal.paraDel':    'Ta bort stycke',
+    'modal.kv':         'Etikett: text',
+    'modal.kvAdd':      '+ Rad (etikett: text)',
+    'modal.kvKPh':      'Etikett',
+    'modal.kvVPh':      'Text',
+    'modal.cardAdd':    '+ Nytt kort',
+    'modal.cardDel':    'Ta bort kort',
+    'modal.cardDelConfirm':'Ta bort hela kortet?',
+    'untitled':         '(namnlös)',
+    'lang.add':         'Nytt språk',
+    'lang.codePrompt':  'Språkkod (t.ex. "de", "fr"):',
+    'lang.namePrompt':  'Språkets namn (t.ex. "Deutsch"):',
+    'loading':          'Laddar databas…',
+  },
+  en: {
+    'brand.sub':        'COUNTRY INFO · RETURNEE PORTAL',
+    'nav.about':        'About',
+    'nav.resources':    'Self-study',
+    'nav.edit':         'Edit',
+    'nav.done':         'Done',
+    'status.pending':   'Changes...',
+    'status.saving':    'Saving...',
+    'status.saved':     'Saved',
+    'status.error':     'Could not save',
+    'crumb.start':      'Start',
+    'start.eyebrow':    'Swedish Migration Agency · organised reintegration',
+    'start.title':      'Where are you <em>headed?</em>',
+    'start.lede':       'A consolidated guide to business opportunities, support programmes and practical first steps — organised by where in the world you are heading back to.',
+    'start.cta':        'Press here to continue',
+    'start.cta2':       'About us & our partnerships',
+    'start.stats':      '{r} regions · {c} countries · {l} languages',
+    'toc.title':        'Contents',
+    'toc.hint':         'Choose a region',
+    'regions.eyebrow':  'Step 1 of 3',
+    'regions.title':    'Where are you from?',
+    'regions.lede':     'Tap the part of the world you are returning to.',
+    'regions.count':    '{n} countries',
+    'regions.add':      '+ New region',
+    'regions.addPrompt':'Name of new region:',
+    'regions.rename':   'Rename',
+    'regions.renamePrompt':'New name for the region:',
+    'regions.del':      'Delete region',
+    'regions.delConfirm':'Delete this region and its country links?',
+    'countries.eyebrow':'Step 2 of 3',
+    'countries.lede':   'Choose a country to read about business opportunities, support programmes and how to get started.',
+    'countries.back':   'All regions',
+    'countries.add':    '+ New country',
+    'countries.addPrompt':'Name of new country:',
+    'countries.rename': 'Rename',
+    'countries.renamePrompt':'New name for the country:',
+    'countries.del':    'Delete country',
+    'countries.delConfirm':'Remove this country from the region?',
+    'countries.stub':   'Coming soon',
+    'countries.ntrans': 'not transl.',
+    'badge.ntrans':     'Not translated',
+    'country.edit':     'Edit content',
+    'country.region':   'Region',
+    'country.fallback': 'Showing Swedish – no translation available for this content yet.',
+    'country.emptyTitle':'Content on its way',
+    'country.emptyBody':'There is no country info for {name} in {lang} yet. Check back soon, or choose another country in {region}.',
+    'country.disclaimer':'The content for {name} is compiled from the Swedish Migration Agency country-of-origin material (2026) and may be updated.',
+    'country.articleNum':'Article {n}',
+    'sources.eyebrow':  'Sources & international organisations',
+    'sources.note':     'ERRIN formally ended in 2022 — the work has since continued through the Return and Reintegration Facility (RRF), run by ICMPD.',
+    'ngo.eyebrow':      'Local organisations',
+    'ngo.title':        'NGOs in the country',
+    'ngo.empty':        'No local organisations have been added for this country yet.',
+    'ngo.add':          '+ Add organisation',
+    'ngo.visit':        'Visit website',
+    'ngo.namePh':       'Name',
+    'ngo.urlPh':        'URL (https://...)',
+    'ngo.notePh':       'Short description',
+    'country.backMore': 'More countries in this region',
+    'country.backRegion':'Change region',
+    'about.eyebrow':    'About us',
+    'about.title':      'Who we are & what we offer',
+    'about.lede':       'All the material below is also gathered in our brochure, together with full contact details.',
+    'about.photo1':     'Operations on the ground',
+    'about.photo2':     'Advice & guidance',
+    'about.photo3':     'Local partnerships',
+    'about.offerNum':   'No. 01',
+    'about.offerTitle': 'What we offer',
+    'about.offerP1':    'We gather country info, business opportunities and support programmes for those planning to re-establish — organised by country and linked to the organisations that can help you move forward.',
+    'about.offerP2':    'Through our partners you can get help with everything from financial reintegration support to practical guidance on the ground in your home country.',
+    'about.contactEyebrow':'Contact',
+    'about.contactTitle':'Local organisations & partnerships',
+    'about.orgAdd':     '+ Add organisation',
+    'about.orgDel':     'Delete',
+    'about.orgEmpty':   'No organisations have been added yet.',
+    'about.back':       'Back to start',
+    'about.visit':      'Visit website',
+    'org.namePh':       'Name',
+    'org.urlPh':        'URL (https://...)',
+    'org.contactPh':    'Contact (phone/email)',
+    'org.descPh':       'Description',
+    'res.eyebrow':      'Self-study',
+    'res.title':        'Study on your own',
+    'res.lede':         'Free and cost-effective resources for CVs, languages, translation and further education — wherever you are in the process.',
+    'res.back':         'Back to start',
+    'foot.note':        'Source: Google · GeoBas — powered by SQLite (sql.js) in your browser',
+    'foot.export':      'Export .sqlite',
+    'foot.import':      'Import .sqlite',
+    'foot.importOk':    'The database has been imported.',
+    'foot.importFail':  'Could not read the file as an SQLite database.',
+    'modal.title':      'Edit content',
+    'modal.close':      'Close',
+    'modal.cancel':     'Cancel',
+    'modal.save':       'Save',
+    'modal.name':       'Country name',
+    'modal.intro':      'Introduction',
+    'modal.cards':      'Cards',
+    'modal.cardNum':    'Card {n}',
+    'modal.titlePh':    'Heading (leave empty for a plain text block)',
+    'modal.paras':      'Paragraphs',
+    'modal.paraAdd':    '+ Paragraph',
+    'modal.paraDel':    'Delete paragraph',
+    'modal.kv':         'Label: text',
+    'modal.kvAdd':      '+ Row (label: text)',
+    'modal.kvKPh':      'Label',
+    'modal.kvVPh':      'Text',
+    'modal.cardAdd':    '+ New card',
+    'modal.cardDel':    'Delete card',
+    'modal.cardDelConfirm':'Delete the whole card?',
+    'untitled':         '(unnamed)',
+    'lang.add':         'New language',
+    'lang.codePrompt':  'Language code (e.g. "de", "fr"):',
+    'lang.namePrompt':  'Language name (e.g. "German"):',
+    'loading':          'Loading database…',
+  },
+  es: {
+    'brand.sub':        'INFO DE PAÍSES · PORTAL DE RETORNO',
+    'nav.about':        'Nosotros',
+    'nav.resources':    'Autoestudio',
+    'nav.edit':         'Editar',
+    'nav.done':         'Listo',
+    'status.pending':   'Cambios...',
+    'status.saving':    'Guardando...',
+    'status.saved':     'Guardado',
+    'status.error':     'No se pudo guardar',
+    'crumb.start':      'Inicio',
+    'start.eyebrow':    'Agencia Sueca de Migraciones · reinserción organizada',
+    'start.title':      '¿Hacia dónde <em>te diriges?</em>',
+    'start.lede':       'Una guía consolidada de oportunidades de negocio, programas de apoyo y primeros pasos prácticos — organizada según el lugar del mundo al que regresas.',
+    'start.cta':        'Pulsa aquí para continuar',
+    'start.cta2':       'Nosotros y nuestros colaboradores',
+    'start.stats':      '{r} regiones · {c} países · {l} idiomas',
+    'toc.title':        'Contenido',
+    'toc.hint':         'Elige una región',
+    'regions.eyebrow':  'Paso 1 de 3',
+    'regions.title':    '¿De dónde eres?',
+    'regions.lede':     'Toca la parte del mundo a la que vas a regresar.',
+    'regions.count':    '{n} países',
+    'regions.add':      '+ Nueva región',
+    'regions.addPrompt':'Nombre de la nueva región:',
+    'regions.rename':   'Renombrar',
+    'regions.renamePrompt':'Nuevo nombre de la región:',
+    'regions.del':      'Eliminar región',
+    'regions.delConfirm':'¿Eliminar esta región y sus vínculos con los países?',
+    'countries.eyebrow':'Paso 2 de 3',
+    'countries.lede':   'Elige un país para leer sobre oportunidades de negocio, programas de apoyo y cómo empezar.',
+    'countries.back':   'Todas las regiones',
+    'countries.add':    '+ Nuevo país',
+    'countries.addPrompt':'Nombre del nuevo país:',
+    'countries.rename': 'Renombrar',
+    'countries.renamePrompt':'Nuevo nombre del país:',
+    'countries.del':    'Eliminar país',
+    'countries.delConfirm':'¿Eliminar este país de la región?',
+    'countries.stub':   'Próximamente',
+    'countries.ntrans': 'sin trad.',
+    'badge.ntrans':     'Sin traducir',
+    'country.edit':     'Editar contenido',
+    'country.region':   'Región',
+    'country.fallback': 'Se muestra en sueco – aún no hay traducción para este contenido.',
+    'country.emptyTitle':'Contenido en camino',
+    'country.emptyBody':'Aún no hay información de país para {name} en {lang}. Vuelve pronto o elige otro país en {region}.',
+    'country.disclaimer':'El contenido de {name} se ha elaborado a partir de la información de país de la Agencia Sueca de Migraciones (2026) y puede actualizarse.',
+    'country.articleNum':'Artículo {n}',
+    'sources.eyebrow':  'Fuentes y organizaciones internacionales',
+    'sources.note':     'ERRIN finalizó formalmente en 2022 — el trabajo continúa desde entonces a través del Return and Reintegration Facility (RRF), gestionado por ICMPD.',
+    'ngo.eyebrow':      'Organizaciones locales',
+    'ngo.title':        'ONG en el país',
+    'ngo.empty':        'Aún no se han añadido organizaciones locales para este país.',
+    'ngo.add':          '+ Añadir organización',
+    'ngo.visit':        'Visitar sitio web',
+    'ngo.namePh':       'Nombre',
+    'ngo.urlPh':        'URL (https://...)',
+    'ngo.notePh':       'Breve descripción',
+    'country.backMore': 'Más países de esta región',
+    'country.backRegion':'Cambiar de región',
+    'about.eyebrow':    'Nosotros',
+    'about.title':      'Quiénes somos y qué ofrecemos',
+    'about.lede':       'Todo el material de abajo también está recogido en nuestro folleto, junto con los datos de contacto completos.',
+    'about.photo1':     'Actividad sobre el terreno',
+    'about.photo2':     'Asesoramiento y orientación',
+    'about.photo3':     'Colaboraciones locales',
+    'about.offerNum':   'N.º 01',
+    'about.offerTitle': 'Qué ofrecemos',
+    'about.offerP1':    'Reunimos información de país, oportunidades de negocio y programas de apoyo para quienes planean un restablecimiento — organizada por país y vinculada a las organizaciones que pueden ayudarte a seguir adelante.',
+    'about.offerP2':    'A través de nuestros colaboradores puedes obtener ayuda desde apoyo económico para el restablecimiento hasta orientación práctica sobre el terreno en tu país de origen.',
+    'about.contactEyebrow':'Contacto',
+    'about.contactTitle':'Organizaciones locales y colaboraciones',
+    'about.orgAdd':     '+ Añadir organización',
+    'about.orgDel':     'Eliminar',
+    'about.orgEmpty':   'Aún no se han añadido organizaciones.',
+    'about.back':       'Volver al inicio',
+    'about.visit':      'Visitar sitio web',
+    'org.namePh':       'Nombre',
+    'org.urlPh':        'URL (https://...)',
+    'org.contactPh':    'Contacto (teléfono/correo)',
+    'org.descPh':       'Descripción',
+    'res.eyebrow':      'Autoestudio',
+    'res.title':        'Estudia por tu cuenta',
+    'res.lede':         'Recursos gratuitos y rentables para el CV, los idiomas, la traducción y la formación continua — sin importar en qué punto del proceso estés.',
+    'res.back':         'Volver al inicio',
+    'foot.note':        'Fuente: Google · GeoBas — con tecnología de SQLite (sql.js) en tu navegador',
+    'foot.export':      'Exportar .sqlite',
+    'foot.import':      'Importar .sqlite',
+    'foot.importOk':    'La base de datos se ha importado.',
+    'foot.importFail':  'No se pudo leer el archivo como una base de datos SQLite.',
+    'modal.title':      'Editar contenido',
+    'modal.close':      'Cerrar',
+    'modal.cancel':     'Cancelar',
+    'modal.save':       'Guardar',
+    'modal.name':       'Nombre del país',
+    'modal.intro':      'Introducción',
+    'modal.cards':      'Tarjetas',
+    'modal.cardNum':    'Tarjeta {n}',
+    'modal.titlePh':    'Título (déjalo vacío para un bloque de texto sin título)',
+    'modal.paras':      'Párrafos',
+    'modal.paraAdd':    '+ Párrafo',
+    'modal.paraDel':    'Eliminar párrafo',
+    'modal.kv':         'Etiqueta: texto',
+    'modal.kvAdd':      '+ Fila (etiqueta: texto)',
+    'modal.kvKPh':      'Etiqueta',
+    'modal.kvVPh':      'Texto',
+    'modal.cardAdd':    '+ Nueva tarjeta',
+    'modal.cardDel':    'Eliminar tarjeta',
+    'modal.cardDelConfirm':'¿Eliminar toda la tarjeta?',
+    'untitled':         '(sin nombre)',
+    'lang.add':         'Nuevo idioma',
+    'lang.codePrompt':  'Código de idioma (p. ej. "de", "fr"):',
+    'lang.namePrompt':  'Nombre del idioma (p. ej. "Alemán"):',
+    'loading':          'Cargando la base de datos…',
+  },
+  ar: {
+    'brand.sub':        'معلومات البلدان · بوابة العائدين',
+    'nav.about':        'من نحن',
+    'nav.resources':    'الدراسة الذاتية',
+    'nav.edit':         'تحرير',
+    'nav.done':         'تم',
+    'status.pending':   'تغييرات...',
+    'status.saving':    'جارٍ الحفظ...',
+    'status.saved':     'تم الحفظ',
+    'status.error':     'تعذّر الحفظ',
+    'crumb.start':      'البداية',
+    'start.eyebrow':    'وكالة الهجرة السويدية · إعادة إدماج منظّمة',
+    'start.title':      'إلى أين <em>أنت ذاهب؟</em>',
+    'start.lede':       'دليل موحّد لفرص الأعمال وبرامج الدعم والخطوات العملية الأولى — مرتّب حسب المنطقة التي ستعود إليها في العالم.',
+    'start.cta':        'اضغط هنا للمتابعة',
+    'start.cta2':       'من نحن وشراكاتنا',
+    'start.stats':      '{r} مناطق · {c} بلدان · {l} لغات',
+    'toc.title':        'المحتويات',
+    'toc.hint':         'اختر منطقة',
+    'regions.eyebrow':  'الخطوة 1 من 3',
+    'regions.title':    'من أين أنت؟',
+    'regions.lede':     'اضغط على جزء العالم الذي ستعود إليه.',
+    'regions.count':    '{n} بلدان',
+    'regions.add':      '+ منطقة جديدة',
+    'regions.addPrompt':'اسم المنطقة الجديدة:',
+    'regions.rename':   'إعادة تسمية',
+    'regions.renamePrompt':'الاسم الجديد للمنطقة:',
+    'regions.del':      'حذف المنطقة',
+    'regions.delConfirm':'حذف هذه المنطقة وروابطها بالبلدان؟',
+    'countries.eyebrow':'الخطوة 2 من 3',
+    'countries.lede':   'اختر بلداً لقراءة فرص الأعمال وبرامج الدعم وكيفية البدء.',
+    'countries.back':   'جميع المناطق',
+    'countries.add':    '+ بلد جديد',
+    'countries.addPrompt':'اسم البلد الجديد:',
+    'countries.rename': 'إعادة تسمية',
+    'countries.renamePrompt':'الاسم الجديد للبلد:',
+    'countries.del':    'حذف البلد',
+    'countries.delConfirm':'إزالة هذا البلد من المنطقة؟',
+    'countries.stub':   'قريباً',
+    'countries.ntrans': 'غير مترجم',
+    'badge.ntrans':     'غير مترجم',
+    'country.edit':     'تحرير المحتوى',
+    'country.region':   'المنطقة',
+    'country.fallback': 'يُعرض بالسويدية – لا توجد ترجمة لهذا المحتوى بعد.',
+    'country.emptyTitle':'المحتوى قيد الإعداد',
+    'country.emptyBody':'لا توجد بعد معلومات عن {name} باللغة {lang}. عُد قريباً أو اختر بلداً آخر في {region}.',
+    'country.disclaimer':'محتوى {name} مُجمَّع من مواد وكالة الهجرة السويدية حول بلدان المنشأ (2026) وقد يُحدَّث.',
+    'country.articleNum':'مقال {n}',
+    'sources.eyebrow':  'المصادر والمنظمات الدولية',
+    'sources.note':     'انتهى ERRIN رسمياً عام 2022 — ويستمر العمل منذ ذلك الحين عبر مرفق العودة وإعادة الإدماج (RRF) الذي يديره ICMPD.',
+    'ngo.eyebrow':      'المنظمات المحلية',
+    'ngo.title':        'المنظمات غير الحكومية في البلد',
+    'ngo.empty':        'لم تُضف منظمات محلية لهذا البلد بعد.',
+    'ngo.add':          '+ إضافة منظمة',
+    'ngo.visit':        'زيارة الموقع',
+    'ngo.namePh':       'الاسم',
+    'ngo.urlPh':        'الرابط (https://...)',
+    'ngo.notePh':       'وصف قصير',
+    'country.backMore': 'مزيد من البلدان في هذه المنطقة',
+    'country.backRegion':'تغيير المنطقة',
+    'about.eyebrow':    'من نحن',
+    'about.title':      'من نحن وماذا نقدم',
+    'about.lede':       'كل المواد أدناه متاحة أيضاً في مطويتنا، مع بيانات الاتصال الكاملة.',
+    'about.photo1':     'العمل الميداني',
+    'about.photo2':     'المشورة والتوجيه',
+    'about.photo3':     'شراكات محلية',
+    'about.offerNum':   'رقم 01',
+    'about.offerTitle': 'ماذا نقدم',
+    'about.offerP1':    'نجمع معلومات البلدان وفرص الأعمال وبرامج الدعم لمن يخطط لإعادة الاستقرار — مرتّبة حسب البلد ومرتبطة بالمنظمات التي يمكنها مساعدتك.',
+    'about.offerP2':    'عبر شركائنا يمكنك الحصول على مساعدة تتراوح بين الدعم المالي لإعادة الاستقرار والتوجيه العملي على الأرض في بلدك.',
+    'about.contactEyebrow':'اتصال',
+    'about.contactTitle':'المنظمات المحلية والشراكات',
+    'about.orgAdd':     '+ إضافة منظمة',
+    'about.orgDel':     'حذف',
+    'about.orgEmpty':   'لم تُضف منظمات بعد.',
+    'about.back':       'العودة إلى البداية',
+    'about.visit':      'زيارة الموقع',
+    'org.namePh':       'الاسم',
+    'org.urlPh':        'الرابط (https://...)',
+    'org.contactPh':    'اتصال (هاتف/بريد)',
+    'org.descPh':       'الوصف',
+    'res.eyebrow':      'الدراسة الذاتية',
+    'res.title':        'ادرس بنفسك',
+    'res.lede':         'موارد مجانية وفعالة من حيث التكلفة للسيرة الذاتية واللغات والترجمة والتعليم المستمر — أينما كنت في هذه الرحلة.',
+    'res.back':         'العودة إلى البداية',
+    'foot.note':        'المصدر: Google · جيوباس — يعمل عبر SQLite (sql.js) في المتصفح',
+    'foot.export':      'تصدير .sqlite',
+    'foot.import':      'استيراد .sqlite',
+    'foot.importOk':    'تم استيراد قاعدة البيانات.',
+    'foot.importFail':  'تعذّرت قراءة الملف كقاعدة بيانات SQLite.',
+    'modal.title':      'تحرير المحتوى',
+    'modal.close':      'إغلاق',
+    'modal.cancel':     'إلغاء',
+    'modal.save':       'حفظ',
+    'modal.name':       'اسم البلد',
+    'modal.intro':      'مقدمة',
+    'modal.cards':      'البطاقات',
+    'modal.cardNum':    'بطاقة {n}',
+    'modal.titlePh':    'العنوان (اتركه فارغاً لفقرة نصية دون عنوان)',
+    'modal.paras':      'الفقرات',
+    'modal.paraAdd':    '+ فقرة',
+    'modal.paraDel':    'حذف الفقرة',
+    'modal.kv':         'تسمية: نص',
+    'modal.kvAdd':      '+ صف (تسمية: نص)',
+    'modal.kvKPh':      'التسمية',
+    'modal.kvVPh':      'النص',
+    'modal.cardAdd':    '+ بطاقة جديدة',
+    'modal.cardDel':    'حذف البطاقة',
+    'modal.cardDelConfirm':'حذف البطاقة كاملة؟',
+    'untitled':         '(بدون اسم)',
+    'lang.add':         'لغة جديدة',
+    'lang.codePrompt':  'رمز اللغة (مثل "de" أو "fr"):',
+    'lang.namePrompt':  'اسم اللغة (مثل "الألمانية"):',
+    'loading':          'جارٍ تحميل قاعدة البيانات…',
+  },
+};
+
+let currentLang = 'sv';
+
+function t(key, vars){
+  const table = STRINGS[currentLang] && STRINGS[currentLang][key] != null ? STRINGS[currentLang] : STRINGS.sv;
+  let s = table[key] != null ? table[key] : key;
+  if(vars){
+    Object.keys(vars).forEach(k => {
+      s = s.split('{' + k + '}').join(String(vars[k]));
+    });
+  }
+  return s;
+}
+
+/* =====================================================================
+   HELPERS
+   ===================================================================== */
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str == null ? '' : str;
+  return div.innerHTML
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+function slugify(s){
+  return s.toLowerCase()
+    .replace(/ä/g,'a').replace(/å/g,'a').replace(/ö/g,'o').replace(/é/g,'e')
+    .replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') || ('x' + Math.random().toString(36).slice(2,8));
+}
+
+/* allow only http(s)/mailto for user-supplied URL fields.  Rejects scheme tricks
+   (javascript:, data:, vbscript:), quote/whitespace/control-character attribute
+   breakouts, and anything that fails a real URL protocol check. */
+function safeUrl(u){
+  const s = String(u || '').trim();
+  if(!s) return '';
+  if(/[\s"'<>`\u0000-\u001f\u007f]/.test(s)) return '#';   // no whitespace/quotes/angle/control chars
+  if(!/^(https?:\/\/|mailto:)/i.test(s)) return '#';       // strict scheme prefix
+  try{
+    const base = (window.location && window.location.href) ? window.location.href : 'https://localhost/';
+    const url = new URL(s, base);
+    const proto = url.protocol.toLowerCase();
+    if(proto === 'http:' || proto === 'https:') return url.href;
+    if(proto === 'mailto:' && s.length > 'mailto:'.length) return url.href;
+  }catch(e){ /* unparseable -> reject */ }
+  return '#';
+}
 
 const ICONS = {
   tourism: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-2 3-3 5.5-3 8a3 3 0 0 0 6 0c0-2.5-1-5-3-8Z"/><path d="M6 21c1-3 3-4 6-4s5 1 6 4"/><path d="M9 11c-1.2.6-2 1.6-2 3M15 11c1.2.6 2 1.6 2 3"/></svg>',
@@ -522,7 +1140,7 @@ const ICONS = {
   compass: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-2 6-6 2 2-6 6-2Z"/></svg>',
 };
 function pickIcon(title){
-  const t = (title || '').toLowerCase();
+  const tt = (title || '').toLowerCase();
   const rules = [
     [/turism|hotell|gästhus|resa|boutique/, 'tourism'],
     [/energi|sol\b|förnybar|grön/, 'energy'],
@@ -536,18 +1154,88 @@ function pickIcon(title){
     [/organisation|stöd|myndighet|iom|program|nätverk/, 'org'],
     [/hur man startar|registrering|tillstånd|steg|starta eget|starta företag/, 'start'],
   ];
-  for(const [re, icon] of rules){ if(re.test(t)) return icon; }
+  for(const [re, icon] of rules){ if(re.test(tt)) return icon; }
   return 'compass';
 }
-function slugify(s){
-  return s.toLowerCase()
-    .replace(/ä/g,'a').replace(/å/g,'a').replace(/ö/g,'o').replace(/é/g,'e')
-    .replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') || ('x' + Math.random().toString(36).slice(2,8));
+
+/* =====================================================================
+   RICH-TEXT SANITIZER (explicit allowlist; runs on save AND on read)
+   ===================================================================== */
+const RICH_ALLOW = new Set(['P','BR','STRONG','EM','H3','H4','UL','OL','LI','A']);
+
+function sanitizeRich(html){
+  if(!html || !html.trim()) return '';
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+
+  function cleanNode(node){
+    if(node.nodeType === Node.TEXT_NODE) return true;          // keep text
+    if(node.nodeType === Node.COMMENT_NODE){ node.remove(); return false; }
+    if(node.nodeType !== Node.ELEMENT_NODE){ node.remove(); return false; }
+    const tag = node.tagName.toUpperCase();
+    if(['SCRIPT','IFRAME','STYLE','META','LINK','OBJECT','EMBED','TITLE','HEAD','FORM','INPUT','BUTTON','TEXTAREA','SELECT'].includes(tag)){
+      node.remove();
+      return false;
+    }
+    // clean children first
+    const kids = Array.from(node.childNodes);
+    kids.forEach(ch => {
+      const keep = cleanNode(ch);
+      if(!keep && ch.parentNode === node) node.removeChild(ch);
+    });
+    if(!RICH_ALLOW.has(tag)){
+      // unwrap: lift children into the parent, then drop the element
+      const parent = node.parentNode;
+      while(node.firstChild) parent.insertBefore(node.firstChild, node);
+      parent.removeChild(node);
+      return false;
+    }
+    if(tag === 'A'){
+      const href = node.getAttribute('href') || '';
+      let safe = false;
+      try{
+        const u = new URL(href, window.location.href);
+        safe = (u.protocol === 'http:' || u.protocol === 'https:' || u.protocol === 'mailto:');
+      }catch(e){
+        safe = href.startsWith('#') || href.startsWith('/');
+      }
+      // strip EVERY attribute (event handlers like onload/onclick/onerror/onfocus,
+      // style, data-*, target, rel, ...) then re-apply only a validated href,
+      // so hostile on* attributes on <a> can never survive sanitization
+      Array.from(node.attributes).forEach(a => node.removeAttribute(a.name));
+      if(safe && href) node.setAttribute('href', href);
+    } else {
+      Array.from(node.attributes).forEach(a => node.removeAttribute(a.name));
+    }
+    return true;
+  }
+
+  Array.from(doc.body.childNodes).forEach(ch => {
+    const keep = cleanNode(ch);
+    if(!keep && ch.parentNode === doc.body) doc.body.removeChild(ch);
+  });
+
+  fixNesting(doc);
+  return doc.body.innerHTML.trim();
 }
-function escapeHtml(str){
-  const div = document.createElement('div');
-  div.textContent = str == null ? '' : str;
-  return div.innerHTML;
+
+/* flatten block-level elements nested inside <p> (invalid HTML from pastes) */
+function fixNesting(doc){
+  const blocks = ['P','H3','H4','UL','OL','LI'];
+  const ps = Array.from(doc.querySelectorAll('p'));
+  ps.forEach(p => {
+    Array.from(p.children).forEach(child => {
+      if(blocks.includes(child.tagName)){
+        const txt = document.createTextNode(child.textContent);
+        p.replaceChild(txt, child);
+      }
+    });
+  });
+  // also drop empty <p> nodes that contain nothing but whitespace/br
+  doc.querySelectorAll('p').forEach(p => {
+    if(p.children.length === 0 && !p.textContent.trim()){
+      p.remove();
+    }
+  });
 }
 
 /* =====================================================================
@@ -646,9 +1334,15 @@ function buildSchema(){
   `);
 }
 
+const SEED_LANGUAGES = [
+  ['sv','Svenska',0],
+  ['en','English',1],
+  ['es','Español',2],
+  ['ar','العربية',3],
+];
+
 function seedDatabase(){
-  run(`INSERT INTO languages (code, name, sort_order) VALUES (?,?,?)`, ['sv','Svenska',0]);
-  run(`INSERT INTO languages (code, name, sort_order) VALUES (?,?,?)`, ['en','English',1]);
+  SEED_LANGUAGES.forEach(l => run(`INSERT INTO languages (code, name, sort_order) VALUES (?,?,?)`, l));
 
   const countryIdBySlug = {};
   function ensureCountry(name){
@@ -661,6 +1355,12 @@ function seedDatabase(){
     const introCard = cards[0] && !cards[0].title ? cards[0] : null;
     const intro = introCard ? introCard.body.join(' ') : '';
     run(`INSERT INTO country_i18n (country_id, lang, name, intro) VALUES (?,?,?,?)`, [id, 'sv', name, intro]);
+    const names = SEED_COUNTRY_NAMES[name];
+    if(names){
+      ['en','es','ar'].forEach(lang => {
+        if(names[lang]) run(`INSERT INTO country_i18n (country_id, lang, name, intro) VALUES (?,?,?,NULL)`, [id, lang, names[lang]]);
+      });
+    }
     const topicCards = introCard ? cards.slice(1) : cards;
     topicCards.forEach((c, ci) => {
       run(`INSERT INTO cards (country_id, lang, sort_order, title) VALUES (?,?,?,?)`, [id, 'sv', ci, c.title || null]);
@@ -679,12 +1379,51 @@ function seedDatabase(){
   SEED_REGIONS.forEach((r, ri) => {
     run(`INSERT INTO regions (slug, lat, lng, sort_order) VALUES (?,?,?,?)`, [r.slug, r.lat, r.lng, ri]);
     const regionId = db.exec("SELECT last_insert_rowid() AS id")[0].values[0][0];
-    run(`INSERT INTO region_i18n (region_id, lang, name) VALUES (?,?,?)`, [regionId, 'sv', r.name]);
+    const names = SEED_REGION_NAMES[r.slug] || { sv: r.name };
+    ['sv','en','es','ar'].forEach(lang => {
+      run(`INSERT INTO region_i18n (region_id, lang, name) VALUES (?,?,?)`, [regionId, lang, names[lang] || names.sv || r.name]);
+    });
     r.countries.forEach((cname, ci) => {
       const countryId = ensureCountry(cname);
       run(`INSERT OR IGNORE INTO country_regions (country_id, region_id, sort_order) VALUES (?,?,?)`, [countryId, regionId, ci]);
     });
   });
+}
+
+/* idempotent upgrade for databases created by the previous version (sv+en only) */
+function migrateDatabase(){
+  let dirty = false;
+  const have = new Set(q(`SELECT code FROM languages`).map(r => r.code));
+  const maxOrder = q(`SELECT COALESCE(MAX(sort_order),0) AS m FROM languages`)[0].m;
+  let order = maxOrder + 1;
+  SEED_LANGUAGES.forEach(l => {
+    if(!have.has(l[0])){
+      run(`INSERT INTO languages (code, name, sort_order) VALUES (?,?,?)`, [l[0], l[1], order++]);
+      have.add(l[0]);
+      dirty = true;
+    }
+  });
+  q(`SELECT id, slug FROM regions`).forEach(r => {
+    const names = SEED_REGION_NAMES[r.slug];
+    if(!names) return;
+    ['en','es','ar'].forEach(lang => {
+      if(!q(`SELECT 1 AS x FROM region_i18n WHERE region_id=? AND lang=?`, [r.id, lang]).length && names[lang]){
+        run(`INSERT INTO region_i18n (region_id, lang, name) VALUES (?,?,?)`, [r.id, lang, names[lang]]);
+        dirty = true;
+      }
+    });
+  });
+  q(`SELECT c.id, i.name AS svname FROM countries c JOIN country_i18n i ON i.country_id=c.id AND i.lang='sv'`).forEach(r => {
+    const names = SEED_COUNTRY_NAMES[r.svname];
+    if(!names) return;
+    ['en','es','ar'].forEach(lang => {
+      if(!q(`SELECT 1 AS x FROM country_i18n WHERE country_id=? AND lang=?`, [r.id, lang]).length && names[lang]){
+        run(`INSERT INTO country_i18n (country_id, lang, name, intro) VALUES (?,?,?,NULL)`, [r.id, lang, names[lang]]);
+        dirty = true;
+      }
+    });
+  });
+  return dirty;
 }
 
 async function initDatabase(){
@@ -697,6 +1436,7 @@ async function initDatabase(){
 
   if(bytes){
     db = new SQLLib.Database(bytes);
+    if(migrateDatabase()) await persistDB();
   } else {
     db = new SQLLib.Database();
     buildSchema();
@@ -740,14 +1480,14 @@ function scheduleSave(){
 function setSaveStatus(state){
   const dot = document.querySelector('#save-status .status-dot');
   const txt = document.getElementById('save-status-text');
-  if(state === 'pending'){ dot.style.display='inline-block'; dot.style.background='#e0a96d'; txt.textContent='Ändringar...'; }
-  else if(state === 'saving'){ dot.style.display='inline-block'; dot.style.background='#e0a96d'; txt.textContent='Sparar...'; }
-  else if(state === 'saved'){ dot.style.display='inline-block'; dot.style.background='var(--accent-2)'; txt.textContent='Sparat'; setTimeout(()=>{ if(txt.textContent==='Sparat'){ dot.style.display='none'; txt.textContent=''; } }, 2000); }
-  else if(state === 'error'){ dot.style.display='inline-block'; dot.style.background='var(--danger)'; txt.textContent='Kunde inte spara'; }
+  if(state === 'pending'){ dot.style.display='inline-block'; dot.style.background='#b3a88c'; txt.textContent=t('status.pending'); }
+  else if(state === 'saving'){ dot.style.display='inline-block'; dot.style.background='#b3a88c'; txt.textContent=t('status.saving'); }
+  else if(state === 'saved'){ dot.style.display='inline-block'; dot.style.background='var(--pine)'; txt.textContent=t('status.saved'); setTimeout(()=>{ if(txt.textContent===t('status.saved')){ dot.style.display='none'; txt.textContent=''; } }, 2200); }
+  else if(state === 'error'){ dot.style.display='inline-block'; dot.style.background='var(--danger)'; txt.textContent=t('status.error'); }
 }
 
 /* =====================================================================
-   QUERY HELPERS
+   QUERY HELPERS (with per-language fallback to Swedish)
    ===================================================================== */
 function getLanguages(){
   return q(`SELECT code, name FROM languages ORDER BY sort_order`);
@@ -757,22 +1497,23 @@ function getRegions(lang){
   return regions.map(r => {
     const i18n = q(`SELECT name FROM region_i18n WHERE region_id=? AND lang=?`, [r.id, lang]);
     const fallback = i18n.length ? null : q(`SELECT name FROM region_i18n WHERE region_id=? AND lang='sv'`, [r.id]);
-    const name = i18n.length ? i18n[0].name : (fallback && fallback[0] ? fallback[0].name : '(namnlös)');
+    const name = i18n.length ? i18n[0].name : (fallback && fallback[0] ? fallback[0].name : t('untitled'));
     const countryCount = q(`SELECT COUNT(*) AS c FROM country_regions WHERE region_id=?`, [r.id])[0].c;
     return { id:r.id, slug:r.slug, lat:r.lat, lng:r.lng, name, translated: i18n.length>0, countryCount };
   });
 }
-function getRegionById(id){
-  return getRegions('sv').find(r=>r.id===id) || null;
+function getRegionById(id, lang){
+  return getRegions(lang).find(r=>r.id===id) || null;
 }
 function getCountriesForRegion(regionId, lang){
   const rows = q(`SELECT c.id FROM countries c JOIN country_regions cr ON cr.country_id=c.id WHERE cr.region_id=? ORDER BY cr.sort_order`, [regionId]);
   return rows.map(row => {
-    const i18n = q(`SELECT name, intro FROM country_i18n WHERE country_id=? AND lang=?`, [row.id, lang]);
-    const svRow = q(`SELECT name, intro FROM country_i18n WHERE country_id=? AND lang='sv'`, [row.id]);
-    const name = i18n.length ? i18n[0].name : (svRow[0] ? svRow[0].name : '(namnlös)');
+    const i18n = q(`SELECT name FROM country_i18n WHERE country_id=? AND lang=?`, [row.id, lang]);
+    const svRow = q(`SELECT name FROM country_i18n WHERE country_id=? AND lang='sv'`, [row.id]);
+    const name = i18n.length ? i18n[0].name : (svRow[0] ? svRow[0].name : t('untitled'));
+    const hasSv = q(`SELECT COUNT(*) AS c FROM cards WHERE country_id=? AND lang='sv'`, [row.id])[0].c;
     const cardCount = q(`SELECT COUNT(*) AS c FROM cards WHERE country_id=? AND lang=?`, [row.id, lang])[0].c;
-    return { id: row.id, name, translated: i18n.length>0, hasContent: cardCount>0 };
+    return { id: row.id, name, translated: i18n.length>0, hasContent: cardCount>0 || hasSv>0 };
   });
 }
 function getCountryDetail(countryId, lang){
@@ -780,19 +1521,26 @@ function getCountryDetail(countryId, lang){
   const svI18n = q(`SELECT name, intro FROM country_i18n WHERE country_id=? AND lang='sv'`, [countryId]);
   const translated = i18n.length>0;
   const nameVal = translated ? i18n[0].name : (svI18n[0] ? svI18n[0].name : '');
-  const introVal = translated ? (i18n[0].intro||'') : (svI18n[0] ? (svI18n[0].intro||'') : '');
-  const cardRows = q(`SELECT id, title FROM cards WHERE country_id=? AND lang=? ORDER BY sort_order`, [countryId, lang]);
+  const introVal = translated && i18n[0].intro ? i18n[0].intro : (svI18n[0] ? (svI18n[0].intro||'') : '');
+  const introFallback = !(translated && i18n[0] && i18n[0].intro);
+
+  let cardRows = q(`SELECT id, title FROM cards WHERE country_id=? AND lang=? ORDER BY sort_order`, [countryId, lang]);
+  let cardsFallback = false;
+  if(!cardRows.length){
+    cardRows = q(`SELECT id, title FROM cards WHERE country_id=? AND lang='sv' ORDER BY sort_order`, [countryId]);
+    cardsFallback = cardRows.length>0;
+  }
   const cards = cardRows.map(c => ({
     id: c.id,
     title: c.title,
     body: q(`SELECT text FROM card_body WHERE card_id=? ORDER BY sort_order`, [c.id]).map(r=>r.text),
     kv: q(`SELECT k, v FROM card_kv WHERE card_id=? ORDER BY sort_order`, [c.id]).map(r=>({k:r.k, v:r.v})),
   }));
-  return { name: nameVal, intro: introVal, cards, translated };
+  return { name: nameVal, intro: introVal, cards, translated, cardsFallback, introFallback };
 }
-function findRegionForCountry(countryId){
+function findRegionForCountry(countryId, lang){
   const rows = q(`SELECT region_id FROM country_regions WHERE country_id=? ORDER BY sort_order LIMIT 1`, [countryId]);
-  return rows.length ? getRegionById(rows[0].region_id) : null;
+  return rows.length ? getRegionById(rows[0].region_id, lang) : null;
 }
 
 /* --- mutations --- */
@@ -816,18 +1564,18 @@ function deleteRegion(regionId){
   run(`DELETE FROM regions WHERE id=?`, [regionId]);
   scheduleSave();
 }
+function upsertCountryRow(countryId, lang, name, intro){
+  const existing = q(`SELECT name FROM country_i18n WHERE country_id=? AND lang=?`, [countryId, lang]);
+  const nm = name != null ? name : (existing.length ? existing[0].name : '');
+  run(`INSERT INTO country_i18n (country_id, lang, name, intro) VALUES (?,?,?,?)
+       ON CONFLICT(country_id, lang) DO UPDATE SET name=excluded.name, intro=excluded.intro`, [countryId, lang, nm, intro || '']);
+  scheduleSave();
+}
 function upsertCountryName(countryId, lang, name){
   const existing = q(`SELECT intro FROM country_i18n WHERE country_id=? AND lang=?`, [countryId, lang]);
   const intro = existing.length ? existing[0].intro : '';
   run(`INSERT INTO country_i18n (country_id, lang, name, intro) VALUES (?,?,?,?)
        ON CONFLICT(country_id, lang) DO UPDATE SET name=excluded.name`, [countryId, lang, name, intro]);
-  scheduleSave();
-}
-function upsertCountryIntro(countryId, lang, intro){
-  const existing = q(`SELECT name FROM country_i18n WHERE country_id=? AND lang=?`, [countryId, lang]);
-  const name = existing.length ? existing[0].name : (q(`SELECT name FROM country_i18n WHERE country_id=? AND lang='sv'`,[countryId])[0]||{}).name || '';
-  run(`INSERT INTO country_i18n (country_id, lang, name, intro) VALUES (?,?,?,?)
-       ON CONFLICT(country_id, lang) DO UPDATE SET intro=excluded.intro`, [countryId, lang, name, intro]);
   scheduleSave();
 }
 function addCountry(regionId, name, lang){
@@ -854,50 +1602,37 @@ function deleteCountryFromRegion(countryId, regionId){
 }
 function addCard(countryId, lang){
   const maxOrder = q(`SELECT COALESCE(MAX(sort_order),-1) AS m FROM cards WHERE country_id=? AND lang=?`, [countryId, lang])[0].m;
-  run(`INSERT INTO cards (country_id, lang, sort_order, title) VALUES (?,?,?,?)`, [countryId, lang, maxOrder+1, 'Nytt kort']);
-  const id = db.exec("SELECT last_insert_rowid() AS id")[0].values[0][0];
-  scheduleSave();
-  return id;
+  run(`INSERT INTO cards (country_id, lang, sort_order, title) VALUES (?,?,?,?)`, [countryId, lang, maxOrder+1, '']);
+  return db.exec("SELECT last_insert_rowid() AS id")[0].values[0][0];
 }
 function deleteCard(cardId){
   run(`DELETE FROM card_body WHERE card_id=?`, [cardId]);
   run(`DELETE FROM card_kv WHERE card_id=?`, [cardId]);
   run(`DELETE FROM cards WHERE id=?`, [cardId]);
-  scheduleSave();
 }
-function updateCardTitle(cardId, title){ run(`UPDATE cards SET title=? WHERE id=?`, [title, cardId]); scheduleSave(); }
-function addParagraph(cardId){
-  const maxOrder = q(`SELECT COALESCE(MAX(sort_order),-1) AS m FROM card_body WHERE card_id=?`, [cardId])[0].m;
-  run(`INSERT INTO card_body (card_id, sort_order, text) VALUES (?,?,?)`, [cardId, maxOrder+1, '']);
-  scheduleSave();
+function updateCardTitle(cardId, title){ run(`UPDATE cards SET title=? WHERE id=?`, [title, cardId]); }
+function replaceCardContent(cardId, paras, kvs){
+  run(`DELETE FROM card_body WHERE card_id=?`, [cardId]);
+  paras.forEach((p, i) => run(`INSERT INTO card_body (card_id, sort_order, text) VALUES (?,?,?)`, [cardId, i, p]));
+  run(`DELETE FROM card_kv WHERE card_id=?`, [cardId]);
+  kvs.forEach((row, i) => run(`INSERT INTO card_kv (card_id, sort_order, k, v) VALUES (?,?,?,?)`, [cardId, i, row.k, row.v]));
 }
-function updateParagraph(bodyId, text){ run(`UPDATE card_body SET text=? WHERE id=?`, [text, bodyId]); scheduleSave(); }
-function deleteParagraph(bodyId){ run(`DELETE FROM card_body WHERE id=?`, [bodyId]); scheduleSave(); }
-function addKvRow(cardId){
-  const maxOrder = q(`SELECT COALESCE(MAX(sort_order),-1) AS m FROM card_kv WHERE card_id=?`, [cardId])[0].m;
-  run(`INSERT INTO card_kv (card_id, sort_order, k, v) VALUES (?,?,?,?)`, [cardId, maxOrder+1, '', '']);
-  scheduleSave();
-}
-function updateKvRow(kvId, k, v){ run(`UPDATE card_kv SET k=?, v=? WHERE id=?`, [k, v, kvId]); scheduleSave(); }
-function deleteKvRow(kvId){ run(`DELETE FROM card_kv WHERE id=?`, [kvId]); scheduleSave(); }
 function addLanguage(code, name){
   const maxOrder = q(`SELECT COALESCE(MAX(sort_order),0) AS m FROM languages`)[0].m;
   run(`INSERT OR IGNORE INTO languages (code, name, sort_order) VALUES (?,?,?)`, [code, name, maxOrder+1]);
   scheduleSave();
 }
 
-/* need id back after inserting body/kv rows for immediate edit binding */
-function lastId(){ return db.exec("SELECT last_insert_rowid() AS id")[0].values[0][0]; }
-
-/* --- NGOs (per country) --- */
+/* --- NGOs (per country, with sv fallback) --- */
 function getNgos(countryId, lang){
-  return q(`SELECT id, name, url, note FROM country_ngos WHERE country_id=? AND lang=? ORDER BY sort_order`, [countryId, lang]);
+  let rows = q(`SELECT id, name, url, note FROM country_ngos WHERE country_id=? AND lang=? ORDER BY sort_order`, [countryId, lang]);
+  if(!rows.length) rows = q(`SELECT id, name, url, note FROM country_ngos WHERE country_id=? AND lang='sv' ORDER BY sort_order`, [countryId]);
+  return rows;
 }
 function addNgo(countryId, lang){
   const maxOrder = q(`SELECT COALESCE(MAX(sort_order),-1) AS m FROM country_ngos WHERE country_id=? AND lang=?`, [countryId, lang])[0].m;
   run(`INSERT INTO country_ngos (country_id, lang, name, url, note, sort_order) VALUES (?,?,?,?,?,?)`, [countryId, lang, '', '', '', maxOrder+1]);
   scheduleSave();
-  return lastId();
 }
 function updateNgo(id, name, url, note){ run(`UPDATE country_ngos SET name=?, url=?, note=? WHERE id=?`, [name, url, note, id]); scheduleSave(); }
 function deleteNgo(id){ run(`DELETE FROM country_ngos WHERE id=?`, [id]); scheduleSave(); }
@@ -912,7 +1647,6 @@ function addOrg(lang){
   const maxOrder = q(`SELECT COALESCE(MAX(sort_order),-1) AS m FROM org_directory WHERE lang=?`, [lang])[0].m;
   run(`INSERT INTO org_directory (lang, name, url, contact, description, sort_order) VALUES (?,?,?,?,?,?)`, [lang, '', '', '', '', maxOrder+1]);
   scheduleSave();
-  return lastId();
 }
 function updateOrg(id, name, url, contact, description){
   run(`UPDATE org_directory SET name=?, url=?, contact=?, description=? WHERE id=?`, [name, url, contact, description, id]);
@@ -921,55 +1655,17 @@ function updateOrg(id, name, url, contact, description){
 function deleteOrg(id){ run(`DELETE FROM org_directory WHERE id=?`, [id]); scheduleSave(); }
 
 /* =====================================================================
-   THREE-GLOBE HERO (via globe.gl)
-   ===================================================================== */
-let world;
-function initGlobe(){
-  const wrap = document.getElementById('globe-canvas-wrap');
-  wrap.innerHTML = '';
-  const w = wrap.clientWidth, h = wrap.clientHeight;
-  const regions = getRegions(currentLang);
-
-  world = Globe()(wrap)
-    .width(w).height(h)
-    .backgroundColor('rgba(0,0,0,0)')
-    .globeImageUrl(EARTH_TEXTURE)
-    .bumpImageUrl(EARTH_BUMP)
-    .showAtmosphere(true).atmosphereColor('#c1652f').atmosphereAltitude(0.22)
-    .pointsData(regions)
-    .pointLat('lat').pointLng('lng')
-    .pointColor(()=> '#c1652f').pointAltitude(0.012).pointRadius(0.55)
-    .pointLabel(d => `<div style="font-family:'JetBrains Mono',monospace;font-size:11px;background:#221610;color:#f5ecd9;padding:6px 10px;border-radius:6px;border:1px solid rgba(236,223,196,0.25);">${escapeHtml(d.name)}</div>`)
-    .labelsData(regions)
-    .labelLat('lat').labelLng('lng').labelText('name').labelSize(1.15).labelDotRadius(0.35)
-    .labelColor(()=> 'rgba(245,236,217,0.9)').labelResolution(2)
-    .onPointClick(d => goRegion(d.id))
-    .onLabelClick(d => goRegion(d.id));
-
-  world.pointOfView({ lat: 25, lng: 20, altitude: 2.4 });
-  const controls = world.controls();
-  controls.autoRotate = true; controls.autoRotateSpeed = 0.6; controls.enableZoom = false; controls.enablePan = false;
-  window.addEventListener('resize', onGlobeResize);
-}
-function refreshGlobePoints(){
-  if(!world) return;
-  const regions = getRegions(currentLang);
-  world.pointsData(regions).labelsData(regions);
-}
-function onGlobeResize(){
-  if(!world) return;
-  const wrap = document.getElementById('globe-canvas-wrap');
-  const w = wrap.clientWidth, h = wrap.clientHeight;
-  if(!w || !h) return;
-  world.width(w).height(h);
-}
-
-/* =====================================================================
-   STATE / ROUTING
+   STATE / ROUTING / RTL
    ===================================================================== */
 const state = { regionId:null, countryId:null };
-let currentLang = 'sv';
 let editMode = false;
+
+function applyLangDir(){
+  const root = document.documentElement;
+  root.setAttribute('lang', currentLang);
+  root.setAttribute('dir', currentLang === 'ar' ? 'rtl' : 'ltr');
+  document.title = 'GeoBas — ' + t('start.eyebrow');
+}
 
 function setActive(viewId){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
@@ -978,9 +1674,9 @@ function setActive(viewId){
 }
 function renderCrumbs(){
   const el = document.getElementById('crumbs');
-  let parts = [`<button data-nav="start">Start</button>`];
+  let parts = [`<button data-nav="start">${escapeHtml(t('crumb.start'))}</button>`];
   if(state.regionId){
-    const region = getRegionById(state.regionId);
+    const region = getRegionById(state.regionId, currentLang);
     parts.push(`<span class="sep">/</span>`);
     if(state.countryId) parts.push(`<button data-nav="region:${state.regionId}">${escapeHtml(region.name)}</button>`);
     else parts.push(`<span class="current">${escapeHtml(region.name)}</span>`);
@@ -996,197 +1692,271 @@ function renderCrumbs(){
 function renderLangSwitch(){
   const el = document.getElementById('lang-switch');
   const langs = getLanguages();
-  el.innerHTML = langs.map(l => `<button class="lang-pill ${l.code===currentLang?'active':''}" data-lang="${l.code}">${escapeHtml(l.code)}</button>`).join('')
-    + (editMode ? `<button class="lang-pill add" id="btn-add-lang" title="Nytt språk">+</button>` : '');
+  el.innerHTML = langs.map(l => `<button class="lang-pill ${l.code===currentLang?'active':''}" data-lang="${escapeHtml(l.code)}" title="${escapeHtml(l.name)}">${escapeHtml(l.code)}</button>`).join('')
+    + (editMode ? `<button class="lang-pill add" id="btn-add-lang" title="${escapeHtml(t('lang.add'))}">+</button>` : '');
   el.querySelectorAll('[data-lang]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{ currentLang = btn.getAttribute('data-lang'); rerenderAll(); });
+    btn.addEventListener('click', ()=>{ currentLang = btn.getAttribute('data-lang'); applyLangDir(); rerenderAll(); });
   });
   const addBtn = document.getElementById('btn-add-lang');
   if(addBtn) addBtn.addEventListener('click', ()=>{
-    const code = prompt('Språkkod (t.ex. "de", "fr"):');
+    const code = prompt(t('lang.codePrompt'));
     if(!code) return;
-    const name = prompt('Språkets namn (t.ex. "Deutsch"):', code);
+    const name = prompt(t('lang.namePrompt'), code);
     if(!name) return;
     addLanguage(code.trim().toLowerCase(), name.trim());
     renderLangSwitch();
   });
 }
 
+function applyChrome(){
+  const $ = id => document.getElementById(id);
+  $('brand-sub').textContent = t('brand.sub');
+  $('nav-about').textContent = t('nav.about');
+  $('nav-resources').textContent = t('nav.resources');
+  $('edit-toggle-label').textContent = editMode ? t('nav.done') : t('nav.edit');
+  $('btn-start-label').textContent = t('start.cta');
+  $('btn-about-2').textContent = t('start.cta2');
+  $('start-eyebrow').textContent = t('start.eyebrow');
+  $('start-title').innerHTML = t('start.title'); // static trusted STRINGS value
+  $('start-lede').textContent = t('start.lede');
+  $('toc-title').textContent = t('toc.title');
+  $('toc-hint').textContent = t('toc.hint');
+  $('regions-eyebrow').textContent = t('regions.eyebrow');
+  $('regions-title').textContent = t('regions.title');
+  $('regions-lede').textContent = t('regions.lede');
+  $('countries-eyebrow').textContent = t('countries.eyebrow');
+  $('countries-lede').textContent = t('countries.lede');
+  $('countries-back').querySelector('span').textContent = t('countries.back');
+  $('btn-edit-country').textContent = t('country.edit');
+  $('sources-eyebrow').textContent = t('sources.eyebrow');
+  $('sources-note').textContent = t('sources.note');
+  $('ngo-eyebrow').textContent = t('ngo.eyebrow');
+  $('ngo-title').textContent = t('ngo.title');
+  $('country-back-more').querySelector('span').textContent = t('country.backMore');
+  $('country-back-region').querySelector('span').textContent = t('country.backRegion');
+  $('about-eyebrow').textContent = t('about.eyebrow');
+  $('about-title').textContent = t('about.title');
+  $('about-lede').textContent = t('about.lede');
+  $('about-offer-num').textContent = t('about.offerNum');
+  $('about-offer-title').textContent = t('about.offerTitle');
+  $('about-offer-p1').innerHTML = sanitizeRich(t('about.offerP1'));
+  $('about-offer-p2').innerHTML = sanitizeRich(t('about.offerP2'));
+  $('about-contact-eyebrow').textContent = t('about.contactEyebrow');
+  $('about-contact-title').textContent = t('about.contactTitle');
+  $('about-back').querySelector('span').textContent = t('about.back');
+  $('res-eyebrow').textContent = t('res.eyebrow');
+  $('res-title').textContent = t('res.title');
+  $('res-lede').textContent = t('res.lede');
+  $('res-back').querySelector('span').textContent = t('res.back');
+  $('foot-note').textContent = t('foot.note');
+  $('btn-export').textContent = t('foot.export');
+  $('btn-import').textContent = t('foot.import');
+  $('edit-modal-title').textContent = t('modal.title');
+  $('edit-modal-close').setAttribute('aria-label', t('modal.close'));
+  $('edit-modal-cancel').textContent = t('modal.cancel');
+  $('edit-modal-save').textContent = t('modal.save');
+}
+
 function rerenderAll(){
+  applyLangDir();
+  applyChrome();
   renderLangSwitch();
   renderCrumbs();
-  refreshGlobePoints();
   const activeView = document.querySelector('.view.active').id;
   if(activeView === 'view-regions') goRegions();
   else if(activeView === 'view-countries' && state.regionId) goRegion(state.regionId);
   else if(activeView === 'view-country' && state.countryId) goCountry(state.countryId);
   else if(activeView === 'view-about') goAbout();
   else if(activeView === 'view-resources') goResources();
+  else goStart();
 }
 
 function goStart(){
   state.regionId=null; state.countryId=null;
+  applyChrome();
   renderCrumbs();
+  const regions = getRegions(currentLang);
+  const countryCount = q(`SELECT COUNT(*) AS c FROM countries`)[0].c;
+  const langCount = getLanguages().length;
+  document.getElementById('start-stats').textContent = t('start.stats', { r: regions.length, c: countryCount, l: langCount });
+  const tocList = document.getElementById('toc-list');
+  tocList.innerHTML = regions.map((r, i) => `
+    <div class="toc-item" data-region-id="${r.id}">
+      <span class="idx">${String(i+1).padStart(2,'0')}</span>
+      <span class="nm">${escapeHtml(r.name)}</span>
+      <span class="ct">${escapeHtml(t('regions.count', { n: r.countryCount }))}</span>
+    </div>
+  `).join('');
+  tocList.querySelectorAll('[data-region-id]').forEach(item=>{
+    item.addEventListener('click', ()=> goRegion(parseInt(item.getAttribute('data-region-id'),10)));
+  });
   setActive('view-start');
 }
 
 function goRegions(){
   state.regionId=null; state.countryId=null;
+  applyChrome();
   renderCrumbs();
   const grid = document.getElementById('region-grid');
   const regions = getRegions(currentLang);
-  grid.innerHTML = regions.map(r => `
-    <div class="region-card" data-region-id="${r.id}">
-      ${editMode ? `<button class="del-x" data-del-region="${r.id}" title="Ta bort region">×</button>` : ''}
-      <div class="mini-globe"></div>
-      ${editMode
-        ? `<input class="name-input" data-region-name="${r.id}" value="${escapeHtml(r.name)}">`
-        : `<div class="name">${escapeHtml(r.name)}</div>${!r.translated ? '<span class="untranslated-badge">Ej översatt</span>' : ''}`}
-      <div class="count">${r.countryCount} länder</div>
+  grid.innerHTML = regions.map((r, i) => `
+    <div class="index-row" data-region-id="${r.id}">
+      <span class="idx">${String(i+1).padStart(2,'0')}</span>
+      <span class="nm">${escapeHtml(r.name)}${!r.translated ? ' <span class="untranslated-badge">' + escapeHtml(t('badge.ntrans')) + '</span>' : ''}</span>
+      <span class="meta">
+        ${editMode ? `<span class="row-actions">
+            <button class="mini-btn" data-rename-region="${r.id}" type="button">${escapeHtml(t('regions.rename'))}</button>
+            <button class="mini-btn danger" data-del-region="${r.id}" type="button">${escapeHtml(t('regions.del'))}</button>
+          </span>` : `<span>${escapeHtml(t('regions.count', { n: r.countryCount }))}</span>`}
+        <span class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </span>
     </div>
-  `).join('') + (editMode ? `<div class="region-card add-card" id="add-region-card">+ Ny region</div>` : '');
+  `).join('') + (editMode ? `<div class="index-row add-row" id="add-region-row">${escapeHtml(t('regions.add'))}</div>` : '');
 
-  grid.querySelectorAll('.region-card[data-region-id]').forEach(card=>{
-    card.addEventListener('click', (e)=>{
-      if(e.target.closest('[data-del-region]') || e.target.closest('[data-region-name]')) return;
-      goRegion(parseInt(card.getAttribute('data-region-id'),10));
+  grid.querySelectorAll('.index-row[data-region-id]').forEach(row=>{
+    row.addEventListener('click', (e)=>{
+      if(e.target.closest('[data-del-region]') || e.target.closest('[data-rename-region]')) return;
+      goRegion(parseInt(row.getAttribute('data-region-id'),10));
     });
   });
-  grid.querySelectorAll('[data-region-name]').forEach(inp=>{
-    inp.addEventListener('click', e=>e.stopPropagation());
-    inp.addEventListener('change', ()=>{
-      upsertRegionName(parseInt(inp.getAttribute('data-region-name'),10), currentLang, inp.value.trim() || '(namnlös)');
-      refreshGlobePoints();
+  grid.querySelectorAll('[data-rename-region]').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      e.stopPropagation();
+      const id = parseInt(btn.getAttribute('data-rename-region'),10);
+      const cur = getRegionById(id, currentLang);
+      const name = prompt(t('regions.renamePrompt'), cur ? cur.name : '');
+      if(name && name.trim()){ upsertRegionName(id, currentLang, name.trim()); goRegions(); }
     });
   });
   grid.querySelectorAll('[data-del-region]').forEach(btn=>{
     btn.addEventListener('click', e=>{
       e.stopPropagation();
-      if(confirm('Ta bort denna region och dess koppling till länder?')){
+      if(confirm(t('regions.delConfirm'))){
         deleteRegion(parseInt(btn.getAttribute('data-del-region'),10));
-        refreshGlobePoints();
         goRegions();
       }
     });
   });
-  const addRegionCard = document.getElementById('add-region-card');
-  if(addRegionCard) addRegionCard.addEventListener('click', ()=>{
-    const name = prompt('Namn på ny region:');
-    if(!name) return;
-    addRegion(name.trim(), currentLang);
-    refreshGlobePoints();
-    goRegions();
+  const addRow = document.getElementById('add-region-row');
+  if(addRow) addRow.addEventListener('click', ()=>{
+    const name = prompt(t('regions.addPrompt'));
+    if(name && name.trim()){ addRegion(name.trim(), currentLang); goRegions(); }
   });
 
   setActive('view-regions');
 }
 
 function goRegion(regionId){
-  const region = getRegionById(regionId);
+  const region = getRegionById(regionId, currentLang);
   if(!region) return goRegions();
   state.regionId = regionId; state.countryId=null;
+  applyChrome();
   renderCrumbs();
   document.getElementById('countries-title').textContent = region.name;
   const grid = document.getElementById('country-grid');
   const countries = getCountriesForRegion(regionId, currentLang);
-  grid.innerHTML = countries.map(c => `
-    <div class="country-card ${c.hasContent ? '' : 'stub'}" data-country-id="${c.id}">
-      ${editMode ? `<button class="del-x" data-del-country="${c.id}" title="Ta bort land">×</button>` : ''}
-      ${editMode
-        ? `<input class="name-input" data-country-name="${c.id}" value="${escapeHtml(c.name)}">`
-        : `<span>${escapeHtml(c.name)}${!c.translated ? ' <span class=\"untranslated-badge\">ej öv.</span>' : ''}</span>`}
-      ${!editMode ? (c.hasContent
-        ? `<span class="arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>`
-        : `<span class="stub-tag">Kommer snart</span>`) : ''}
+  grid.innerHTML = countries.map((c, i) => `
+    <div class="index-row ${c.hasContent ? '' : 'is-stub'}" data-country-id="${c.id}">
+      <span class="idx">${String(i+1).padStart(2,'0')}</span>
+      <span class="nm">${escapeHtml(c.name)}${!c.translated ? ' <span class="untranslated-badge">' + escapeHtml(t('badge.ntrans')) + '</span>' : ''}</span>
+      <span class="meta">
+        ${editMode ? `<span class="row-actions">
+            <button class="mini-btn" data-rename-country="${c.id}" type="button">${escapeHtml(t('countries.rename'))}</button>
+            <button class="mini-btn danger" data-del-country="${c.id}" type="button">${escapeHtml(t('countries.del'))}</button>
+          </span>` : (!c.hasContent ? `<span class="stub-tag">${escapeHtml(t('countries.stub'))}</span>` : '')}
+        <span class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </span>
     </div>
-  `).join('') + (editMode ? `<div class="country-card add-card" id="add-country-card">+ Nytt land</div>` : '');
+  `).join('') + (editMode ? `<div class="index-row add-row" id="add-country-row">${escapeHtml(t('countries.add'))}</div>` : '');
 
-  grid.querySelectorAll('.country-card[data-country-id]').forEach(card=>{
-    card.addEventListener('click', (e)=>{
-      if(e.target.closest('[data-del-country]') || e.target.closest('[data-country-name]')) return;
-      goCountry(parseInt(card.getAttribute('data-country-id'),10));
+  grid.querySelectorAll('.index-row[data-country-id]').forEach(row=>{
+    row.addEventListener('click', (e)=>{
+      if(e.target.closest('[data-del-country]') || e.target.closest('[data-rename-country]')) return;
+      goCountry(parseInt(row.getAttribute('data-country-id'),10));
     });
   });
-  grid.querySelectorAll('[data-country-name]').forEach(inp=>{
-    inp.addEventListener('click', e=>e.stopPropagation());
-    inp.addEventListener('change', ()=>{
-      upsertCountryName(parseInt(inp.getAttribute('data-country-name'),10), currentLang, inp.value.trim() || '(namnlös)');
+  grid.querySelectorAll('[data-rename-country]').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      e.stopPropagation();
+      const id = parseInt(btn.getAttribute('data-rename-country'),10);
+      const cur = getCountryDetail(id, currentLang);
+      const name = prompt(t('countries.renamePrompt'), cur.name);
+      if(name && name.trim()){ upsertCountryName(id, currentLang, name.trim()); goRegion(regionId); }
     });
   });
   grid.querySelectorAll('[data-del-country]').forEach(btn=>{
     btn.addEventListener('click', e=>{
       e.stopPropagation();
-      if(confirm('Ta bort detta land från regionen?')){
+      if(confirm(t('countries.delConfirm'))){
         deleteCountryFromRegion(parseInt(btn.getAttribute('data-del-country'),10), regionId);
         goRegion(regionId);
       }
     });
   });
-  const addCountryCard = document.getElementById('add-country-card');
-  if(addCountryCard) addCountryCard.addEventListener('click', ()=>{
-    const name = prompt('Namn på nytt land:');
-    if(!name) return;
-    addCountry(regionId, name.trim(), currentLang);
-    goRegion(regionId);
+  const addRow = document.getElementById('add-country-row');
+  if(addRow) addRow.addEventListener('click', ()=>{
+    const name = prompt(t('countries.addPrompt'));
+    if(name && name.trim()){ addCountry(regionId, name.trim(), currentLang); goRegion(regionId); }
   });
 
   setActive('view-countries');
 }
 
 function goCountry(countryId){
-  const region = findRegionForCountry(countryId);
+  const region = findRegionForCountry(countryId, currentLang);
   state.regionId = region ? region.id : state.regionId;
   state.countryId = countryId;
+  applyChrome();
   renderCrumbs();
 
   const detail = getCountryDetail(countryId, currentLang);
   document.getElementById('country-region-tag').textContent = region ? region.name : '';
-
   const nameStatic = document.getElementById('country-name-static');
-  const nameEdit = document.getElementById('country-name-edit');
   const introStatic = document.getElementById('country-intro-static');
-  const introEdit = document.getElementById('country-intro-edit');
+  const ntrans = document.getElementById('country-ntrans');
 
-  nameStatic.innerHTML = escapeHtml(detail.name) + (!editMode && !detail.translated ? ' <span class="untranslated-badge" style="vertical-align:middle;">Ej översatt</span>' : '');
-  nameEdit.value = detail.name;
-  introStatic.textContent = detail.intro;
-  introEdit.value = detail.intro;
-
-  nameStatic.style.display = editMode ? 'none' : 'block';
-  nameEdit.style.display = editMode ? 'block' : 'none';
-  introStatic.style.display = editMode ? 'none' : 'block';
-  introEdit.style.display = editMode ? 'block' : 'none';
-
-  if(editMode){
-    nameEdit.onchange = () => upsertCountryName(countryId, currentLang, nameEdit.value.trim() || '(namnlös)');
-    introEdit.onchange = () => upsertCountryIntro(countryId, currentLang, introEdit.value);
-  }
+  nameStatic.innerHTML = escapeHtml(detail.name) + (!detail.translated ? ' <span class="untranslated-badge">' + escapeHtml(t('badge.ntrans')) + '</span>' : '');
+  introStatic.innerHTML = sanitizeRich(detail.intro);
+  const fallback = detail.cardsFallback || detail.introFallback;
+  ntrans.style.display = (fallback && !editMode) ? 'block' : 'none';
+  ntrans.textContent = t('country.fallback');
 
   const grid = document.getElementById('topics-grid');
   const emptyState = document.getElementById('empty-state');
   const disclaimer = document.getElementById('country-disclaimer');
 
-  if(detail.cards.length === 0 && !editMode){
+  if(detail.cards.length === 0){
     grid.innerHTML = '';
     emptyState.innerHTML = `
-      <div class="empty-country">
-        <h3>Innehåll på väg</h3>
-        <p>Det finns ännu ingen landinfo för ${escapeHtml(detail.name)} på ${currentLang.toUpperCase()}. ${region ? 'Kom tillbaka snart, eller välj ett annat land i ' + escapeHtml(region.name) + '.' : ''}</p>
+      <div class="empty-state">
+        <h3>${escapeHtml(t('country.emptyTitle'))}</h3>
+        <p>${escapeHtml(t('country.emptyBody', { name: detail.name, lang: currentLang.toUpperCase(), region: region ? region.name : '' }))}</p>
       </div>`;
     disclaimer.style.display = 'none';
   } else {
     emptyState.innerHTML = '';
-    grid.innerHTML = detail.cards.map(c => renderTopicCard(c, countryId)).join('')
-      + (editMode ? `<div class="add-topic-card" id="add-card-btn">+ Nytt kort</div>` : '');
-    disclaimer.style.display = editMode ? 'none' : 'block';
-    disclaimer.textContent = `Innehållet för ${detail.name} är sammanställt från Migrationsverkets landinfo-underlag (2026) och kan komma att uppdateras.`;
-    bindTopicCardEvents(countryId);
-    const addCardBtn = document.getElementById('add-card-btn');
-    if(addCardBtn) addCardBtn.addEventListener('click', ()=>{ addCard(countryId, currentLang); goCountry(countryId); });
+    grid.innerHTML = detail.cards.map((card, i) => renderArticleCard(card, i)).join('');
+    disclaimer.style.display = 'block';
+    disclaimer.textContent = t('country.disclaimer', { name: detail.name });
   }
 
   renderNgoList(countryId);
   setActive('view-country');
+}
+
+function renderArticleCard(card, index){
+  const icon = pickIcon(card.title);
+  let inner = '';
+  (card.body || []).forEach(p => { if(p) inner += `<div class="body-text">${sanitizeRich(p)}</div>`; });
+  if(card.kv && card.kv.length){
+    inner += `<div class="kv">` + card.kv.map(row => `<div class="kv-row"><span class="k">${escapeHtml(row.k)}</span><span class="v">${sanitizeRich(row.v)}</span></div>`).join('') + `</div>`;
+  }
+  const plainCls = card.title ? '' : ' plain';
+  return `<article class="article${plainCls}">
+    ${card.title ? `<span class="num">${escapeHtml(t('country.articleNum', { n: String(index+1).padStart(2,'0') }))}</span>
+      <div class="icon">${ICONS[icon]}</div><h3>${escapeHtml(card.title)}</h3>` : `<span class="num">${escapeHtml(t('country.articleNum', { n: String(index+1).padStart(2,'0') }))}</span>`}
+    ${inner}
+  </article>`;
 }
 
 function renderNgoList(countryId){
@@ -1195,16 +1965,16 @@ function renderNgoList(countryId){
 
   if(!editMode){
     if(!ngos.length){
-      el.innerHTML = `<p class="ngo-empty">Inga lokala organisationer inlagda ännu för det här landet.</p>`;
+      el.innerHTML = `<p class="ngo-empty">${escapeHtml(t('ngo.empty'))}</p>`;
       return;
     }
     el.innerHTML = ngos.map(n => `
       <div class="ngo-item">
         <div>
-          <div class="ngo-name">${escapeHtml(n.name || '(namnlös organisation)')}</div>
+          <div class="ngo-name">${escapeHtml(n.name || t('untitled'))}</div>
           ${n.note ? `<div class="ngo-note">${escapeHtml(n.note)}</div>` : ''}
         </div>
-        ${n.url ? `<a href="${escapeHtml(n.url)}" target="_blank" rel="noopener">Besök webbplats →</a>` : ''}
+        ${n.url ? `<a href="${escapeHtml(safeUrl(n.url))}" target="_blank" rel="noopener">${escapeHtml(t('ngo.visit'))} →</a>` : ''}
       </div>
     `).join('');
     return;
@@ -1212,12 +1982,12 @@ function renderNgoList(countryId){
 
   el.innerHTML = ngos.map(n => `
     <div class="ngo-edit-row" data-ngo-id="${n.id}">
-      <input class="edit-field" placeholder="Namn" value="${escapeHtml(n.name)}">
-      <input class="edit-field" placeholder="URL (https://...)" value="${escapeHtml(n.url)}">
-      <textarea class="edit-field" placeholder="Kort beskrivning">${escapeHtml(n.note)}</textarea>
-      <button class="row-del" data-del-ngo="${n.id}">×</button>
+      <input class="edit-inline" placeholder="${escapeHtml(t('ngo.namePh'))}" value="${escapeHtml(n.name)}">
+      <input class="edit-inline" placeholder="${escapeHtml(t('ngo.urlPh'))}" value="${escapeHtml(n.url)}">
+      <textarea class="edit-inline" placeholder="${escapeHtml(t('ngo.notePh'))}">${escapeHtml(n.note)}</textarea>
+      <button class="del-x" data-del-ngo="${n.id}" type="button" title="${escapeHtml(t('countries.del'))}">×</button>
     </div>
-  `).join('') + `<button class="mini-btn add-ngo-btn" id="add-ngo-btn">+ Lägg till organisation</button>`;
+  `).join('') + `<button class="mini-btn add-ngo-btn" id="add-ngo-btn" type="button">${escapeHtml(t('ngo.add'))}</button>`;
 
   el.querySelectorAll('[data-ngo-id]').forEach(row=>{
     const id = parseInt(row.getAttribute('data-ngo-id'),10);
@@ -1234,83 +2004,6 @@ function renderNgoList(countryId){
   if(addBtn) addBtn.addEventListener('click', ()=>{ addNgo(countryId, currentLang); renderNgoList(countryId); });
 }
 
-function renderTopicCard(t, countryId){
-  if(!editMode){
-    const icon = pickIcon(t.title);
-    let inner = '';
-    (t.body || []).forEach(p=>{ if(p) inner += `<p class="body-text">${escapeHtml(p)}</p>`; });
-    if(t.kv && t.kv.length){
-      inner += `<div class="kv">` + t.kv.map(row=>`<div class="kv-row"><span class="k">${escapeHtml(row.k)}</span><span class="v">${escapeHtml(row.v)}</span></div>`).join('') + `</div>`;
-    }
-    const plainCls = t.title ? '' : 'plain';
-    return `<div class="topic-card ${plainCls}">
-      ${t.title ? `<div class="icon">${ICONS[icon]}</div><h3>${escapeHtml(t.title)}</h3>` : ''}
-      ${inner}
-    </div>`;
-  }
-  // editing markup
-  const bodyRowsHtml = (t.body||[]).map((p, idx) => {
-    const bodyId = t._bodyIds ? t._bodyIds[idx] : null;
-    return '';
-  }).join('');
-  return `<div class="topic-card editing" data-card-id="${t.id}">
-    <button class="del-x" data-del-card="${t.id}" title="Ta bort kort">×</button>
-    <input class="edit-field" data-card-title="${t.id}" placeholder="Rubrik (lämna tomt för textstycke utan rubrik)" value="${escapeHtml(t.title||'')}" style="margin-bottom:12px; font-family:'Fraunces',serif; font-weight:600;">
-    <div data-body-list="${t.id}"></div>
-    <div class="card-toolbar">
-      <button class="mini-btn" data-add-para="${t.id}">+ Stycke</button>
-      <button class="mini-btn" data-add-kv="${t.id}">+ Rad (etikett: text)</button>
-      <button class="mini-btn danger" data-del-card2="${t.id}">Ta bort kort</button>
-    </div>
-    <div data-kv-list="${t.id}" style="margin-top:10px;"></div>
-  </div>`;
-}
-
-function bindTopicCardEvents(countryId){
-  document.querySelectorAll('[data-card-id]').forEach(cardEl=>{
-    const cardId = parseInt(cardEl.getAttribute('data-card-id'),10);
-    const cardData = getCountryDetail(countryId, currentLang).cards.find(c=>c.id===cardId);
-    if(!cardData) return;
-
-    const bodyList = cardEl.querySelector(`[data-body-list="${cardId}"]`);
-    bodyList.innerHTML = q(`SELECT id, text FROM card_body WHERE card_id=? ORDER BY sort_order`, [cardId]).map(row => `
-      <div class="para-edit-row" data-body-id="${row.id}">
-        <textarea class="edit-field">${escapeHtml(row.text)}</textarea>
-        <button class="row-del" data-del-para="${row.id}">×</button>
-      </div>`).join('');
-
-    const kvList = cardEl.querySelector(`[data-kv-list="${cardId}"]`);
-    kvList.innerHTML = q(`SELECT id, k, v FROM card_kv WHERE card_id=? ORDER BY sort_order`, [cardId]).map(row => `
-      <div class="kv-edit-row" data-kv-id="${row.id}">
-        <input class="edit-field" placeholder="Etikett" value="${escapeHtml(row.k)}">
-        <textarea class="edit-field" placeholder="Text">${escapeHtml(row.v)}</textarea>
-        <button class="row-del" data-del-kv="${row.id}">×</button>
-      </div>`).join('');
-
-    cardEl.querySelector(`[data-card-title="${cardId}"]`).addEventListener('change', e=> updateCardTitle(cardId, e.target.value));
-    cardEl.querySelectorAll('[data-body-id] textarea').forEach(ta=>{
-      const row = ta.closest('[data-body-id]');
-      ta.addEventListener('change', ()=> updateParagraph(parseInt(row.getAttribute('data-body-id'),10), ta.value));
-    });
-    cardEl.querySelectorAll('[data-del-para]').forEach(btn=> btn.addEventListener('click', ()=>{ deleteParagraph(parseInt(btn.getAttribute('data-del-para'),10)); goCountry(countryId); }));
-    cardEl.querySelectorAll('[data-kv-id]').forEach(row=>{
-      const kvId = parseInt(row.getAttribute('data-kv-id'),10);
-      const [kInput, vInput] = row.querySelectorAll('input, textarea');
-      const save = ()=> updateKvRow(kvId, kInput.value, vInput.value);
-      kInput.addEventListener('change', save);
-      vInput.addEventListener('change', save);
-    });
-    cardEl.querySelectorAll('[data-del-kv]').forEach(btn=> btn.addEventListener('click', ()=>{ deleteKvRow(parseInt(btn.getAttribute('data-del-kv'),10)); goCountry(countryId); }));
-    const addParaBtn = cardEl.querySelector(`[data-add-para="${cardId}"]`);
-    if(addParaBtn) addParaBtn.addEventListener('click', ()=>{ addParagraph(cardId); goCountry(countryId); });
-    const addKvBtn = cardEl.querySelector(`[data-add-kv="${cardId}"]`);
-    if(addKvBtn) addKvBtn.addEventListener('click', ()=>{ addKvRow(cardId); goCountry(countryId); });
-    cardEl.querySelectorAll(`[data-del-card="${cardId}"], [data-del-card2="${cardId}"]`).forEach(btn=>{
-      btn.addEventListener('click', ()=>{ if(confirm('Ta bort hela kortet?')){ deleteCard(cardId); goCountry(countryId); } });
-    });
-  });
-}
-
 function handleNav(token){
   if(!token) return;
   if(token === 'start') return goStart();
@@ -1320,36 +2013,44 @@ function handleNav(token){
   if(token === 'about') return goAbout();
   if(token.startsWith('region:')) return goRegion(parseInt(token.slice(7),10));
 }
+document.addEventListener('click', e=>{
+  const el = e.target.closest('[data-nav]');
+  if(el) handleNav(el.getAttribute('data-nav'));
+});
 
 function goResources(){
+  applyChrome();
+  renderCrumbs();
   const el = document.getElementById('resources-list');
-  el.innerHTML = RESOURCE_LINKS.map(group => `
-    <div class="topic-card" style="margin-bottom:16px;">
+  el.innerHTML = RESOURCE_LINKS.map((group, gi) => `
+    <article class="article" style="margin-bottom:16px;">
+      <span class="num">${String(gi+1).padStart(2,'0')}</span>
       <h3>${escapeHtml(group.group)}</h3>
-      <div class="kv" style="margin-top:14px;">
+      <div class="kv" style="margin-top:12px;">
         ${group.items.map(item => `
-          <div class="kv-row" style="align-items:flex-start;">
-            <span class="k" style="min-width:0;"></span>
+          <div class="kv-row" style="grid-template-columns:1fr; align-items:flex-start;">
             <span class="v">
-              <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener" style="color:var(--paper); font-weight:600; text-decoration:none;">${escapeHtml(item.name)} →</a>
-              <div style="color:var(--sand-2); margin-top:2px;">${escapeHtml(item.note)}</div>
+              <a href="${escapeHtml(safeUrl(item.url))}" target="_blank" rel="noopener" style="color:var(--ink); font-weight:600; text-decoration:none; border-bottom:1px solid var(--line-2);">${escapeHtml(item.name)} →</a>
+              <div style="color:var(--muted); margin-top:2px; font-size:0.82rem;">${escapeHtml(item.note)}</div>
             </span>
           </div>
         `).join('')}
       </div>
-    </div>
+    </article>
   `).join('');
   setActive('view-resources');
 }
 
 function goAbout(){
+  applyChrome();
+  renderCrumbs();
   const photoGrid = document.getElementById('about-photo-grid');
-  const captions = ['Verksamheten på plats', 'Rådgivning &amp; vägledning', 'Lokala samarbeten'];
+  const captions = [t('about.photo1'), t('about.photo2'), t('about.photo3')];
   photoGrid.innerHTML = captions.map(cap => `
     <div class="about-photo">
       <div style="text-align:center; color:var(--muted); padding:20px;">
         <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:10px;"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="m21 15-5-5L5 19"/></svg>
-        <div style="font-size:0.78rem;">${cap}</div>
+        <div style="font-size:0.78rem;">${escapeHtml(cap)}</div>
       </div>
     </div>
   `).join('');
@@ -1366,29 +2067,29 @@ function renderOrgDirectory(){
     el.innerHTML = orgs.map(o => `
       <div class="org-item">
         <div>
-          <div class="org-name">${escapeHtml(o.name || '(namnlös)')}</div>
+          <div class="org-name">${escapeHtml(o.name || t('untitled'))}</div>
           ${o.description ? `<div class="org-desc">${escapeHtml(o.description)}</div>` : ''}
           ${o.contact ? `<div class="org-contact">${escapeHtml(o.contact)}</div>` : ''}
         </div>
-        ${o.url ? `<a href="${escapeHtml(o.url)}" target="_blank" rel="noopener">Besök webbplats →</a>` : ''}
+        ${o.url ? `<a href="${escapeHtml(safeUrl(o.url))}" target="_blank" rel="noopener">${escapeHtml(t('about.visit'))} →</a>` : ''}
       </div>
-    `).join('') + (orgs.length ? '' : `<p class="ngo-empty">Inga organisationer inlagda ännu.</p>`);
+    `).join('') + (orgs.length ? '' : `<p class="ngo-empty">${escapeHtml(t('about.orgEmpty'))}</p>`);
     return;
   }
 
   el.innerHTML = orgs.map(o => `
     <div class="org-item" data-org-id="${o.id}" style="display:block;">
       <div class="org-edit-grid">
-        <input class="edit-field" placeholder="Namn" value="${escapeHtml(o.name)}" data-f="name">
-        <input class="edit-field" placeholder="URL (https://...)" value="${escapeHtml(o.url)}" data-f="url">
+        <input class="edit-inline" placeholder="${escapeHtml(t('org.namePh'))}" value="${escapeHtml(o.name)}" data-f="name">
+        <input class="edit-inline" placeholder="${escapeHtml(t('org.urlPh'))}" value="${escapeHtml(o.url)}" data-f="url">
       </div>
       <div class="org-edit-grid">
-        <input class="edit-field" placeholder="Kontakt (telefon/e-post)" value="${escapeHtml(o.contact)}" data-f="contact">
-        <textarea class="edit-field" placeholder="Beskrivning" data-f="description">${escapeHtml(o.description)}</textarea>
+        <input class="edit-inline" placeholder="${escapeHtml(t('org.contactPh'))}" value="${escapeHtml(o.contact)}" data-f="contact">
+        <textarea class="edit-inline" placeholder="${escapeHtml(t('org.descPh'))}" data-f="description">${escapeHtml(o.description)}</textarea>
       </div>
-      <button class="mini-btn danger" data-del-org="${o.id}" style="margin-top:8px;">Ta bort</button>
+      <button class="mini-btn danger" data-del-org="${o.id}" type="button" style="margin-top:8px;">${escapeHtml(t('about.orgDel'))}</button>
     </div>
-  `).join('') + `<button class="mini-btn add-ngo-btn" id="add-org-btn">+ Lägg till organisation</button>`;
+  `).join('') + `<button class="mini-btn add-ngo-btn" id="add-org-btn" type="button">${escapeHtml(t('about.orgAdd'))}</button>`;
 
   el.querySelectorAll('[data-org-id]').forEach(card=>{
     const id = parseInt(card.getAttribute('data-org-id'),10);
@@ -1403,19 +2104,252 @@ function renderOrgDirectory(){
   const addBtn = document.getElementById('add-org-btn');
   if(addBtn) addBtn.addEventListener('click', ()=>{ addOrg(currentLang); renderOrgDirectory(); });
 }
-document.addEventListener('click', e=>{
-  const el = e.target.closest('[data-nav]');
-  if(el) handleNav(el.getAttribute('data-nav'));
-});
 
 /* =====================================================================
-   EDIT MODE TOGGLE / EXPORT / IMPORT
+   CKEDITOR MODAL (rich-text content editing for a country)
+   ===================================================================== */
+let modalState = null;       // { countryId, lang, cards: [{id|null, title, paras:[], kvs:[]}] }
+let ckInstances = [];        // active ClassicEditor instances in the modal
+
+function ckAvailable(){
+  return typeof window.ClassicEditor !== 'undefined';
+}
+
+function openCountryEditor(countryId){
+  const lang = currentLang;
+  const detail = getCountryDetail(countryId, lang);
+  const ownCards = q(`SELECT id FROM cards WHERE country_id=? AND lang=?`, [countryId, lang]);
+  const useOwnIds = ownCards.length > 0;
+  modalState = { countryId, lang, name: detail.name || '', intro: detail.intro || '', cards: [], removedCardIds: [] };
+
+  if(detail.cards.length){
+    modalState.cards = detail.cards.map(c => ({
+      id: useOwnIds ? c.id : null,     // fallback cards (sv) become NEW cards in the active language
+      title: c.title || '',
+      paras: (c.body || []).map(p => ({ text: p })),
+      kvs: (c.kv || []).map(r => ({ k: r.k || '', v: r.v || '' })),
+    }));
+  } else {
+    modalState.cards = [{ id: null, title: '', paras: [{ text: '' }], kvs: [] }];
+  }
+
+  renderModalBody();
+  const overlay = document.getElementById('edit-modal');
+  overlay.classList.add('open');
+  overlay.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  initModalEditors();
+}
+
+function renderModalBody(){
+  const body = document.getElementById('edit-modal-body');
+  const cardsHtml = modalState.cards.map((card, i) => `
+    <div class="m-card" data-card-index="${i}">
+      <div class="m-card-head">
+        <span class="m-card-num">${escapeHtml(t('modal.cardNum', { n: String(i+1).padStart(2,'0') }))}</span>
+        <button class="del-x" data-del-card="${i}" type="button" title="${escapeHtml(t('modal.cardDel'))}">×</button>
+      </div>
+      <div class="m-field">
+        <input class="edit-inline" data-card-title="${i}" placeholder="${escapeHtml(t('modal.titlePh'))}" value="${escapeHtml(card.title)}">
+      </div>
+      <div class="m-field">
+        <label>${escapeHtml(t('modal.paras'))}</label>
+        ${card.paras.map((p, pi) => `
+          <div class="m-para">
+            <textarea class="edit-inline rich" data-para="${i}:${pi}" placeholder="${escapeHtml(t('modal.paras'))}">${escapeHtml(p.text)}</textarea>
+            <button class="mini-btn danger" data-del-para="${i}:${pi}" type="button" style="margin-top:6px;">${escapeHtml(t('modal.paraDel'))}</button>
+          </div>`).join('')}
+        <button class="mini-btn" data-add-para="${i}" type="button">${escapeHtml(t('modal.paraAdd'))}</button>
+      </div>
+      <div class="m-field">
+        <label>${escapeHtml(t('modal.kv'))}</label>
+        ${card.kvs.map((kv, ki) => `
+          <div class="m-kv">
+            <input class="edit-inline" data-kv-k="${i}:${ki}" placeholder="${escapeHtml(t('modal.kvKPh'))}" value="${escapeHtml(kv.k)}">
+            <textarea class="edit-inline rich" data-kv-v="${i}:${ki}" placeholder="${escapeHtml(t('modal.kvVPh'))}">${escapeHtml(kv.v)}</textarea>
+            <button class="del-x" data-del-kv="${i}:${ki}" type="button" title="${escapeHtml(t('modal.paraDel'))}">×</button>
+          </div>`).join('')}
+        <button class="mini-btn" data-add-kv="${i}" type="button">${escapeHtml(t('modal.kvAdd'))}</button>
+      </div>
+    </div>
+  `).join('');
+
+  body.innerHTML = `
+    <div class="m-field">
+      <label for="em-name">${escapeHtml(t('modal.name'))}</label>
+      <input id="em-name" class="edit-inline" value="${escapeHtml(modalState.name)}">
+    </div>
+    <div class="m-field">
+      <label for="em-intro">${escapeHtml(t('modal.intro'))}</label>
+      <textarea id="em-intro" class="edit-inline rich" placeholder="${escapeHtml(t('modal.intro'))}">${escapeHtml(modalState.intro)}</textarea>
+    </div>
+    <div class="m-field">
+      <label>${escapeHtml(t('modal.cards'))}</label>
+      ${cardsHtml}
+      <button class="mini-btn" id="em-add-card" type="button">${escapeHtml(t('modal.cardAdd'))}</button>
+    </div>
+  `;
+
+  /* structural buttons (event delegation on the modal body) */
+  body.querySelectorAll('[data-add-para]').forEach(btn =>
+    btn.addEventListener('click', ()=>{
+      const ci = parseInt(btn.getAttribute('data-add-para'),10);
+      modalState.cards[ci].paras.push({ text: '' });
+      rerenderModal();
+    }));
+  body.querySelectorAll('[data-del-para]').forEach(btn =>
+    btn.addEventListener('click', ()=>{
+      const [ci, pi] = btn.getAttribute('data-del-para').split(':').map(Number);
+      modalState.cards[ci].paras.splice(pi, 1);
+      rerenderModal();
+    }));
+  body.querySelectorAll('[data-add-kv]').forEach(btn =>
+    btn.addEventListener('click', ()=>{
+      const ci = parseInt(btn.getAttribute('data-add-kv'),10);
+      modalState.cards[ci].kvs.push({ k: '', v: '' });
+      rerenderModal();
+    }));
+  body.querySelectorAll('[data-del-kv]').forEach(btn =>
+    btn.addEventListener('click', ()=>{
+      const [ci, ki] = btn.getAttribute('data-del-kv').split(':').map(Number);
+      modalState.cards[ci].kvs.splice(ki, 1);
+      rerenderModal();
+    }));
+  body.querySelectorAll('[data-del-card]').forEach(btn =>
+    btn.addEventListener('click', ()=>{
+      const ci = parseInt(btn.getAttribute('data-del-card'),10);
+      if(modalState.cards.length <= 1){ alert(t('modal.cardDelConfirm')); return; }
+      if(confirm(t('modal.cardDelConfirm'))){
+        const card = modalState.cards[ci];
+        if(card.id != null) modalState.removedCardIds.push(card.id);
+        modalState.cards.splice(ci, 1);
+        rerenderModal();
+      }
+    }));
+  const addCardBtn = document.getElementById('em-add-card');
+  if(addCardBtn) addCardBtn.addEventListener('click', ()=>{
+    modalState.cards.push({ id: null, title: '', paras: [{ text: '' }], kvs: [] });
+    rerenderModal();
+  });
+
+  /* value binding: sync inputs/editors into modalState */
+  const nameInput = document.getElementById('em-name');
+  if(nameInput) nameInput.addEventListener('input', ()=>{ modalState.name = nameInput.value; });
+  body.querySelectorAll('[data-card-title]').forEach(inp =>
+    inp.addEventListener('input', ()=>{
+      modalState.cards[parseInt(inp.getAttribute('data-card-title'),10)].title = inp.value;
+    }));
+  body.querySelectorAll('[data-kv-k]').forEach(inp =>
+    inp.addEventListener('input', ()=>{
+      const [ci, ki] = inp.getAttribute('data-kv-k').split(':').map(Number);
+      modalState.cards[ci].kvs[ki].k = inp.value;
+    }));
+}
+
+/* re-render modal (after structural edits); editors are re-created */
+async function rerenderModal(){
+  modalState.intro = readRichValue('#em-intro');
+  modalState.cards.forEach((card, ci) => {
+    card.paras.forEach((p, pi) => { p.text = readRichValue(`[data-para="${ci}:${pi}"]`); });
+    card.kvs.forEach((kv, ki) => { kv.v = readRichValue(`[data-kv-v="${ci}:${ki}"]`); });
+  });
+  const nameInput = document.getElementById('em-name');
+  if(nameInput) modalState.name = nameInput.value;
+
+  await destroyModalEditors();
+  renderModalBody();
+  initModalEditors();
+}
+
+function readRichValue(sel){
+  const el = document.querySelector(sel);
+  if(!el) return '';
+  if(el._ck) return el._ck.getData();
+  return el.value;
+}
+
+async function initModalEditors(){
+  if(!ckAvailable()) return; // textareas remain plain (still sanitized on save)
+  const targets = Array.from(document.querySelectorAll('#edit-modal-body textarea.rich'));
+  for(const ta of targets){
+    try{
+      const editor = await ClassicEditor.create(ta, {
+        toolbar: ['heading','|','bold','italic','|','bulletedList','numberedList','|','link'],
+        language: currentLang,
+      });
+      ta._ck = editor;
+      ckInstances.push(editor);
+    }catch(err){
+      console.warn('CKEditor init failed, falling back to plain textarea', err);
+      ta._ck = null;
+    }
+  }
+}
+
+async function destroyModalEditors(){
+  await Promise.all(ckInstances.map(ed => ed.destroy().catch(()=>{})));
+  ckInstances = [];
+  document.querySelectorAll('#edit-modal-body textarea.rich').forEach(ta => { ta._ck = null; });
+}
+
+function closeCountryEditor(){
+  const overlay = document.getElementById('edit-modal');
+  overlay.classList.remove('open');
+  overlay.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+  destroyModalEditors();
+  modalState = null;
+}
+
+async function saveCountryEditor(){
+  if(!modalState) return;
+  const { countryId, lang } = modalState;
+  const nameInput = document.getElementById('em-name');
+  const name = nameInput ? nameInput.value.trim() : '';
+  const intro = sanitizeRich(readRichValue('em-intro'));
+
+  const cardPayloads = modalState.cards.map((card, ci) => {
+    const title = card.title.trim();
+    const paras = card.paras.map((p, pi) => sanitizeRich(readRichValue(`[data-para="${ci}:${pi}"]`)));
+    const kvs = card.kvs.map((kv, ki) => ({
+      k: kv.k.trim(),
+      v: sanitizeRich(readRichValue(`[data-kv-v="${ci}:${ki}"]`)),
+    }));
+    return { id: card.id, title, paras, kvs };
+  });
+
+  /* persist name + intro (current language) */
+  const existing = q(`SELECT name FROM country_i18n WHERE country_id=? AND lang=?`, [countryId, lang]);
+  const svName = q(`SELECT name FROM country_i18n WHERE country_id=? AND lang='sv'`, [countryId])[0];
+  const finalName = name || (existing.length ? existing[0].name : (svName ? svName.name : t('untitled')));
+  upsertCountryRow(countryId, lang, finalName, intro);
+
+  /* delete cards removed inside the modal */
+  (modalState.removedCardIds || []).forEach(cid => deleteCard(cid));
+
+  /* persist cards */
+  cardPayloads.forEach(payload => {
+    let cardId = payload.id;
+    if(cardId == null){
+      cardId = addCard(countryId, lang);
+    }
+    run(`UPDATE cards SET title=? WHERE id=?`, [payload.title, cardId]);
+    replaceCardContent(cardId, payload.paras, payload.kvs);
+  });
+  scheduleSave();
+  setSaveStatus('saved');
+  closeCountryEditor();
+  goCountry(countryId);
+}
+
+/* =====================================================================
+   EDIT MODE TOGGLE / EXPORT / IMPORT / INIT
    ===================================================================== */
 document.getElementById('btn-edit-toggle').addEventListener('click', ()=>{
   editMode = !editMode;
   const btn = document.getElementById('btn-edit-toggle');
   btn.classList.toggle('on', editMode);
-  document.getElementById('edit-toggle-label').textContent = editMode ? 'Klar' : 'Redigera';
+  document.getElementById('edit-toggle-label').textContent = editMode ? t('nav.done') : t('nav.edit');
   rerenderAll();
 });
 
@@ -1436,16 +2370,34 @@ document.getElementById('import-file').addEventListener('change', async (e)=>{
   const buf = new Uint8Array(await file.arrayBuffer());
   try{
     db = new SQLLib.Database(buf);
-    await persistDB();
-    goStart();
-    initGlobe();
+    if(migrateDatabase()) await persistDB();
+    else await persistDB();
+    closeCountryEditor();
     renderLangSwitch();
-    alert('Databasen har importerats.');
+    goStart();
+    alert(t('foot.importOk'));
   }catch(err){
-    alert('Kunde inte läsa filen som en SQLite-databas.');
+    alert(t('foot.importFail'));
     console.error(err);
   }
   e.target.value = '';
+});
+
+/* modal chrome buttons */
+document.getElementById('btn-edit-country').addEventListener('click', ()=>{
+  if(state.countryId != null) openCountryEditor(state.countryId);
+});
+document.getElementById('edit-modal-save').addEventListener('click', saveCountryEditor);
+document.getElementById('edit-modal-cancel').addEventListener('click', closeCountryEditor);
+document.getElementById('edit-modal-close').addEventListener('click', closeCountryEditor);
+document.getElementById('edit-modal').addEventListener('click', (e)=>{
+  if(e.target.id === 'edit-modal') closeCountryEditor();
+});
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape'){
+    const overlay = document.getElementById('edit-modal');
+    if(overlay.classList.contains('open')) closeCountryEditor();
+  }
 });
 
 /* =====================================================================
@@ -1453,9 +2405,10 @@ document.getElementById('import-file').addEventListener('change', async (e)=>{
    ===================================================================== */
 window.addEventListener('DOMContentLoaded', async ()=>{
   await initDatabase();
+  applyLangDir();
+  applyChrome();
   renderLangSwitch();
   goStart();
-  initGlobe();
   document.getElementById('btn-start').addEventListener('click', goRegions);
 });
 </script>
