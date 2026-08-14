@@ -6,328 +6,294 @@
 <title>GeoBas — Landinfo för återvändare</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Noto+Naskh+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/globe.gl"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/sql-wasm.js"></script>
 <script src="https://cdn.ckeditor.com/ckeditor5/40.0.0/classic/ckeditor.js" defer></script>
 <style>
   :root{
-    --bg:#221610; --bg-2:#2e1e15; --panel:#3a271b;
-    --accent:#c1652f; --accent-2:#8fa06a;
-    --sand:#ecdfc4; --sand-2:#dccda8; --ink:#231509; --paper:#f5ecd9; --muted:#b7a288;
-    --line:rgba(236,223,196,0.14);
-    --edit:#5b8dae;
-    --danger:#b34a3d;
-    --shadow: 0 20px 50px rgba(0,0,0,0.35);
+    --bg:#eef2f5; --surface:#ffffff; --surface-2:#f6f8fa;
+    --ink:#182430; --ink-2:#3d5163; --muted:#6b7d8e;
+    --line:#d8e0e8; --line-strong:#c2cdd8;
+    --accent:#1f5f8f; --accent-strong:#184b73; --accent-soft:#e8f1f8; --accent-line:#b9d3e6;
+    --ok:#2e7d52; --ok-soft:#e7f4ec;
+    --warn:#96690f; --warn-soft:#faf1dc;
+    --danger:#b3402e; --danger-soft:#f9e8e5;
+    --edit:#127a8c; --edit-soft:#e2f2f5;
+    --shadow:0 10px 30px rgba(24,36,48,0.08);
+    --radius:14px;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
-    background:
-      radial-gradient(ellipse 900px 500px at 15% -10%, #4a3020 0%, transparent 60%),
-      radial-gradient(ellipse 800px 600px at 110% 10%, #3a2818 0%, transparent 55%),
-      linear-gradient(180deg, var(--bg) 0%, #1b110c 100%);
-    color:var(--paper); font-family:'Inter','Noto Naskh Arabic','Segoe UI',Tahoma,sans-serif; min-height:100vh; overflow-x:hidden;
+    background:var(--bg); color:var(--ink);
+    font-family:'Inter','Noto Naskh Arabic','Segoe UI',Tahoma,sans-serif;
+    min-height:100vh; line-height:1.55; font-size:16px;
+    -webkit-font-smoothing:antialiased;
   }
-  ::selection{background:var(--accent); color:var(--paper);}
-  a{color:inherit;}
-  h1,h2,h3{font-family:'Fraunces','Noto Naskh Arabic','Segoe UI',Tahoma,serif; margin:0; font-weight:600; letter-spacing:-0.01em;}
-  .eyebrow{font-family:'JetBrains Mono','Noto Naskh Arabic','Segoe UI',Tahoma,monospace; text-transform:uppercase; letter-spacing:0.14em; font-size:0.72rem; color:var(--accent);}
-  button, input, textarea{font-family:inherit;}
-  :focus-visible{outline:2px solid var(--accent); outline-offset:3px;}
+  ::selection{background:var(--accent); color:#fff;}
+  a{color:var(--accent);}
+  h1,h2,h3,h4{margin:0; font-weight:700; letter-spacing:-0.01em; color:var(--ink);}
+  button,input,textarea{font-family:inherit;}
+  :focus-visible{outline:3px solid var(--accent); outline-offset:2px;}
+  .visually-hidden{position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;}
+  .skip-link{position:absolute; top:-60px; left:16px; z-index:100; background:var(--accent); color:#fff; padding:10px 16px; border-radius:0 0 10px 10px; font-size:0.85rem; transition:top .2s ease;}
+  .skip-link:focus{top:0;}
 
-  .grat-wash{
-    position:fixed; inset:0; pointer-events:none; z-index:0; opacity:0.05;
-    background-image:
-      repeating-linear-gradient(0deg, var(--paper) 0 1px, transparent 1px 64px),
-      repeating-linear-gradient(90deg, var(--paper) 0 1px, transparent 1px 64px);
-  }
+  .eyebrow{font-family:'JetBrains Mono','Noto Naskh Arabic','Segoe UI',Tahoma,monospace; text-transform:uppercase; letter-spacing:0.12em; font-size:0.68rem; font-weight:500; color:var(--accent); display:inline-block;}
 
-  .shell{position:relative; z-index:1; max-width:1180px; margin:0 auto; padding:0 28px 100px;}
-  header.topbar{display:flex; align-items:center; justify-content:space-between; padding:22px 0 8px; gap:14px; flex-wrap:wrap;}
-  .brand{display:flex; align-items:baseline; gap:10px; cursor:pointer; user-select:none;}
-  .brand .mark{font-family:'Fraunces',serif; font-weight:700; font-size:1.35rem; letter-spacing:-0.02em;}
+  /* --- service masthead --- */
+  .svc-bar{background:var(--surface); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:40;}
+  .svc-bar-inner{max-width:1220px; margin:0 auto; padding:12px 28px; display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;}
+  .brand{display:flex; align-items:baseline; gap:10px; cursor:pointer; user-select:none; background:none; border:none; padding:0; color:var(--ink); font-size:1rem;}
+  .brand .mark{font-weight:700; font-size:1.15rem; letter-spacing:-0.01em;}
   .brand .mark em{font-style:normal; color:var(--accent);}
-  .brand .sub{font-family:'JetBrains Mono',monospace; font-size:0.66rem; color:var(--muted); letter-spacing:0.08em;}
+  .brand .sub{font-family:'JetBrains Mono','Noto Naskh Arabic',monospace; font-size:0.62rem; color:var(--muted); letter-spacing:0.1em;}
+  .svc-actions{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
 
-  .topbar-right{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
-  .lang-switch{display:flex; gap:2px; background:var(--panel); border:1px solid var(--line); border-radius:100px; padding:3px;}
-  .lang-pill{
-    border:none; background:none; color:var(--muted); font-family:'JetBrains Mono',monospace;
-    font-size:0.68rem; letter-spacing:0.05em; padding:6px 12px; border-radius:100px; cursor:pointer; text-transform:uppercase;
-  }
-  .lang-pill.active{background:var(--accent); color:var(--paper);}
-  .lang-pill.add{color:var(--accent); font-size:0.9rem; padding:6px 9px;}
+  .lang-switch{display:flex; gap:2px; background:var(--surface-2); border:1px solid var(--line); border-radius:8px; padding:3px;}
+  .lang-pill{border:none; background:none; color:var(--muted); font-family:'JetBrains Mono',monospace; font-size:0.66rem; letter-spacing:0.05em; padding:5px 11px; border-radius:6px; cursor:pointer; text-transform:uppercase;}
+  .lang-pill.active{background:var(--accent); color:#fff;}
+  .lang-pill.add{color:var(--accent); font-size:0.85rem; padding:5px 8px;}
 
-  .icon-btn{
-    display:inline-flex; align-items:center; gap:6px; background:var(--panel); border:1px solid var(--line);
-    color:var(--sand-2); padding:8px 13px; border-radius:100px; cursor:pointer; font-size:0.72rem;
-    font-family:'JetBrains Mono',monospace; letter-spacing:0.04em; text-transform:uppercase; transition:.2s ease;
-  }
-  .icon-btn:hover{border-color:var(--accent); color:var(--paper);}
+  .icon-btn{display:inline-flex; align-items:center; gap:6px; background:var(--surface); border:1px solid var(--line-strong); color:var(--ink-2); padding:7px 12px; border-radius:8px; cursor:pointer; font-size:0.72rem; font-family:'JetBrains Mono',monospace; letter-spacing:0.04em; text-transform:uppercase; transition:border-color .2s ease, background .2s ease;}
+  .icon-btn:hover{border-color:var(--accent); color:var(--accent);}
   .icon-btn svg{width:13px; height:13px;}
-  .icon-btn.on{background:var(--edit); border-color:var(--edit); color:#fff;}
-  .status-dot{
-    width:7px; height:7px; border-radius:50%; background:var(--accent-2); display:inline-block; margin-right:2px;
-    animation: pulse-dot 1.4s ease infinite;
-  }
-  @keyframes pulse-dot{ 0%,100%{opacity:1;} 50%{opacity:0.3;} }
-  #save-status{font-family:'JetBrains Mono',monospace; font-size:0.66rem; color:var(--muted); display:flex; align-items:center; gap:6px; min-width:90px;}
+  .icon-btn.on{background:var(--accent); border-color:var(--accent); color:#fff;}
+  .status-dot{width:7px; height:7px; border-radius:50%; background:var(--ok); display:inline-block; margin-right:2px; animation:pulse-dot 1.4s ease infinite;}
+  @keyframes pulse-dot{0%,100%{opacity:1;} 50%{opacity:0.3;}}
+  #save-status{font-family:'JetBrains Mono',monospace; font-size:0.64rem; color:var(--muted); display:flex; align-items:center; gap:6px; min-width:86px;}
 
-  .crumbs{font-family:'JetBrains Mono',monospace; font-size:0.74rem; color:var(--muted); display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:6px;}
+  /* --- primary nav --- */
+  .svc-nav{background:var(--surface); border-bottom:1px solid var(--line);}
+  .svc-nav-inner{max-width:1220px; margin:0 auto; padding:0 28px; display:flex; gap:2px; overflow-x:auto;}
+  .svc-nav button{appearance:none; border:none; background:none; cursor:pointer; color:var(--ink-2); font-size:0.88rem; font-weight:500; padding:11px 14px 10px; border-bottom:3px solid transparent; white-space:nowrap;}
+  .svc-nav button:hover{color:var(--ink);}
+  .svc-nav button[aria-current="page"]{color:var(--accent); border-bottom-color:var(--accent); font-weight:600;}
+
+  /* --- workspace shell --- */
+  .workspace{max-width:1220px; margin:0 auto; padding:18px 28px 80px;}
+  .crumbs{font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:var(--muted); display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:2px 0 18px;}
   .crumbs button{background:none; border:none; color:var(--muted); cursor:pointer; padding:4px 2px; font-family:inherit; font-size:inherit; border-bottom:1px solid transparent;}
-  .crumbs button:hover{color:var(--paper); border-color:var(--accent);}
-  .crumbs .current{color:var(--paper);}
+  .crumbs button:hover{color:var(--accent); border-color:var(--accent);}
+  .crumbs .current{color:var(--ink-2); font-weight:500;}
   .crumbs .sep{opacity:0.4;}
 
-  .view{display:none; animation:rise .5s ease both;}
-  .view.active{display:block;}
-  @keyframes rise{from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:translateY(0);}}
+  .view{display:none;}
+  .view.active{display:block; animation:rise .35s ease both;}
+  @keyframes rise{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);}}
   @media (prefers-reduced-motion: reduce){ .view{animation:none;} *{animation-duration:0.001s !important; transition-duration:0.001s !important;} }
 
-  #view-start{padding-top:10px;}
-  .hero{display:grid; grid-template-columns: 1.05fr 1fr; gap:20px; align-items:center; min-height:74vh;}
-  .hero-copy{position:relative; z-index:2;}
-  .hero-copy h1{font-size:clamp(2.6rem, 5.4vw, 4.4rem); line-height:0.98; margin:14px 0 22px;}
-  .hero-copy h1 .stroke{-webkit-text-stroke:1.5px var(--paper); color:transparent;}
-  .hero-copy p.lede{font-size:1.05rem; color:var(--sand-2); max-width:46ch; line-height:1.6; margin:0 0 30px;}
-  .cta-row{display:flex; align-items:center; gap:18px; flex-wrap:wrap;}
-  .cta{
-    appearance:none; border:none; cursor:pointer; background:var(--accent); color:var(--paper);
-    font-family:'JetBrains Mono',monospace; font-size:0.82rem; letter-spacing:0.06em; text-transform:uppercase;
-    padding:16px 26px; border-radius:100px; display:inline-flex; align-items:center; gap:10px;
-    box-shadow: var(--shadow); transition: transform .25s ease, box-shadow .25s ease;
-  }
-  .cta:hover{transform:translateY(-2px); box-shadow:0 24px 60px rgba(193,101,47,0.35);}
-  .cta svg{width:16px; height:16px;}
-  .cta-secondary{background:transparent; border:1px solid var(--line); color:var(--sand-2); box-shadow:none;}
-  .cta-secondary:hover{border-color:var(--accent); color:var(--paper); box-shadow:none;}
-  .hint{font-size:0.78rem; color:var(--muted);}
+  /* --- page heads --- */
+  .page-head{margin:4px 0 20px; max-width:720px;}
+  .page-head h1{font-size:clamp(1.7rem,3.2vw,2.35rem); margin:8px 0 10px;}
+  .page-head h2{font-size:clamp(1.4rem,2.6vw,1.9rem);}
+  .page-head p{color:var(--ink-2); margin:8px 0 0; line-height:1.65;}
+  .lede{color:var(--ink-2); line-height:1.7; max-width:75ch; margin:0;}
 
-  .globe-stage{position:relative; height:min(74vh, 600px); z-index:1;}
-  #globe-canvas-wrap{position:absolute; inset:0; cursor:grab;}
-  #globe-canvas-wrap:active{cursor:grabbing;}
-  .globe-loading{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:var(--muted); letter-spacing:0.08em;}
+  /* --- two-column task layout --- */
+  .view-grid{display:grid; grid-template-columns:minmax(0,1fr) 310px; gap:26px; align-items:start;}
+  @media (max-width:980px){ .view-grid{grid-template-columns:1fr;} }
+  .view-main{min-width:0;}
 
-  .page-head{margin:8px 0 34px; max-width:640px; display:flex; align-items:flex-start; justify-content:space-between; gap:20px;}
-  .page-head h2{font-size:clamp(1.8rem,3.4vw,2.5rem);}
-  .page-head p{color:var(--sand-2); margin-top:10px; line-height:1.6;}
+  /* --- panels --- */
+  .panel{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; margin-bottom:22px; box-shadow:var(--shadow);}
+  .panel-head{display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:15px 20px 13px; border-bottom:1px solid var(--line);}
+  .panel-head h2{font-size:1.05rem;}
+  .panel-meta{font-family:'JetBrains Mono',monospace; font-size:0.64rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em;}
+  .panel-body{padding:18px 20px;}
+  .panel-body .body-text{margin:0 0 12px; color:var(--ink-2); line-height:1.65;}
+  .panel-body .body-text:last-child{margin-bottom:0;}
 
-  .region-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:16px;}
-  @media (max-width:900px){ .region-grid{grid-template-columns:repeat(2, 1fr);} }
-  @media (max-width:540px){ .region-grid{grid-template-columns:1fr;} }
+  /* --- data tables --- */
+  .data-table{width:100%; border-collapse:collapse; font-size:0.92rem;}
+  .data-table th{font-family:'JetBrains Mono',monospace; font-size:0.64rem; text-transform:uppercase; letter-spacing:0.08em; font-weight:500; color:var(--muted); text-align:left; padding:10px 16px; border-bottom:1px solid var(--line-strong); background:var(--surface-2);}
+  .data-table td{padding:13px 16px; border-bottom:1px solid var(--line); vertical-align:middle;}
+  .data-table tbody tr{cursor:pointer; transition:background .15s ease;}
+  .data-table tbody tr:hover{background:var(--accent-soft);}
+  .data-table tbody tr:last-child td{border-bottom:none;}
+  .data-table .cell-primary{font-weight:600; color:var(--ink);}
+  .data-table .cell-count{font-family:'JetBrains Mono',monospace; font-size:0.74rem; color:var(--muted); white-space:nowrap;}
+  .data-table .cell-chevron{color:var(--accent); text-align:right; font-weight:700;}
+  .data-table tr.add-row{cursor:pointer; color:var(--accent); font-family:'JetBrains Mono',monospace; font-size:0.74rem; text-transform:uppercase; letter-spacing:0.05em;}
+  .data-table tr.add-row:hover{background:var(--accent-soft);}
+  .data-table .row-del{margin:0;}
 
-  .region-card{
-    background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:22px 18px 20px; text-align:center; cursor:pointer;
-    display:flex; flex-direction:column; align-items:center; gap:14px; transition:transform .25s ease, border-color .25s ease, background .25s ease;
-    position:relative; overflow:hidden;
-  }
-  .region-card:hover{transform:translateY(-4px); border-color:var(--accent); background:#432c1e;}
-  .region-card.add-card{cursor:pointer; border-style:dashed; justify-content:center; min-height:150px; color:var(--accent);}
-  .mini-globe{
-    width:84px; height:84px; border-radius:50%;
-    background-image:url('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-blue-marble.jpg');
-    background-size:220% 110%;
-    box-shadow: inset -10px -10px 24px rgba(0,0,0,0.45), inset 6px 6px 14px rgba(255,255,255,0.08);
-    animation: spin-bg 22s linear infinite; border:1px solid rgba(0,0,0,0.4);
-  }
-  @keyframes spin-bg{ from{background-position:0% 50%;} to{background-position:200% 50%;} }
-  .region-card .name{font-family:'Fraunces',serif; font-weight:600; font-size:1.05rem;}
-  .region-card .count{font-family:'JetBrains Mono',monospace; font-size:0.68rem; color:var(--muted);}
-  .name-input{
-    font-family:'Fraunces',serif; font-weight:600; font-size:1.05rem; text-align:center; background:rgba(0,0,0,0.25);
-    border:1px solid var(--edit); border-radius:8px; color:var(--paper); padding:4px 8px; width:100%;
-  }
-  .untranslated-badge{font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:#e0a96d; letter-spacing:0.05em; text-transform:uppercase;}
-  .del-x{
-    position:absolute; top:8px; right:8px; width:22px; height:22px; border-radius:50%; background:var(--danger); color:#fff;
-    border:none; cursor:pointer; font-size:0.8rem; line-height:1; display:flex; align-items:center; justify-content:center;
-  }
+  /* --- badges --- */
+  .badge{display:inline-flex; align-items:center; gap:6px; font-family:'JetBrains Mono',monospace; font-size:0.62rem; letter-spacing:0.05em; text-transform:uppercase; padding:4px 10px; border-radius:100px; white-space:nowrap;}
+  .badge::before{content:''; width:6px; height:6px; border-radius:50%; background:currentColor; flex-shrink:0;}
+  .badge.ok{background:var(--ok-soft); color:var(--ok);}
+  .badge.warn{background:var(--warn-soft); color:var(--warn);}
+  .badge.muted{background:var(--surface-2); color:var(--muted); border:1px solid var(--line);}
+  .untranslated-badge{font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--warn); background:var(--warn-soft); border-radius:100px; padding:3px 9px; letter-spacing:0.05em; text-transform:uppercase; margin-inline-start:8px; white-space:nowrap;}
 
-  .country-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:14px;}
-  @media (max-width:760px){ .country-grid{grid-template-columns:repeat(2, 1fr);} }
-  @media (max-width:480px){ .country-grid{grid-template-columns:1fr;} }
+  /* --- stepper --- */
+  .stepper{display:flex; align-items:center; gap:8px; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:12px 16px; margin-bottom:18px; box-shadow:var(--shadow);}
+  .stepper-label{font-family:'JetBrains Mono',monospace; font-size:0.64rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-inline-end:8px; white-space:nowrap;}
+  .step{display:flex; align-items:center; gap:9px; background:none; border:none; cursor:pointer; color:var(--ink-2); font-size:0.86rem; padding:5px 8px; border-radius:8px; white-space:nowrap;}
+  .step:hover{background:var(--surface-2);}
+  .step .step-no{width:25px; height:25px; border-radius:50%; background:var(--surface-2); border:1px solid var(--line-strong); color:var(--muted); display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:0.7rem; flex-shrink:0;}
+  .step.current .step-no{background:var(--accent); border-color:var(--accent); color:#fff;}
+  .step.current{color:var(--ink); font-weight:600;}
+  .step-line{flex:1; height:1px; background:var(--line-strong); min-width:16px;}
 
-  .country-card{
-    background:var(--sand); color:var(--ink); border:1px solid rgba(0,0,0,0.15); border-radius:14px; padding:20px 18px; cursor:pointer;
-    display:flex; align-items:center; justify-content:space-between; gap:10px; transition:transform .2s ease, background .2s ease;
-    font-family:'Fraunces',serif; font-weight:600; font-size:1.08rem; position:relative;
-  }
-  .country-card:hover{transform:translateX(4px); background:var(--paper);}
-  .country-card .arrow{opacity:0.5; transition:transform .2s ease, opacity .2s ease;}
-  .country-card:hover .arrow{opacity:1; transform:translateX(3px);}
-  .country-card.stub{opacity:0.55;}
-  .country-card.stub .stub-tag{font-family:'JetBrains Mono',monospace; font-size:0.62rem; text-transform:uppercase; letter-spacing:0.05em; color:#8a6c4a;}
-  .country-card.add-card{background:transparent; border-style:dashed; color:var(--sand-2); justify-content:center;}
-  .country-card .name-input{color:var(--ink); border-color:var(--edit); text-align:left;}
+  /* --- continue card --- */
+  .continue-card{display:flex; align-items:center; gap:16px; background:var(--accent-soft); border:1px solid var(--accent-line); border-radius:var(--radius); padding:14px 18px; margin-bottom:18px; flex-wrap:wrap;}
+  .continue-icon{width:38px; height:38px; border-radius:10px; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .continue-body{flex:1; min-width:180px;}
+  .continue-name{font-weight:700; font-size:1.05rem; margin-top:2px;}
+  .continue-sub{color:var(--ink-2); font-size:0.82rem;}
 
-  .country-hero{display:grid; grid-template-columns:180px 1fr; gap:34px; align-items:start; padding:8px 0 30px; border-bottom:1px solid var(--line); margin-bottom:34px;}
-  @media (max-width:640px){ .country-hero{grid-template-columns:1fr; gap:18px;} }
-  .country-hero .badge-globe{
-    width:150px; height:150px; border-radius:50%; background-image:url('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-blue-marble.jpg');
-    background-size:220% 110%; box-shadow: inset -14px -14px 30px rgba(0,0,0,0.5), inset 8px 8px 16px rgba(255,255,255,0.08), var(--shadow);
-    animation: spin-bg 30s linear infinite;
-  }
-  .country-hero h2{font-size:clamp(2.1rem,4vw,3.2rem); margin-bottom:14px;}
-  .country-hero .region-tag{margin-bottom:10px; display:block;}
-  .country-hero .lede{color:var(--sand-2); line-height:1.7; font-size:1rem; max-width:70ch;}
-  .edit-field{width:100%; background:rgba(0,0,0,0.25); border:1px solid var(--edit); border-radius:8px; color:var(--paper); padding:8px 10px; font-family:inherit;}
-  textarea.edit-field{resize:vertical; min-height:60px; line-height:1.5;}
-  input.edit-field.title-field{font-family:'Fraunces',serif; font-size:2rem; font-weight:600; margin-bottom:10px;}
+  /* --- side rail --- */
+  .view-side{min-width:0;}
+  .side-card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:16px 18px 14px; margin-bottom:16px; box-shadow:var(--shadow);}
+  .side-card h3{font-size:0.92rem; margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid var(--line);}
+  .side-card-head .eyebrow{display:block; margin-bottom:6px;}
+  .quick-list{list-style:none; margin:0; padding:0;}
+  .quick-list li{border-bottom:1px solid var(--line);}
+  .quick-list li:last-child{border-bottom:none;}
+  .quick-list button{width:100%; text-align:left; background:none; border:none; cursor:pointer; padding:11px 2px; font-size:0.88rem; color:var(--ink-2); display:flex; align-items:center; gap:8px;}
+  .quick-list button:hover{color:var(--accent);}
+  .quick-list .q-arrow{margin-inline-start:auto; opacity:0.45; font-weight:700;}
 
-  .topics-grid{display:grid; grid-template-columns:repeat(2, 1fr); gap:16px;}
-  @media (max-width:760px){ .topics-grid{grid-template-columns:1fr;} }
+  .sources-col{display:flex; flex-direction:column; gap:8px; margin-top:4px;}
+  .source-chip{display:inline-flex; align-items:center; gap:6px; background:var(--surface-2); border:1px solid var(--line); color:var(--ink-2); padding:8px 12px; border-radius:8px; font-size:0.78rem; text-decoration:none; transition:border-color .2s ease, background .2s ease;}
+  .source-chip:hover{background:var(--accent-soft); border-color:var(--accent-line); color:var(--accent);}
+  .sources-note{margin:10px 0 0; font-size:0.72rem; color:var(--muted); line-height:1.6;}
 
-  .topic-card{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:24px 24px 22px; position:relative;}
-  .topic-card.plain{background:transparent; border-style:dashed;}
-  .topic-card.editing{border-color:var(--edit); background:#2a3540;}
-  .topic-card .icon{width:34px; height:34px; border-radius:9px; background:rgba(193,101,47,0.15); display:flex; align-items:center; justify-content:center; margin-bottom:14px; color:var(--accent);}
-  .topic-card .icon svg{width:18px; height:18px;}
-  .topic-card h3{font-size:1.12rem; margin-bottom:8px; line-height:1.25;}
-  .topic-card .body-text{color:var(--sand-2); font-size:0.92rem; line-height:1.6; margin-bottom:12px;}
+  /* --- definition rows --- */
+  .kv{margin-top:6px;}
+  .kv-row{display:flex; gap:14px; padding:8px 0; border-top:1px dashed var(--line); font-size:0.88rem; line-height:1.55;}
+  .kv-row:first-child{border-top:none;}
+  .kv-row .k{flex:0 0 140px; font-family:'JetBrains Mono',monospace; font-size:0.64rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--accent); padding-top:3px;}
+  .kv-row .v{color:var(--ink-2); flex:1; min-width:0;}
+
+  /* --- country dossier --- */
+  .dossier-head{padding:2px 0 20px; margin-bottom:20px; border-bottom:1px solid var(--line-strong);}
+  .dossier-head h2{font-size:clamp(1.7rem,3vw,2.35rem); margin:8px 0 12px;}
+  .dossier-meta{font-family:'JetBrains Mono',monospace; font-size:0.66rem; color:var(--muted); letter-spacing:0.03em; margin:12px 0 0;}
+
+  /* --- dossier sections (stacked document chapters, replaces card grid) --- */
+  .topics-grid{display:grid; grid-template-columns:1fr; gap:16px;}
+  .topic-card{background:var(--surface); border:1px solid var(--line); border-inline-start:4px solid var(--accent); border-radius:var(--radius); padding:20px 24px 18px; position:relative; box-shadow:var(--shadow);}
+  .topic-card.plain{border-inline-start-color:var(--line-strong);}
+  .topic-card.editing{border-color:var(--edit); border-inline-start-color:var(--edit); background:var(--edit-soft);}
+  .topic-card .icon{width:32px; height:32px; border-radius:8px; background:var(--accent-soft); color:var(--accent); display:flex; align-items:center; justify-content:center; margin-bottom:12px;}
+  .topic-card .icon svg{width:17px; height:17px;}
+  .topic-card h3{font-size:1.08rem; margin-bottom:8px; line-height:1.3;}
+  .topic-card .body-text{color:var(--ink-2); font-size:0.92rem; line-height:1.65; margin-bottom:10px;}
   .topic-card .body-text:last-child{margin-bottom:0;}
-  .kv{margin-top:10px;}
-  .kv-row{display:flex; gap:8px; margin-bottom:8px; font-size:0.88rem; line-height:1.55;}
-  .kv-row .k{font-family:'JetBrains Mono',monospace; font-size:0.66rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--accent); white-space:nowrap; padding-top:2px;}
-  .kv-row .v{color:var(--sand-2);}
 
-  .empty-country{padding:60px 20px; text-align:center; border:1px dashed var(--line); border-radius:18px; color:var(--muted);}
-  .empty-country h3{color:var(--sand-2); margin-bottom:10px; font-size:1.3rem;}
+  .empty-country{padding:50px 20px; text-align:center; border:1px dashed var(--line-strong); border-radius:var(--radius); color:var(--muted); background:var(--surface);}
+  .empty-country h3{color:var(--ink-2); margin-bottom:10px; font-size:1.15rem;}
 
-  .disclaimer{margin-top:40px; padding:16px 18px; border-radius:12px; background:rgba(0,0,0,0.2); border:1px dashed var(--line); font-size:0.78rem; color:var(--muted); line-height:1.6;}
+  .disclaimer{margin-top:26px; padding:13px 16px; border-radius:10px; background:var(--warn-soft); border:1px solid #ead9ae; font-size:0.76rem; color:var(--warn); line-height:1.6;}
 
-  .sources-panel{margin-top:32px; padding:20px 22px; border-radius:16px; background:var(--panel); border:1px solid var(--line);}
-  .sources-links{display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;}
-  .source-chip{
-    display:inline-flex; align-items:center; gap:6px; background:rgba(193,101,47,0.12); border:1px solid rgba(193,101,47,0.35);
-    color:var(--paper); padding:8px 14px; border-radius:100px; font-size:0.78rem; text-decoration:none; transition:.2s ease;
-  }
-  .source-chip:hover{background:rgba(193,101,47,0.22); border-color:var(--accent);}
-  .sources-note{margin-top:12px; font-size:0.74rem; color:var(--muted); line-height:1.6;}
-
-  .ngo-panel{margin-top:28px; padding:20px 22px; border-radius:16px; border:1px dashed var(--line);}
-  .ngo-item{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px solid var(--line);}
+  /* --- NGOs (side rail) --- */
+  .ngo-item{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:11px 0; border-bottom:1px solid var(--line);}
   .ngo-item:last-child{border-bottom:none;}
-  .ngo-item .ngo-name{font-family:'Fraunces',serif; font-weight:600; font-size:1rem;}
-  .ngo-item .ngo-note{color:var(--sand-2); font-size:0.85rem; line-height:1.5; margin-top:2px;}
-  .ngo-item a{color:var(--accent); font-size:0.82rem; text-decoration:none;}
+  .ngo-item .ngo-name{font-weight:600; font-size:0.92rem;}
+  .ngo-item .ngo-note{color:var(--ink-2); font-size:0.8rem; line-height:1.5; margin-top:2px;}
+  .ngo-item a{color:var(--accent); font-size:0.8rem; text-decoration:none; white-space:nowrap;}
   .ngo-item a:hover{text-decoration:underline;}
-  .ngo-empty{color:var(--muted); font-size:0.85rem; font-style:italic;}
-  .ngo-edit-row{display:grid; grid-template-columns:1fr 1fr 1.4fr auto; gap:8px; padding:10px 0; border-bottom:1px solid var(--line); align-items:start;}
+  .ngo-empty{color:var(--muted); font-size:0.82rem; font-style:italic; margin:0;}
+  .ngo-edit-row{display:grid; grid-template-columns:1fr 1fr 1.3fr auto; gap:8px; padding:10px 0; border-bottom:1px solid var(--line); align-items:start;}
   @media (max-width:700px){ .ngo-edit-row{grid-template-columns:1fr;} }
-  .add-ngo-btn{margin-top:14px;}
+  .add-ngo-btn{margin-top:12px;}
 
-  .about-photo-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:14px;}
-  @media (max-width:760px){ .about-photo-grid{grid-template-columns:1fr;} }
-  .about-photo{
-    border-radius:16px; overflow:hidden; aspect-ratio:4/3; background:var(--panel); border:1px solid var(--line);
-    display:flex; align-items:center; justify-content:center;
-  }
-  .about-photo img{width:100%; height:100%; object-fit:cover; display:block;}
-
-  .org-item{
-    background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:18px 20px; margin-bottom:12px;
-    display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap;
-  }
-  .org-item .org-name{font-family:'Fraunces',serif; font-weight:600; font-size:1.05rem; margin-bottom:4px;}
-  .org-item .org-desc{color:var(--sand-2); font-size:0.88rem; line-height:1.55; max-width:60ch;}
-  .org-item .org-contact{color:var(--muted); font-size:0.8rem; margin-top:6px;}
-  .org-item a{color:var(--accent); text-decoration:none; font-size:0.85rem;}
+  /* --- org directory --- */
+  .org-item{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:16px 20px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; box-shadow:var(--shadow);}
+  .org-item .org-name{font-weight:600; font-size:1rem; margin-bottom:4px;}
+  .org-item .org-desc{color:var(--ink-2); font-size:0.86rem; line-height:1.55; max-width:60ch;}
+  .org-item .org-contact{color:var(--muted); font-size:0.78rem; margin-top:6px;}
+  .org-item a{color:var(--accent); text-decoration:none; font-size:0.84rem;}
   .org-item a:hover{text-decoration:underline;}
   .org-edit-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;}
   @media (max-width:700px){ .org-edit-grid{grid-template-columns:1fr;} }
 
-  .back-strip{margin-top:44px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;}
-  .link-btn{background:none; border:1px solid var(--line); color:var(--sand-2); padding:11px 18px; border-radius:100px; cursor:pointer; font-size:0.82rem; display:inline-flex; align-items:center; gap:8px; transition:.2s ease;}
-  .link-btn:hover{border-color:var(--accent); color:var(--paper);}
+  /* --- back strip & buttons --- */
+  .back-strip{margin-top:34px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;}
+  .link-btn{background:var(--surface); border:1px solid var(--line-strong); color:var(--ink-2); padding:10px 16px; border-radius:8px; cursor:pointer; font-size:0.82rem; display:inline-flex; align-items:center; gap:8px; transition:border-color .2s ease, color .2s ease;}
+  .link-btn:hover{border-color:var(--accent); color:var(--accent);}
   .link-btn svg{width:14px; height:14px;}
+  .cta{appearance:none; border:none; cursor:pointer; background:var(--accent); color:#fff; font-family:'JetBrains Mono',monospace; font-size:0.76rem; letter-spacing:0.05em; text-transform:uppercase; padding:12px 20px; border-radius:8px; display:inline-flex; align-items:center; gap:9px; box-shadow:0 6px 16px rgba(31,95,143,0.28); transition:background .2s ease, transform .2s ease;}
+  .cta:hover{background:var(--accent-strong);}
+  .cta svg{width:15px; height:15px;}
 
   /* --- edit-mode chrome --- */
-  .edit-toolbar{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px;}
-  .mini-btn{
-    border:1px dashed var(--line); background:none; color:var(--sand-2); padding:8px 12px; border-radius:10px; cursor:pointer;
-    font-size:0.76rem; font-family:'JetBrains Mono',monospace; display:inline-flex; align-items:center; gap:6px;
-  }
-  .mini-btn:hover{border-color:var(--accent); color:var(--paper);}
-  .mini-btn.danger{color:#e08c7d;}
-  .mini-btn.danger:hover{border-color:var(--danger); color:#ff9a8a;}
-  .card-toolbar{display:flex; gap:6px; flex-wrap:wrap; margin-top:14px; padding-top:12px; border-top:1px dashed var(--line);}
+  .mini-btn{border:1px dashed var(--line-strong); background:var(--surface); color:var(--ink-2); padding:7px 11px; border-radius:8px; cursor:pointer; font-size:0.74rem; font-family:'JetBrains Mono',monospace; display:inline-flex; align-items:center; gap:6px;}
+  .hint{font-size:0.76rem; color:var(--muted); line-height:1.5;}
+  .mini-btn:hover{border-color:var(--accent); color:var(--accent);}
+  .mini-btn.danger{color:var(--danger);}
+  .mini-btn.danger:hover{border-color:var(--danger); color:var(--danger);}
+  .card-toolbar{display:flex; gap:6px; flex-wrap:wrap; margin-top:14px; padding-top:12px; border-top:1px dashed var(--line-strong);}
+  .edit-field{width:100%; background:var(--surface); border:1px solid var(--line-strong); border-radius:8px; color:var(--ink); padding:8px 10px; font-family:inherit; font-size:0.9rem;}
+  .edit-field:focus{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); outline:none;}
+  textarea.edit-field{resize:vertical; min-height:60px; line-height:1.5;}
+  input.edit-field.title-field{font-size:1.5rem; font-weight:700; margin-bottom:10px;}
+  .name-input{font-family:inherit; font-weight:600; font-size:0.92rem; background:var(--surface); border:1px solid var(--edit); border-radius:6px; color:var(--ink); padding:4px 8px; width:100%;}
+  .name-input:focus{border-color:var(--edit); box-shadow:0 0 0 3px var(--edit-soft); outline:none;}
+  .row-del{background:var(--danger); border:none; color:#fff; width:26px; height:26px; border-radius:6px; cursor:pointer; flex-shrink:0; font-size:0.8rem; line-height:1;}
+  .del-x{position:absolute; top:10px; right:10px; width:24px; height:24px; border-radius:6px; background:var(--danger); color:#fff; border:none; cursor:pointer; font-size:0.78rem; line-height:1; display:flex; align-items:center; justify-content:center;}
   .kv-edit-row{display:flex; gap:6px; margin-bottom:8px; align-items:flex-start;}
-  .kv-edit-row input{flex:0 0 140px;}
+  .kv-edit-row input{flex:0 0 150px;}
   .kv-edit-row textarea{flex:1; min-height:44px;}
-  .para-edit-row{display:flex; gap:6px; margin-bottom:8px; align-items:flex-start;}
-  .para-edit-row textarea{flex:1;}
-  .row-del{background:var(--danger); border:none; color:#fff; width:26px; height:26px; border-radius:6px; cursor:pointer; flex-shrink:0; font-size:0.8rem;}
-  .add-topic-card{
-    display:flex; align-items:center; justify-content:center; min-height:140px; border:1px dashed var(--edit); border-radius:16px;
-    color:var(--edit); cursor:pointer; font-family:'JetBrains Mono',monospace; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em;
-  }
-  .add-topic-card:hover{background:rgba(91,141,174,0.1);}
+  .add-topic-card{display:flex; align-items:center; justify-content:center; min-height:60px; border:1px dashed var(--edit); border-radius:var(--radius); color:var(--edit); cursor:pointer; font-family:'JetBrains Mono',monospace; font-size:0.74rem; text-transform:uppercase; letter-spacing:0.05em; background:var(--surface);}
+  .add-topic-card:hover{background:var(--edit-soft);}
 
-  footer.foot{max-width:1180px; margin:60px auto 0; padding:24px 28px; border-top:1px solid var(--line); display:flex; justify-content:space-between; color:var(--muted); font-size:0.72rem; font-family:'JetBrains Mono',monospace; flex-wrap:wrap; gap:14px; align-items:center;}
+  /* --- footer --- */
+  footer.foot{max-width:1220px; margin:0 auto; padding:20px 28px; border-top:1px solid var(--line); display:flex; justify-content:space-between; color:var(--muted); font-size:0.7rem; font-family:'JetBrains Mono',monospace; flex-wrap:wrap; gap:14px; align-items:center;}
   footer.foot .data-actions{display:flex; gap:8px;}
   #import-file{display:none;}
 
-  /* --- Globe Focus hero: side-by-side with ~35% larger globe --- */
-  .hero-globe{grid-template-columns:minmax(0,1fr) minmax(0,1.55fr); gap:36px; min-height:88vh;}
-  .hero-globe .globe-stage{height:min(86vh, 810px);}
-  .hero-globe .hero-copy h1{font-size:clamp(2.2rem,3.6vw,3.4rem);}
-  @media (max-width:940px){
-    .hero-globe{grid-template-columns:1fr; min-height:auto; gap:24px;}
-    .hero-globe .globe-stage{height:min(60vh, 480px);}
-  }
-
-  /* --- RTL (Arabic) --- */
-  [dir="rtl"] .topbar{flex-direction:row-reverse;}
-  [dir="rtl"] .crumbs{flex-direction:row-reverse;}
-  [dir="rtl"] .back-strip{flex-direction:row-reverse;}
-  [dir="rtl"] .country-card:hover{transform:translateX(-4px);}
-  [dir="rtl"] .country-card:hover .arrow{transform:translateX(-3px);}
-  [dir="rtl"] .country-card .arrow svg,[dir="rtl"] .cta svg,[dir="rtl"] .link-btn svg{transform:scaleX(-1);}
-  [dir="rtl"] .del-x{right:auto; left:8px;}
-  [dir="rtl"] .country-hero{text-align:right;}
-  [dir="rtl"] .kv-edit-row input{flex-basis:auto;}
-
-  /* --- CKEditor edit modal --- */
-  .modal-overlay{position:fixed; inset:0; background:rgba(15,9,6,0.75); z-index:60; display:flex; align-items:center; justify-content:center; padding:22px;}
+  /* --- modal --- */
+  .modal-overlay{position:fixed; inset:0; background:rgba(24,36,48,0.55); z-index:60; display:flex; align-items:center; justify-content:center; padding:22px;}
   .modal-overlay[hidden]{display:none;}
-  .modal{background:var(--panel); border:1px solid var(--line); border-radius:18px; width:min(880px, 96vw); max-height:92vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:var(--shadow);}
-  .modal-head{display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--line);}
-  .modal-head h3{font-size:1.15rem;}
+  .modal{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); width:min(880px, 96vw); max-height:92vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 24px 60px rgba(24,36,48,0.3);}
+  .modal-head{display:flex; align-items:center; justify-content:space-between; padding:15px 20px; border-bottom:1px solid var(--line);}
+  .modal-head h3{font-size:1.1rem;}
   .modal-close{background:none; border:none; color:var(--muted); font-size:1.5rem; line-height:1; cursor:pointer; padding:2px 8px; border-radius:8px;}
-  .modal-close:hover{color:var(--paper); background:rgba(0,0,0,0.25);}
+  .modal-close:hover{color:var(--ink); background:var(--surface-2);}
   .modal-body{overflow-y:auto; padding:18px 20px; display:flex; flex-direction:column; gap:16px;}
-  .modal-card-title{font-family:'Fraunces','Noto Naskh Arabic',serif; font-weight:600; font-size:1.25rem;}
+  .modal-card-title{font-weight:600; font-size:1.2rem;}
   .modal-actions{display:flex; justify-content:flex-end; gap:12px; padding:16px 20px; border-top:1px solid var(--line);}
-  .modal-actions .cta{padding:12px 22px; font-size:0.78rem;}
-  .modal-kv{border-top:1px dashed var(--line); padding-top:14px;}
+  .modal-actions .cta{padding:11px 20px; font-size:0.74rem;}
+  .modal-kv{border-top:1px dashed var(--line-strong); padding-top:14px;}
   .modal-kv .eyebrow{display:block; margin-bottom:10px;}
   #modal-editor-host{min-height:0;}
   .modal-body .ck-editor__editable{min-height:230px; max-height:40vh; overflow-y:auto; border-radius:0 0 8px 8px;}
   .ck.ck-editor{
-    --ck-color-base-background:#3a271b; --ck-color-base-border:#6b4a2e; --ck-color-base-text:#f5ecd9;
-    --ck-color-toolbar-background:#2e1e15; --ck-color-toolbar-border:#6b4a2e;
-    --ck-color-button-default-background:#2e1e15; --ck-color-button-default-hover-background:#4a3020; --ck-color-button-default-active-background:#4a3020;
-    --ck-color-panel-background:#3a271b; --ck-color-input-background:#3a271b; --ck-color-input-text:#f5ecd9;
-    --ck-color-dropdown-panel-background:#3a271b; --ck-color-link-default:#8fb7d4; --ck-color-editor-background:#2a1a11;
-    --ck-color-focus-border:#c1652f; --ck-color-widget-hover-border:#c1652f;
+    --ck-color-base-background:#ffffff; --ck-color-base-border:#c2cdd8; --ck-color-base-text:#182430;
+    --ck-color-toolbar-background:#f6f8fa; --ck-color-toolbar-border:#d8e0e8;
+    --ck-color-button-default-background:#f6f8fa; --ck-color-button-default-hover-background:#e8f1f8; --ck-color-button-default-active-background:#d9e6f0;
+    --ck-color-panel-background:#ffffff; --ck-color-input-background:#ffffff; --ck-color-input-text:#182430;
+    --ck-color-dropdown-panel-background:#ffffff; --ck-color-link-default:#1f5f8f; --ck-color-editor-background:#ffffff;
+    --ck-color-focus-border:#1f5f8f; --ck-color-widget-hover-border:#1f5f8f;
   }
-  .ck.ck-editor .ck-content{color:var(--paper);}
+  .ck.ck-editor .ck-content{color:#182430;}
+
+  /* --- RTL (Arabic) --- */
+  [dir="rtl"] .svc-bar-inner{flex-direction:row-reverse;}
+  [dir="rtl"] .crumbs{flex-direction:row-reverse;}
+  [dir="rtl"] .back-strip{flex-direction:row-reverse;}
+  [dir="rtl"] .data-table th{text-align:right;}
+  [dir="rtl"] .data-table .cell-chevron{text-align:left;}
+  [dir="rtl"] .quick-list button{text-align:right;}
+  [dir="rtl"] .link-btn svg,[dir="rtl"] .cta svg{transform:scaleX(-1);}
+  [dir="rtl"] .del-x{right:auto; left:10px;}
+  [dir="rtl"] .kv-row .k{text-align:right;}
 </style>
 </head>
 <body>
 
-<div class="grat-wash"></div>
+<a class="skip-link" href="#main" data-i18n="skip_link">Hoppa till huvudinnehåll</a>
 
-<div class="shell">
-  <header class="topbar">
-    <div class="brand" data-nav="start">
+<header class="svc-bar">
+  <div class="svc-bar-inner">
+    <button class="brand" data-nav="start" type="button">
       <span class="mark">Geo<em>Bas</em></span>
       <span class="sub" data-i18n="brand_sub">LANDINFO / ÅTERVÄNDARPORTAL</span>
-    </div>
-    <div class="topbar-right">
-      <button class="icon-btn" data-nav="about" data-i18n="nav_about" type="button">Om oss</button>
-      <button class="icon-btn" data-nav="resources" data-i18n="nav_resources" type="button">Egenstudier</button>
+    </button>
+    <div class="svc-actions">
       <div id="save-status"><span class="status-dot" style="display:none;"></span><span id="save-status-text"></span></div>
       <div class="lang-switch" id="lang-switch"></div>
       <button class="icon-btn" id="btn-edit-toggle" type="button">
@@ -335,159 +301,220 @@
         <span id="edit-toggle-label" data-i18n="btn_edit">Redigera</span>
       </button>
     </div>
-  </header>
-  <nav class="crumbs" id="crumbs"></nav>
+  </div>
+</header>
 
-  <section id="view-start" class="view active">
-    <div class="hero hero-globe">
-      <div class="hero-copy">
-        <span class="eyebrow" data-i18n="hero_eyebrow">Migrationsverket · organiserad sysselsättning</span>
-        <h1 data-i18n-html="hero_h1">Var vill du bygga<br><span class="stroke">ditt nästa kapitel</span>?</h1>
-        <p class="lede" data-i18n="hero_lede">En samlad guide till affärsmöjligheter, stödprogram och praktiska första steg — oavsett vilket land du är på väg tillbaka till.</p>
-        <div class="cta-row">
-          <button class="cta" id="btn-start" type="button">
-            <span data-i18n="hero_cta">Tryck här för att gå vidare</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-          </button>
-          <button class="cta cta-secondary" data-nav="about" data-i18n="hero_cta_secondary" type="button">
-            Om oss &amp; våra samarbeten
-          </button>
+<nav class="svc-nav" data-i18n-aria="nav_aria" aria-label="Huvudnavigering">
+  <div class="svc-nav-inner">
+    <button data-nav="start" data-i18n="nav_home" type="button">Start</button>
+    <button data-nav="regions" data-i18n="nav_landinfo" type="button">Landinfo</button>
+    <button data-nav="about" data-i18n="nav_orgs" type="button">Organisationer</button>
+    <button data-nav="resources" data-i18n="nav_resources" type="button">Egenstudier</button>
+  </div>
+</nav>
+
+<div class="workspace">
+  <main id="main" class="main-col">
+    <nav class="crumbs" id="crumbs" data-i18n-aria="crumbs_aria" aria-label="Sökväg"></nav>
+
+    <section id="view-home" class="view active">
+      <div class="view-grid">
+        <div class="view-main">
+          <div class="page-head">
+            <span class="eyebrow" data-i18n="home_eyebrow">Tjänsteöversikt</span>
+            <h1 data-i18n="home_title">Landinfo för återvändare</h1>
+            <p data-i18n="home_sub">Samlad, myndighetsgranskad information om affärsmöjligheter, stödprogram och praktiska första steg — oavsett vilket land du är på väg tillbaka till.</p>
+          </div>
+          <div class="stepper" id="stepper"></div>
+          <div id="home-continue"></div>
+          <div class="panel">
+            <div class="panel-head">
+              <h2 data-i18n="home_region_title">Landinfo efter region</h2>
+              <span class="panel-meta" id="home-region-meta"></span>
+            </div>
+            <table class="data-table">
+              <thead><tr><th scope="col" data-i18n="col_region">Region</th><th scope="col" data-i18n="col_countries">Länder</th><th scope="col" data-i18n="col_status">Status</th><th scope="col"><span class="visually-hidden">Öppna</span></th></tr></thead>
+              <tbody id="home-region-table"></tbody>
+            </table>
+          </div>
         </div>
-        <p class="hint" data-i18n="hero_hint">Dra i globen för att rotera · håll musen över den för att pausa · tryck på en prick för att välja region</p>
+        <aside class="view-side">
+          <div class="side-card">
+            <h3 data-i18n="quick_title">Vanliga ärenden</h3>
+            <ul class="quick-list">
+              <li><button data-nav="regions" type="button"><span data-i18n="quick_find">Hitta landinfo för ett land</span><span class="q-arrow" aria-hidden="true">→</span></button></li>
+              <li><button data-nav="about" type="button"><span data-i18n="quick_contact">Kontakta en stödorganisation</span><span class="q-arrow" aria-hidden="true">→</span></button></li>
+              <li><button data-nav="resources" type="button"><span data-i18n="quick_study">Studera på egen hand</span><span class="q-arrow" aria-hidden="true">→</span></button></li>
+              <li><button data-nav="about" type="button"><span data-i18n="quick_about">Om tjänsten &amp; våra samarbeten</span><span class="q-arrow" aria-hidden="true">→</span></button></li>
+            </ul>
+          </div>
+          <div class="side-card">
+            <h3 data-i18n="sources_title">Officiella källor</h3>
+            <div class="sources-links sources-col">
+              <a class="source-chip" href="https://lifos.migrationsverket.se/fokuslander.html" target="_blank" rel="noopener">Lifos — landinformation (Migrationsverket)</a>
+              <a class="source-chip" href="https://www.iom.int/" target="_blank" rel="noopener">IOM — International Organization for Migration</a>
+              <a class="source-chip" href="https://reintegrationfacility.eu/" target="_blank" rel="noopener">ERRIN / Return &amp; Reintegration Facility</a>
+            </div>
+            <p class="sources-note" data-i18n="sources_note">ERRIN avslutades formellt 2022 — arbetet fortsätter sedan dess genom Return and Reintegration Facility (RRF), som drivs av ICMPD.</p>
+          </div>
+          <div class="side-card">
+            <h3 data-i18n="status_title">Tjänstestatus</h3>
+            <div class="kv">
+              <div class="kv-row"><span class="k" data-i18n="status_db">Databas</span><span class="v">SQLite (sql.js)</span></div>
+              <div class="kv-row"><span class="k" data-i18n="status_lang">Språk</span><span class="v">sv · en · es · ar</span></div>
+              <div class="kv-row"><span class="k" data-i18n="status_save">Sparande</span><span class="v">Lokalt i webbläsaren</span></div>
+            </div>
+          </div>
+        </aside>
       </div>
-      <div class="globe-stage">
-        <div id="globe-canvas-wrap"><div class="globe-loading" data-i18n="globe_loading">Laddar databas &amp; jordglob…</div></div>
-      </div>
-    </div>
-  </section>
+    </section>
 
-  <section id="view-regions" class="view">
-    <div class="page-head">
-      <div>
-        <span class="eyebrow" data-i18n="regions_eyebrow">Steg 1 av 3</span>
-        <h2 data-i18n="regions_title">Var kommer du ifrån?</h2>
-        <p data-i18n="regions_sub">Tryck på den världsdelen som du ska återvända till.</p>
+    <section id="view-regions" class="view">
+      <div class="page-head">
+        <div>
+          <span class="eyebrow" data-i18n="regions_eyebrow">Steg 1 av 3</span>
+          <h2 data-i18n="regions_title">Var kommer du ifrån?</h2>
+          <p data-i18n="regions_sub">Välj den världsdel du ska återvända till för att se dess länder.</p>
+        </div>
       </div>
-    </div>
-    <div class="region-grid" id="region-grid"></div>
-  </section>
+      <div class="panel">
+        <table class="data-table">
+          <thead><tr><th scope="col" data-i18n="col_region">Region</th><th scope="col" data-i18n="col_countries">Länder</th><th scope="col" data-i18n="col_status">Status</th><th scope="col"></th></tr></thead>
+          <tbody id="region-grid"></tbody>
+        </table>
+      </div>
+      <div class="back-strip">
+        <button class="link-btn" data-nav="start" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+          <span data-i18n="back_home">Till startsidan</span>
+        </button>
+      </div>
+    </section>
 
-  <section id="view-about" class="view">
-    <div class="page-head">
-      <div>
-        <span class="eyebrow" data-i18n="about_eyebrow">Om oss</span>
-        <h2 data-i18n="about_title">Vilka vi är &amp; vad vi erbjuder</h2>
-        <p data-i18n="about_sub">Allt material nedan finns även samlat i vår folder, tillsammans med fullständiga kontaktuppgifter.</p>
+    <section id="view-countries" class="view">
+      <div class="view-grid">
+        <div class="view-main">
+          <div class="page-head">
+            <div>
+              <span class="eyebrow" data-i18n="countries_eyebrow">Steg 2 av 3</span>
+              <h2 id="countries-title">Region</h2>
+              <p data-i18n="countries_sub">Välj land för att läsa affärsmöjligheter, stödprogram och hur du kommer igång.</p>
+            </div>
+          </div>
+          <div class="panel">
+            <table class="data-table">
+              <thead><tr><th scope="col" data-i18n="col_country">Land</th><th scope="col" data-i18n="col_status">Status</th><th scope="col"></th></tr></thead>
+              <tbody id="country-grid"></tbody>
+            </table>
+          </div>
+          <div class="back-strip">
+            <button class="link-btn" data-nav="regions" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+              <span data-i18n="back_regions">Alla regioner</span>
+            </button>
+          </div>
+        </div>
+        <aside class="view-side" id="region-context"></aside>
       </div>
-    </div>
-    <div class="about-photo-grid" id="about-photo-grid"></div>
-    <div class="topics-grid" style="margin-top:24px;">
-      <div class="topic-card">
-        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m11 14 2-2 4 4"/><path d="M3 12h4l2-3 2 3h2"/><path d="M13 12h4l2-3"/><path d="M7 14a5 5 0 0 0 8 4"/></svg></div>
-        <h3 data-i18n="about_offer_title">Vad vi erbjuder</h3>
-        <p class="body-text" data-i18n="about_offer_p1">Vi samlar landinfo, affärsmöjligheter och stödprogram för dig som planerar en återetablering — sorterat per land och kopplat till de organisationer som kan hjälpa dig vidare.</p>
-        <p class="body-text" data-i18n="about_offer_p2">Genom våra samarbetspartners kan du få hjälp med allt från ekonomiskt återetableringsstöd till praktisk vägledning på plats i ditt hemland.</p>
-      </div>
-    </div>
-    <div class="page-head" style="margin-top:44px;">
-      <div>
-        <span class="eyebrow" data-i18n="contact_eyebrow">Kontakt</span>
-        <h2 style="font-size:1.6rem;" data-i18n="contact_title">Lokala organisationer &amp; samarbeten</h2>
-      </div>
-    </div>
-    <div id="org-directory-list"></div>
-    <div class="back-strip">
-      <button class="link-btn" data-nav="start">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
-        <span data-i18n="back_home">Till startsidan</span>
-      </button>
-    </div>
-  </section>
+    </section>
 
-  <section id="view-resources" class="view">
-    <div class="page-head">
-      <div>
-        <span class="eyebrow" data-i18n="resources_eyebrow">Egenstudier</span>
-        <h2 data-i18n="resources_title">Studera på egen hand</h2>
-        <p data-i18n="resources_sub">Gratis och kostnadseffektiva resurser för CV, språk, översättning och vidareutbildning — oavsett var du befinner dig i processen.</p>
+    <section id="view-country" class="view">
+      <div class="view-grid">
+        <div class="view-main">
+          <header class="dossier-head">
+            <span class="eyebrow region-tag" id="country-region-tag">Region</span>
+            <h2 id="country-name-static"></h2>
+            <input id="country-name-edit" class="edit-field title-field" style="display:none;" />
+            <p class="lede" id="country-intro-static"></p>
+            <textarea id="country-intro-edit" class="edit-field" style="display:none;"></textarea>
+            <p class="dossier-meta" data-i18n="dossier_meta">Uppdaterad från Migrationsverkets landinfo (2026)</p>
+          </header>
+          <div class="topics-grid" id="topics-grid"></div>
+          <div id="empty-state"></div>
+          <div class="disclaimer" id="country-disclaimer" style="display:none;"></div>
+          <div class="back-strip">
+            <button class="link-btn" data-nav="back-to-countries" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+              <span data-i18n="back_more_countries">Fler länder i regionen</span>
+            </button>
+            <button class="link-btn" data-nav="regions" type="button"><span data-i18n="back_switch_region">Byt region</span></button>
+          </div>
+        </div>
+        <aside class="view-side">
+          <div class="side-card">
+            <div class="side-card-head"><span class="eyebrow" data-i18n="ngo_eyebrow">Lokala organisationer</span><h3 data-i18n="ngo_title">NGOs i landet</h3></div>
+            <div id="ngo-list"></div>
+          </div>
+          <div class="side-card">
+            <h3 data-i18n="sources_title">Officiella källor</h3>
+            <div class="sources-links sources-col">
+              <a class="source-chip" href="https://lifos.migrationsverket.se/fokuslander.html" target="_blank" rel="noopener">Lifos — landinformation (Migrationsverket)</a>
+              <a class="source-chip" href="https://www.iom.int/" target="_blank" rel="noopener">IOM — International Organization for Migration</a>
+              <a class="source-chip" href="https://reintegrationfacility.eu/" target="_blank" rel="noopener">ERRIN / Return &amp; Reintegration Facility</a>
+            </div>
+            <p class="sources-note" data-i18n="sources_note">ERRIN avslutades formellt 2022 — arbetet fortsätter sedan dess genom Return and Reintegration Facility (RRF), som drivs av ICMPD.</p>
+          </div>
+        </aside>
       </div>
-    </div>
-    <div id="resources-list"></div>
-    <div class="back-strip">
-      <button class="link-btn" data-nav="start">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
-        <span data-i18n="back_home">Till startsidan</span>
-      </button>
-    </div>
-  </section>
+    </section>
 
-  <section id="view-countries" class="view">
-    <div class="page-head">
-      <div>
-        <span class="eyebrow" id="countries-eyebrow" data-i18n="countries_eyebrow">Steg 2 av 3</span>
-        <h2 id="countries-title">Region</h2>
-        <p data-i18n="countries_sub">Välj land för att läsa affärsmöjligheter, stödprogram och hur du kommer igång.</p>
+    <section id="view-about" class="view">
+      <div class="page-head">
+        <div>
+          <span class="eyebrow" data-i18n="about_eyebrow">Om oss</span>
+          <h2 data-i18n="about_title">Vilka vi är &amp; vad vi erbjuder</h2>
+          <p data-i18n="about_sub">Allt material nedan finns även samlat i vår folder, tillsammans med fullständiga kontaktuppgifter.</p>
+        </div>
       </div>
-    </div>
-    <div class="country-grid" id="country-grid"></div>
-    <div class="back-strip">
-      <button class="link-btn" data-nav="regions">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
-        <span data-i18n="back_regions">Alla regioner</span>
-      </button>
-    </div>
-  </section>
-
-  <section id="view-country" class="view">
-    <div class="country-hero">
-      <div class="badge-globe" id="country-badge-globe"></div>
-      <div style="width:100%;">
-        <span class="eyebrow region-tag" id="country-region-tag">Region</span>
-        <h2 id="country-name-static"></h2>
-        <input id="country-name-edit" class="edit-field title-field" style="display:none;" />
-        <p class="lede" id="country-intro-static"></p>
-        <textarea id="country-intro-edit" class="edit-field" style="display:none;"></textarea>
+      <div class="panel">
+        <div class="panel-head"><h2 data-i18n="about_offer_title">Vad vi erbjuder</h2></div>
+        <div class="panel-body">
+          <p class="body-text" data-i18n="about_offer_p1">Vi samlar landinfo, affärsmöjligheter och stödprogram för dig som planerar en återetablering — sorterat per land och kopplat till de organisationer som kan hjälpa dig vidare.</p>
+          <p class="body-text" data-i18n="about_offer_p2">Genom våra samarbetspartners kan du få hjälp med allt från ekonomiskt återetableringsstöd till praktisk vägledning på plats i ditt hemland.</p>
+        </div>
       </div>
-    </div>
-    <div class="topics-grid" id="topics-grid"></div>
-    <div id="empty-state"></div>
-
-    <div class="sources-panel">
-      <span class="eyebrow" data-i18n="sources_eyebrow">Källor &amp; internationella organisationer</span>
-      <div class="sources-links">
-        <a class="source-chip" href="https://lifos.migrationsverket.se/fokuslander.html" target="_blank" rel="noopener">Lifos — landinformation (Migrationsverket)</a>
-        <a class="source-chip" href="https://www.iom.int/" target="_blank" rel="noopener">IOM — International Organization for Migration</a>
-        <a class="source-chip" href="https://reintegrationfacility.eu/" target="_blank" rel="noopener">ERRIN / Return &amp; Reintegration Facility</a>
+      <div class="page-head" style="margin-top:26px;">
+        <div>
+          <span class="eyebrow" data-i18n="contact_eyebrow">Kontakt</span>
+          <h2 style="font-size:1.35rem;" data-i18n="contact_title">Lokala organisationer &amp; samarbeten</h2>
+        </div>
       </div>
-      <p class="sources-note" data-i18n="sources_note">ERRIN avslutades formellt 2022 — arbetet fortsätter sedan dess genom Return and Reintegration Facility (RRF), som drivs av ICMPD.</p>
-    </div>
-
-    <div class="ngo-panel">
-      <div class="page-head" style="margin:0 0 16px;">
-        <div><span class="eyebrow" data-i18n="ngo_eyebrow">Lokala organisationer</span><h2 style="font-size:1.3rem;" data-i18n="ngo_title">NGOs i landet</h2></div>
+      <div id="org-directory-list"></div>
+      <div class="back-strip">
+        <button class="link-btn" data-nav="start" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+          <span data-i18n="back_home">Till startsidan</span>
+        </button>
       </div>
-      <div id="ngo-list"></div>
-    </div>
+    </section>
 
-    <div class="disclaimer" id="country-disclaimer" style="display:none;"></div>
-    <div class="back-strip">
-      <button class="link-btn" data-nav="back-to-countries">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
-        <span data-i18n="back_more_countries">Fler länder i regionen</span>
-      </button>
-      <button class="link-btn" data-nav="regions"><span data-i18n="back_switch_region">Byt region</span></button>
-    </div>
-  </section>
-
-  <footer class="foot">
-    <span data-i18n="footer_source">Källa: Google · GeoBas — driven av SQLite (sql.js) i webbläsaren</span>
-    <div class="data-actions">
-      <button class="icon-btn" id="btn-export" data-i18n="export_btn">Exportera .sqlite</button>
-      <button class="icon-btn" id="btn-import" data-i18n="import_btn">Importera .sqlite</button>
-      <input type="file" id="import-file" accept=".sqlite,.db">
-    </div>
-  </footer>
+    <section id="view-resources" class="view">
+      <div class="page-head">
+        <div>
+          <span class="eyebrow" data-i18n="resources_eyebrow">Egenstudier</span>
+          <h2 data-i18n="resources_title">Studera på egen hand</h2>
+          <p data-i18n="resources_sub">Gratis och kostnadseffektiva resurser för CV, språk, översättning och vidareutbildning — oavsett var du befinner dig i processen.</p>
+        </div>
+      </div>
+      <div id="resources-list"></div>
+      <div class="back-strip">
+        <button class="link-btn" data-nav="start" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+          <span data-i18n="back_home">Till startsidan</span>
+        </button>
+      </div>
+    </section>
+  </main>
 </div>
+
+<footer class="foot">
+  <span data-i18n="footer_source">Källa: Google · GeoBas — driven av SQLite (sql.js) i webbläsaren</span>
+  <div class="data-actions">
+    <button class="icon-btn" id="btn-export" data-i18n="export_btn" type="button">Exportera .sqlite</button>
+    <button class="icon-btn" id="btn-import" data-i18n="import_btn" type="button">Importera .sqlite</button>
+    <input type="file" id="import-file" accept=".sqlite,.db">
+  </div>
+</footer>
 
 <div class="modal-overlay" id="edit-modal" hidden>
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
@@ -568,8 +595,6 @@ const ORG_DIRECTORY_SEED = [
   { name:"Svenska Röda Korset", url:"https://www.rodakorset.se/", contact:"", description:"Kan bland annat hjälpa till att söka efter anhöriga och ge stöd inför och efter återvändande." },
 ];
 
-const EARTH_TEXTURE = 'https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-blue-marble.jpg';
-const EARTH_BUMP = 'https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-topology.png';
 const SQLJS_CDN = 'https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/';
 const STORAGE_KEY = 'geobas-db-v1';
 
@@ -648,6 +673,32 @@ const STRINGS = {
     nav_about:'Om oss', nav_resources:'Egenstudier',
     btn_edit:'Redigera', btn_done:'Klar', add_lang:'Nytt språk',
     crumb_start:'Start',
+    nav_home:'Start', nav_landinfo:'Landinfo', nav_orgs:'Organisationer',
+    nav_aria:'Huvudnavigering', crumbs_aria:'Sökväg',
+    skip_link:'Hoppa till huvudinnehåll',
+    home_eyebrow:'Tjänsteöversikt',
+    home_title:'Landinfo för återvändare',
+    home_sub:'Samlad, myndighetsgranskad information om affärsmöjligheter, stödprogram och praktiska första steg — oavsett vilket land du är på väg tillbaka till.',
+    stepper_label:'Din väg genom tjänsten',
+    step1_title:'Välj region', step2_title:'Välj land', step3_title:'Läs landinfo',
+    home_region_title:'Landinfo efter region',
+    home_region_meta:'%s regioner · %s länder',
+    home_continue_title:'Fortsätt där du slutade',
+    home_continue_region:'Region: %s',
+    home_continue_btn:'Öppna',
+    quick_title:'Vanliga ärenden',
+    quick_find:'Hitta landinfo för ett land',
+    quick_contact:'Kontakta en stödorganisation',
+    quick_study:'Studera på egen hand',
+    quick_about:'Om tjänsten & våra samarbeten',
+    sources_title:'Officiella källor',
+    status_title:'Tjänstestatus',
+    status_db:'Databas', status_lang:'Språk', status_save:'Sparande',
+    col_region:'Region', col_countries:'Länder', col_country:'Land', col_status:'Status',
+    status_ready:'Info tillgänglig', status_pending:'Under arbete',
+    countries_in_region:'Länder i regionen',
+    other_regions:'Andra regioner',
+    dossier_meta:'Uppdaterad från Migrationsverkets landinfo (2026)',
     hero_eyebrow:'Migrationsverket · organiserad sysselsättning',
     hero_h1_a:'Var vill du bygga', hero_h1_b:'ditt nästa kapitel',
     hero_lede:'En samlad guide till affärsmöjligheter, stödprogram och praktiska första steg — oavsett vilket land du är på väg tillbaka till.',
@@ -723,6 +774,32 @@ const STRINGS = {
     nav_about:'About us', nav_resources:'Self-study',
     btn_edit:'Edit', btn_done:'Done', add_lang:'New language',
     crumb_start:'Start',
+    nav_home:'Home', nav_landinfo:'Country info', nav_orgs:'Organisations',
+    nav_aria:'Main navigation', crumbs_aria:'Breadcrumb',
+    skip_link:'Skip to main content',
+    home_eyebrow:'Service overview',
+    home_title:'Country information for returnees',
+    home_sub:'A single, authoritative guide to business opportunities, support programmes and practical first steps — no matter which country you are returning to.',
+    stepper_label:'Your path through the service',
+    step1_title:'Choose region', step2_title:'Choose country', step3_title:'Read country info',
+    home_region_title:'Country information by region',
+    home_region_meta:'%s regions · %s countries',
+    home_continue_title:'Continue where you left off',
+    home_continue_region:'Region: %s',
+    home_continue_btn:'Open',
+    quick_title:'Common tasks',
+    quick_find:'Find country information for a country',
+    quick_contact:'Contact a support organisation',
+    quick_study:'Study on your own',
+    quick_about:'About the service & our partners',
+    sources_title:'Official sources',
+    status_title:'Service status',
+    status_db:'Database', status_lang:'Language', status_save:'Saving',
+    col_region:'Region', col_countries:'Countries', col_country:'Country', col_status:'Status',
+    status_ready:'Information available', status_pending:'In progress',
+    countries_in_region:'Countries in the region',
+    other_regions:'Other regions',
+    dossier_meta:'Updated from the Swedish Migration Agency country information (2026)',
     hero_eyebrow:'Swedish Migration Agency · organised employment',
     hero_h1_a:'Where do you want to build', hero_h1_b:'your next chapter?',
     hero_lede:'A single guide to business opportunities, support programmes and practical first steps — no matter which country you are returning to.',
@@ -798,6 +875,32 @@ const STRINGS = {
     nav_about:'Sobre nosotros', nav_resources:'Autoestudio',
     btn_edit:'Editar', btn_done:'Listo', add_lang:'Nuevo idioma',
     crumb_start:'Inicio',
+    nav_home:'Inicio', nav_landinfo:'Información de países', nav_orgs:'Organizaciones',
+    nav_aria:'Navegación principal', crumbs_aria:'Migas de pan',
+    skip_link:'Saltar al contenido principal',
+    home_eyebrow:'Resumen del servicio',
+    home_title:'Información de países para retornados',
+    home_sub:'Una guía única y autorizada de oportunidades de negocio, programas de apoyo y primeros pasos prácticos — sin importar a qué país vuelvas.',
+    stepper_label:'Tu recorrido por el servicio',
+    step1_title:'Elige región', step2_title:'Elige país', step3_title:'Lee la información del país',
+    home_region_title:'Información de países por región',
+    home_region_meta:'%s regiones · %s países',
+    home_continue_title:'Continúa donde lo dejaste',
+    home_continue_region:'Región: %s',
+    home_continue_btn:'Abrir',
+    quick_title:'Tareas frecuentes',
+    quick_find:'Buscar información de un país',
+    quick_contact:'Contacta con una organización de apoyo',
+    quick_study:'Estudia por tu cuenta',
+    quick_about:'Sobre el servicio y nuestros socios',
+    sources_title:'Fuentes oficiales',
+    status_title:'Estado del servicio',
+    status_db:'Base de datos', status_lang:'Idioma', status_save:'Guardado',
+    col_region:'Región', col_countries:'Países', col_country:'País', col_status:'Estado',
+    status_ready:'Información disponible', status_pending:'En preparación',
+    countries_in_region:'Países de la región',
+    other_regions:'Otras regiones',
+    dossier_meta:'Actualizado a partir de la información de países de la Agencia de Migración (2026)',
     hero_eyebrow:'Agencia de Migración · empleo organizado',
     hero_h1_a:'¿Dónde quieres construir', hero_h1_b:'tu próximo capítulo?',
     hero_lede:'Una guía completa de oportunidades de negocio, programas de apoyo y primeros pasos prácticos — sin importar a qué país vuelvas.',
@@ -873,6 +976,32 @@ const STRINGS = {
     nav_about:'من نحن', nav_resources:'دراسة ذاتية',
     btn_edit:'تعديل', btn_done:'تم', add_lang:'لغة جديدة',
     crumb_start:'البداية',
+    nav_home:'البداية', nav_landinfo:'معلومات البلدان', nav_orgs:'المنظمات',
+    nav_aria:'التنقل الرئيسي', crumbs_aria:'مسار التنقل',
+    skip_link:'تخطَّ إلى المحتوى الرئيسي',
+    home_eyebrow:'نظرة عامة على الخدمة',
+    home_title:'معلومات بلدية للعائدين',
+    home_sub:'دليل واحد موثوق لفرص الأعمال وبرامج الدعم والخطوات العملية الأولى — أياً كان البلد الذي تعود إليه.',
+    stepper_label:'مسارك عبر الخدمة',
+    step1_title:'اختر المنطقة', step2_title:'اختر البلد', step3_title:'اقرأ معلومات البلد',
+    home_region_title:'معلومات البلدان حسب المنطقة',
+    home_region_meta:'%s منطقة · %s بلداً',
+    home_continue_title:'أكمل من حيث توقفت',
+    home_continue_region:'المنطقة: %s',
+    home_continue_btn:'فتح',
+    quick_title:'المهام الشائعة',
+    quick_find:'ابحث عن معلومات بلد',
+    quick_contact:'تواصل مع منظمة دعم',
+    quick_study:'ادرس بنفسك',
+    quick_about:'عن الخدمة وشركائنا',
+    sources_title:'المصادر الرسمية',
+    status_title:'حالة الخدمة',
+    status_db:'قاعدة البيانات', status_lang:'اللغة', status_save:'الحفظ',
+    col_region:'المنطقة', col_countries:'البلدان', col_country:'البلد', col_status:'الحالة',
+    status_ready:'المعلومات متاحة', status_pending:'قيد الإعداد',
+    countries_in_region:'بلدان المنطقة',
+    other_regions:'مناطق أخرى',
+    dossier_meta:'مُحدَّث من معلومات بلدية لوكالة الهجرة السويدية (2026)',
     hero_eyebrow:'وكالة الهجرة السويدية · توظيف منظم',
     hero_h1_a:'أين تريد بناء', hero_h1_b:'فصلك القادم؟',
     hero_lede:'دليل شامل لفرص الأعمال وبرامج الدعم والخطوات العملية الأولى — أياً كان البلد الذي تعود إليه.',
@@ -1272,9 +1401,9 @@ function scheduleSave(){
 function setSaveStatus(state){
   const dot = document.querySelector('#save-status .status-dot');
   const txt = document.getElementById('save-status-text');
-  if(state === 'pending'){ dot.style.display='inline-block'; dot.style.background='#e0a96d'; txt.textContent=T('save_pending'); }
-  else if(state === 'saving'){ dot.style.display='inline-block'; dot.style.background='#e0a96d'; txt.textContent=T('save_saving'); }
-  else if(state === 'saved'){ dot.style.display='inline-block'; dot.style.background='var(--accent-2)'; txt.textContent=T('save_saved'); setTimeout(()=>{ if(txt.textContent===T('save_saved')){ dot.style.display='none'; txt.textContent=''; } }, 2000); }
+  if(state === 'pending'){ dot.style.display='inline-block'; dot.style.background='var(--warn)'; txt.textContent=T('save_pending'); }
+  else if(state === 'saving'){ dot.style.display='inline-block'; dot.style.background='var(--warn)'; txt.textContent=T('save_saving'); }
+  else if(state === 'saved'){ dot.style.display='inline-block'; dot.style.background='var(--ok)'; txt.textContent=T('save_saved'); setTimeout(()=>{ if(txt.textContent===T('save_saved')){ dot.style.display='none'; txt.textContent=''; } }, 2000); }
   else if(state === 'error'){ dot.style.display='inline-block'; dot.style.background='var(--danger)'; txt.textContent=T('save_error'); }
 }
 
@@ -1501,57 +1630,6 @@ function validateImportedDb(database){
   return true;
 }
 
-/* =====================================================================
-   THREE-GLOBE HERO (via globe.gl)
-   ===================================================================== */
-let world;
-function initGlobe(){
-  const wrap = document.getElementById('globe-canvas-wrap');
-  wrap.innerHTML = '';
-  const w = wrap.clientWidth, h = wrap.clientHeight;
-  const regions = getRegions(currentLang);
-
-  world = Globe()(wrap)
-    .width(w).height(h)
-    .backgroundColor('rgba(0,0,0,0)')
-    .globeImageUrl(EARTH_TEXTURE)
-    .bumpImageUrl(EARTH_BUMP)
-    .showAtmosphere(true).atmosphereColor('#c1652f').atmosphereAltitude(0.22)
-    .pointsData(regions)
-    .pointLat('lat').pointLng('lng')
-    .pointColor(()=> '#c1652f')
-    .pointAltitude(0.02)
-    .pointRadius(0.95)          // larger clickable region markers
-    .pointResolution(24)
-    .onPointHover(d => { wrap.style.cursor = d ? 'pointer' : 'grab'; })
-    .onPointClick(d => goRegion(d.id));
-  // No labelsData / pointLabel / onLabelClick — region labels are intentionally hidden.
-
-  world.pointOfView({ lat: 25, lng: 20, altitude: 2.4 });
-  const controls = world.controls();
-  controls.autoRotate = true; controls.autoRotateSpeed = 0.6;
-  controls.enableZoom = false; controls.enablePan = false;   // drag-to-rotate stays enabled
-  let hoverPaused = false, dragActive = false;
-  const syncAutoRotate = () => { controls.autoRotate = !hoverPaused && !dragActive; };
-  controls.addEventListener('start', () => { dragActive = true;  syncAutoRotate(); });
-  controls.addEventListener('end',   () => { dragActive = false; syncAutoRotate(); });
-  wrap.addEventListener('pointerenter', () => { hoverPaused = true;  syncAutoRotate(); });
-  wrap.addEventListener('pointerleave', () => { hoverPaused = false; syncAutoRotate(); });
-
-  window.addEventListener('resize', onGlobeResize);
-}
-function refreshGlobePoints(){
-  if(!world) return;
-  const regions = getRegions(currentLang);
-  world.pointsData(regions);
-}
-function onGlobeResize(){
-  if(!world) return;
-  const wrap = document.getElementById('globe-canvas-wrap');
-  const w = wrap.clientWidth, h = wrap.clientHeight;
-  if(!w || !h) return;
-  world.width(w).height(h);
-}
 
 /* =====================================================================
    STATE / ROUTING
@@ -1563,6 +1641,11 @@ let editMode = false;
 function setActive(viewId){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById(viewId).classList.add('active');
+  const navMap = {'view-home':'start','view-regions':'regions','view-countries':'regions','view-country':'regions','view-about':'about','view-resources':'resources'};
+  document.querySelectorAll('.svc-nav [data-nav]').forEach(b=>{
+    if(b.getAttribute('data-nav') === navMap[viewId]) b.setAttribute('aria-current','page');
+    else b.removeAttribute('aria-current');
+  });
   window.scrollTo({top:0, behavior:'smooth'});
 }
 function renderCrumbs(){
@@ -1605,19 +1688,83 @@ function rerenderAll(){
   applyStaticI18n();
   renderLangSwitch();
   renderCrumbs();
-  refreshGlobePoints();
   const activeView = document.querySelector('.view.active').id;
-  if(activeView === 'view-regions') goRegions();
+  if(activeView === 'view-home') goHome();
+  else if(activeView === 'view-regions') goRegions();
   else if(activeView === 'view-countries' && state.regionId) goRegion(state.regionId);
   else if(activeView === 'view-country' && state.countryId) goCountry(state.countryId);
   else if(activeView === 'view-about') goAbout();
   else if(activeView === 'view-resources') goResources();
 }
 
-function goStart(){
-  state.regionId=null; state.countryId=null;
+function goHome(){
+  // Keeps state.regionId/countryId so the "continue where you left off" card
+  // and the breadcrumb trail survive a trip back to the service desk.
   renderCrumbs();
-  setActive('view-start');
+  renderStepper();
+  renderHomeContinue();
+  renderHomeRegionIndex();
+  setActive('view-home');
+}
+function renderStepper(){
+  const el = document.getElementById('stepper');
+  const steps = [T('step1_title'), T('step2_title'), T('step3_title')];
+  el.innerHTML = `<span class="stepper-label">${escapeHtml(T('stepper_label'))}</span>` +
+    steps.map((label, i) => `
+      <button class="step${i === 0 ? ' current' : ''}" data-nav="regions" type="button">
+        <span class="step-no" aria-hidden="true">${i + 1}</span>
+        <span class="step-label">${escapeHtml(label)}</span>
+      </button>` + (i < steps.length - 1 ? '<span class="step-line" aria-hidden="true"></span>' : '')
+    ).join('');
+}
+function renderHomeContinue(){
+  const el = document.getElementById('home-continue');
+  if(state.countryId){
+    const c = getCountryDetail(state.countryId, currentLang);
+    const region = findRegionForCountry(state.countryId);
+    el.innerHTML = `<div class="continue-card">
+      <div class="continue-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m9 12 2 2 4-4"/></svg></div>
+      <div class="continue-body">
+        <span class="eyebrow">${escapeHtml(T('home_continue_title'))}</span>
+        <div class="continue-name">${escapeHtml(c.name)}</div>
+        <div class="continue-sub">${escapeHtml(region ? region.name : '')}</div>
+      </div>
+      <button class="cta" data-nav="continue" type="button">${escapeHtml(T('home_continue_btn'))} →</button>
+    </div>`;
+  } else if(state.regionId){
+    const region = getRegionById(state.regionId);
+    el.innerHTML = `<div class="continue-card">
+      <div class="continue-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m9 12 2 2 4-4"/></svg></div>
+      <div class="continue-body">
+        <span class="eyebrow">${escapeHtml(T('home_continue_title'))}</span>
+        <div class="continue-name">${escapeHtml(region ? region.name : '')}</div>
+        <div class="continue-sub">${escapeHtml(Tf('home_continue_region', region ? region.name : ''))}</div>
+      </div>
+      <button class="cta" data-nav="continue" type="button">${escapeHtml(T('home_continue_btn'))} →</button>
+    </div>`;
+  } else {
+    el.innerHTML = '';
+  }
+}
+function renderHomeRegionIndex(){
+  const tbody = document.getElementById('home-region-table');
+  const meta = document.getElementById('home-region-meta');
+  const regions = getRegions(currentLang);
+  const countryTotal = regions.reduce((a, r) => a + r.countryCount, 0);
+  meta.textContent = Tf('home_region_meta', regions.length, countryTotal);
+  tbody.innerHTML = regions.map(r => `
+    <tr class="region-row" data-region-id="${r.id}" tabindex="0">
+      <td class="cell-primary">${escapeHtml(r.name)}${!r.translated ? ' <span class="badge warn">' + escapeHtml(T('untranslated_short')) + '</span>' : ''}</td>
+      <td class="cell-count">${Tf('countries_count', r.countryCount)}</td>
+      <td><span class="badge ok">${escapeHtml(T('status_ready'))}</span></td>
+      <td class="cell-chevron" aria-hidden="true">→</td>
+    </tr>
+  `).join('');
+  tbody.querySelectorAll('.region-row').forEach(row => {
+    const open = () => goRegion(parseInt(row.getAttribute('data-region-id'), 10));
+    row.addEventListener('click', open);
+    row.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+  });
 }
 
 function goRegions(){
@@ -1626,27 +1773,31 @@ function goRegions(){
   const grid = document.getElementById('region-grid');
   const regions = getRegions(currentLang);
   grid.innerHTML = regions.map(r => `
-    <div class="region-card" data-region-id="${r.id}">
-      ${editMode ? `<button class="del-x" data-del-region="${r.id}" title="${escapeHtml(T('del_card'))}">×</button>` : ''}
-      <div class="mini-globe"></div>
-      ${editMode
+    <tr class="region-row" data-region-id="${r.id}" ${editMode ? '' : 'tabindex="0"'}>
+      <td class="cell-primary">${editMode
         ? `<input class="name-input" data-region-name="${r.id}" value="${escapeHtml(r.name)}">`
-        : `<div class="name">${escapeHtml(r.name)}</div>${!r.translated ? '<span class="untranslated-badge">' + escapeHtml(T('untranslated')) + '</span>' : ''}`}
-      <div class="count">${Tf('countries_count', r.countryCount)}</div>
-    </div>
-  `).join('') + (editMode ? `<div class="region-card add-card" id="add-region-card">${escapeHtml(T('add_region'))}</div>` : '');
+        : escapeHtml(r.name)}
+        ${!r.translated ? '<span class="badge warn">' + escapeHtml(T('untranslated_short')) + '</span>' : ''}</td>
+      <td class="cell-count">${Tf('countries_count', r.countryCount)}</td>
+      <td>${editMode
+        ? `<button class="row-del" data-del-region="${r.id}" title="${escapeHtml(T('del_card'))}" type="button">×</button>`
+        : `<span class="badge ok">${escapeHtml(T('status_ready'))}</span>`}</td>
+      <td class="cell-chevron" aria-hidden="true">${editMode ? '' : '→'}</td>
+    </tr>
+  `).join('') + (editMode ? `<tr class="add-row" id="add-region-card"><td colspan="4">${escapeHtml(T('add_region'))}</td></tr>` : '');
 
-  grid.querySelectorAll('.region-card[data-region-id]').forEach(card=>{
-    card.addEventListener('click', (e)=>{
+  grid.querySelectorAll('.region-row[data-region-id]').forEach(row=>{
+    const open = ()=>{ goRegion(parseInt(row.getAttribute('data-region-id'),10)); };
+    row.addEventListener('click', (e)=>{
       if(e.target.closest('[data-del-region]') || e.target.closest('[data-region-name]')) return;
-      goRegion(parseInt(card.getAttribute('data-region-id'),10));
+      open();
     });
+    row.addEventListener('keydown', e=>{ if(!editMode && (e.key==='Enter' || e.key===' ')){ e.preventDefault(); open(); } });
   });
   grid.querySelectorAll('[data-region-name]').forEach(inp=>{
     inp.addEventListener('click', e=>e.stopPropagation());
     inp.addEventListener('change', ()=>{
       upsertRegionName(parseInt(inp.getAttribute('data-region-name'),10), currentLang, inp.value.trim() || T('nameless'));
-      refreshGlobePoints();
     });
   });
   grid.querySelectorAll('[data-del-region]').forEach(btn=>{
@@ -1654,7 +1805,6 @@ function goRegions(){
       e.stopPropagation();
       if(confirm(T('delete_confirm_region'))){
         deleteRegion(parseInt(btn.getAttribute('data-del-region'),10));
-        refreshGlobePoints();
         goRegions();
       }
     });
@@ -1664,7 +1814,6 @@ function goRegions(){
     const name = prompt(T('prompt_region_name'));
     if(!name) return;
     addRegion(name.trim(), currentLang);
-    refreshGlobePoints();
     goRegions();
   });
 
@@ -1680,22 +1829,27 @@ function goRegion(regionId){
   const grid = document.getElementById('country-grid');
   const countries = getCountriesForRegion(regionId, currentLang);
   grid.innerHTML = countries.map(c => `
-    <div class="country-card ${c.hasContent ? '' : 'stub'}" data-country-id="${c.id}">
-      ${editMode ? `<button class="del-x" data-del-country="${c.id}" title="${escapeHtml(T('del_card'))}">×</button>` : ''}
-      ${editMode
+    <tr class="country-row" data-country-id="${c.id}" ${editMode ? '' : 'tabindex="0"'}>
+      <td class="cell-primary">${editMode
         ? `<input class="name-input" data-country-name="${c.id}" value="${escapeHtml(c.name)}">`
-        : `<span>${escapeHtml(c.name)}${!c.translated ? ' <span class=\"untranslated-badge\">' + escapeHtml(T('untranslated_short')) + '</span>' : ''}</span>`}
-      ${!editMode ? (c.hasContent
-        ? `<span class="arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>`
-        : `<span class="stub-tag">${escapeHtml(T('coming_soon'))}</span>`) : ''}
-    </div>
-  `).join('') + (editMode ? `<div class="country-card add-card" id="add-country-card">${escapeHtml(T('add_country'))}</div>` : '');
+        : escapeHtml(c.name)}
+        ${!c.translated ? '<span class="badge warn">' + escapeHtml(T('untranslated_short')) + '</span>' : ''}</td>
+      <td>${c.hasContent
+        ? `<span class="badge ok">${escapeHtml(T('status_ready'))}</span>`
+        : `<span class="badge muted">${escapeHtml(T('coming_soon'))}</span>`}</td>
+      <td>${editMode
+        ? `<button class="row-del" data-del-country="${c.id}" title="${escapeHtml(T('del_card'))}" type="button">×</button>`
+        : `<span class="cell-chevron" aria-hidden="true">→</span>`}</td>
+    </tr>
+  `).join('') + (editMode ? `<tr class="add-row" id="add-country-card"><td colspan="3">${escapeHtml(T('add_country'))}</td></tr>` : '');
 
-  grid.querySelectorAll('.country-card[data-country-id]').forEach(card=>{
-    card.addEventListener('click', (e)=>{
+  grid.querySelectorAll('.country-row[data-country-id]').forEach(row=>{
+    const open = ()=>{ goCountry(parseInt(row.getAttribute('data-country-id'),10)); };
+    row.addEventListener('click', (e)=>{
       if(e.target.closest('[data-del-country]') || e.target.closest('[data-country-name]')) return;
-      goCountry(parseInt(card.getAttribute('data-country-id'),10));
+      open();
     });
+    row.addEventListener('keydown', e=>{ if(!editMode && (e.key==='Enter' || e.key===' ')){ e.preventDefault(); open(); } });
   });
   grid.querySelectorAll('[data-country-name]').forEach(inp=>{
     inp.addEventListener('click', e=>e.stopPropagation());
@@ -1720,7 +1874,24 @@ function goRegion(regionId){
     goRegion(regionId);
   });
 
+  renderRegionContext(regionId);
   setActive('view-countries');
+}
+function renderRegionContext(regionId){
+  const el = document.getElementById('region-context');
+  const regions = getRegions(currentLang);
+  const others = regions.filter(r => r.id !== regionId);
+  el.innerHTML = `
+    <div class="side-card">
+      <h3>${escapeHtml(T('countries_in_region'))}</h3>
+      <div class="kv"><div class="kv-row"><span class="k">${escapeHtml(T('col_countries'))}</span><span class="v">${getCountriesForRegion(regionId, currentLang).length}</span></div></div>
+    </div>
+    <div class="side-card">
+      <h3>${escapeHtml(T('other_regions'))}</h3>
+      <ul class="quick-list">
+        ${others.map(r => `<li><button data-nav="region:${r.id}" type="button"><span>${escapeHtml(r.name)}</span><span class="q-arrow" aria-hidden="true">→</span></button></li>`).join('')}
+      </ul>
+    </div>`;
 }
 
 function goCountry(countryId){
@@ -2039,11 +2210,12 @@ function bindTopicCardEvents(countryId){
 
 function handleNav(token){
   if(!token) return;
-  if(token === 'start') return goStart();
+  if(token === 'start' || token === 'home') return goHome();
   if(token === 'regions') return goRegions();
   if(token === 'back-to-countries') return state.regionId ? goRegion(state.regionId) : goRegions();
   if(token === 'resources') return goResources();
   if(token === 'about') return goAbout();
+  if(token === 'continue') return state.countryId ? goCountry(state.countryId) : (state.regionId ? goRegion(state.regionId) : goHome());
   if(token.startsWith('region:')) return goRegion(parseInt(token.slice(7),10));
 }
 
@@ -2057,8 +2229,8 @@ function goResources(){
           <div class="kv-row" style="align-items:flex-start;">
             <span class="k" style="min-width:0;"></span>
             <span class="v">
-              <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener" style="color:var(--paper); font-weight:600; text-decoration:none;">${escapeHtml(item.name)} →</a>
-              <div style="color:var(--sand-2); margin-top:2px;">${escapeHtml(T(item.note))}</div>
+              <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener" style="color:var(--ink); font-weight:600; text-decoration:none;">${escapeHtml(item.name)} →</a>
+              <div style="color:var(--ink-2); margin-top:2px;">${escapeHtml(T(item.note))}</div>
             </span>
           </div>
         `).join('')}
@@ -2069,17 +2241,6 @@ function goResources(){
 }
 
 function goAbout(){
-  const photoGrid = document.getElementById('about-photo-grid');
-  const captions = [T('about_photo_1'), T('about_photo_2'), T('about_photo_3')];
-  photoGrid.innerHTML = captions.map(cap => `
-    <div class="about-photo">
-      <div style="text-align:center; color:var(--muted); padding:20px;">
-        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:10px;"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="m21 15-5-5L5 19"/></svg>
-        <div style="font-size:0.78rem;">${cap}</div>
-      </div>
-    </div>
-  `).join('');
-
   renderOrgDirectory();
   setActive('view-about');
 }
@@ -2165,8 +2326,7 @@ document.getElementById('import-file').addEventListener('change', async (e)=>{
     validateImportedDb(candidate);
     db = candidate;
     await persistDB();
-    goStart();
-    initGlobe();
+    goHome();
     renderLangSwitch();
     alert(T('import_ok'));
   }catch(err){
@@ -2210,9 +2370,7 @@ window.addEventListener('DOMContentLoaded', async ()=>{
   await initDatabase();
   applyStaticI18n();
   renderLangSwitch();
-  goStart();
-  initGlobe();
-  document.getElementById('btn-start').addEventListener('click', goRegions);
+  goHome();
 });
 </script>
 </body>
