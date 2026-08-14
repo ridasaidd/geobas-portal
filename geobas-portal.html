@@ -1048,6 +1048,26 @@ function escapeHtml(str){
   div.textContent = str == null ? '' : str;
   return div.innerHTML;
 }
+/* Attribute-context escaping. escapeHtml() (via innerHTML serialization) does NOT
+   escape double quotes, so it must never be used inside an attribute value: a
+   quote would terminate the attribute and allow breakout/event-handler injection.
+   This escapes & < > " ' so untrusted strings are inert in quoted attributes. */
+function escapeHtmlAttr(str){
+  return String(str == null ? '' : str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+/* External-link URL guard: allow only http(s)/mailto. Blocks javascript:, data:,
+   vbscript:, file: and any other scheme. Combine with escapeHtmlAttr at the
+   render site so a hostile URL cannot break out of the href attribute either. */
+function safeUrl(u){
+  if(u == null) return '';
+  const s = String(u).trim();
+  return /^(https?:|mailto:)/i.test(s) ? s : '';
+}
 
 /* Conservative rich-text sanitizer: whitelisted tags only, links http(s)/mailto
    with rel=noopener, all other attributes and dangerous elements removed. */
@@ -1062,7 +1082,13 @@ function sanitizeRich(html){
       if(child.nodeType !== 1){ child.remove(); return; }
       const tag = child.tagName.toUpperCase();
       if(RICH_DROP.has(tag)){ child.remove(); return; }
-      if(!RICH_ALLOWED.has(tag)){ child.replaceWith(...Array.from(child.childNodes)); return; }
+      if(!RICH_ALLOWED.has(tag)){
+        // Sanitize descendants before unwrapping, so nothing (script, handlers,
+        // attributes on nested allowed tags) escapes through the wrapper.
+        clean(child);
+        child.replaceWith(...Array.from(child.childNodes));
+        return;
+      }
       if(tag === 'A'){
         const href = (child.getAttribute('href') || '').trim();
         const safe = /^(https?:|mailto:)/i.test(href) ? href : '';
@@ -1263,6 +1289,16 @@ function ensureSeedTranslations(){
       });
     }
   });
+}
+
+/* Trust gate for imported .sqlite files: the blob must be a real SQLite DB with
+   every table the app queries at runtime. Missing tables or a corrupt blob throw,
+   so the caller can keep the previous DB instead of running on a broken one. */
+const IMPORT_REQUIRED_TABLES = ['languages','regions','region_i18n','countries','country_regions','country_i18n','cards','card_body','card_kv','country_ngos','org_directory'];
+function validateImportedDb(){
+  const rows = q(`SELECT name FROM sqlite_master WHERE type='table'`);
+  const have = new Set(rows.map(r => r.name));
+  IMPORT_REQUIRED_TABLES.forEach(name => { if(!have.has(name)) throw new Error('imported DB missing table: ' + name); });
 }
 
 async function initDatabase(){
@@ -1573,8 +1609,8 @@ function renderCrumbs(){
 function renderLangSwitch(){
   const el = document.getElementById('lang-switch');
   const langs = getLanguages();
-  el.innerHTML = langs.map(l => `<button class="lang-pill ${l.code===currentLang?'active':''}" data-lang="${l.code}" title="${escapeHtml(l.name)}">${escapeHtml(l.code)}</button>`).join('')
-    + (editMode ? `<button class="lang-pill add" id="btn-add-lang" title="${escapeHtml(t('langTitle'))}">+</button>` : '');
+  el.innerHTML = langs.map(l => `<button class="lang-pill ${l.code===currentLang?'active':''}" data-lang="${escapeHtmlAttr(l.code)}" title="${escapeHtmlAttr(l.name)}">${escapeHtml(l.code)}</button>`).join('')
+    + (editMode ? `<button class="lang-pill add" id="btn-add-lang" title="${escapeHtmlAttr(t('langTitle'))}">+</button>` : '');
   el.querySelectorAll('[data-lang]').forEach(btn=>{
     btn.addEventListener('click', ()=>{ currentLang = btn.getAttribute('data-lang'); applyLangDir(); rerenderAll(); });
   });
@@ -1623,10 +1659,10 @@ function goRegions(){
     const code = r.slug.slice(0,2).toUpperCase();
     return `
     <div class="region-card" data-region-id="${r.id}" style="--rc:${col.main}; --rc-soft:${col.soft};">
-      ${editMode ? `<button class="del-x" data-del-region="${r.id}" title="${escapeHtml(t('deleteOrg'))}">×</button>` : ''}
+      ${editMode ? `<button class="del-x" data-del-region="${r.id}" title="${escapeHtmlAttr(t('deleteOrg'))}">×</button>` : ''}
       <div class="region-pin">${code}</div>
       ${editMode
-        ? `<input class="name-input" data-region-name="${r.id}" value="${escapeHtml(r.name)}">`
+        ? `<input class="name-input" data-region-name="${r.id}" value="${escapeHtmlAttr(r.name)}">`
         : `<div class="name">${escapeHtml(r.name)}</div>${!r.translated ? '<span class="untranslated-badge">'+escapeHtml(t('untranslated'))+'</span>' : ''}`}
       <div class="count">${escapeHtml(t('countCountries', {n: r.countryCount}))}</div>
       <span class="card-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
@@ -1677,9 +1713,9 @@ function goRegion(regionId){
   const countries = getCountriesForRegion(regionId, currentLang);
   grid.innerHTML = countries.map(c => `
     <div class="country-card ${c.hasContent ? '' : 'stub'}" data-country-id="${c.id}">
-      ${editMode ? `<button class="del-x" data-del-country="${c.id}" title="${escapeHtml(t('deleteOrg'))}">×</button>` : ''}
+      ${editMode ? `<button class="del-x" data-del-country="${c.id}" title="${escapeHtmlAttr(t('deleteOrg'))}">×</button>` : ''}
       ${editMode
-        ? `<input class="name-input" data-country-name="${c.id}" value="${escapeHtml(c.name)}">`
+        ? `<input class="name-input" data-country-name="${c.id}" value="${escapeHtmlAttr(c.name)}">`
         : `<span>${escapeHtml(c.name)}${!c.translated ? ' <span class="untranslated-badge">'+escapeHtml(t('untranslated'))+'</span>' : ''}</span>`}
       ${!editMode ? (c.hasContent
         ? `<span class="arrow"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>`
@@ -1788,7 +1824,7 @@ function renderTopicCard(c){
     ${editMode ? `<button class="card-edit-btn" data-edit-card="${c.id}" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m16.5 3.5 4 4L7 21l-4.5 1L4 17.5 16.5 3.5Z"/></svg>
       ${escapeHtml(t('editCard'))}</button>` : ''}
-    ${editMode ? `<button class="del-x" data-del-card="${c.id}" title="${escapeHtml(t('deleteCard'))}">×</button>` : ''}
+    ${editMode ? `<button class="del-x" data-del-card="${c.id}" title="${escapeHtmlAttr(t('deleteCard'))}">×</button>` : ''}
     ${c.title ? `<div class="icon">${ICONS[icon]}</div><h3>${escapeHtml(c.title)}</h3>` : ''}
     <div class="rich-body">${inner}</div>
   </div>`;
@@ -1822,7 +1858,7 @@ function renderNgoList(countryId){
           <div class="ngo-name">${escapeHtml(n.name || t('unnamed'))}</div>
           ${n.note ? `<div class="ngo-note">${escapeHtml(n.note)}</div>` : ''}
         </div>
-        ${n.url ? `<a href="${escapeHtml(n.url)}" target="_blank" rel="noopener">${escapeHtml(t('visitSite'))} →</a>` : ''}
+        ${safeUrl(n.url) ? `<a href="${escapeHtmlAttr(safeUrl(n.url))}" target="_blank" rel="noopener">${escapeHtml(t('visitSite'))} →</a>` : ''}
       </div>
     `).join('');
     return;
@@ -1830,9 +1866,9 @@ function renderNgoList(countryId){
 
   el.innerHTML = ngos.map(n => `
     <div class="ngo-edit-row" data-ngo-id="${n.id}">
-      <input class="edit-field" placeholder="${escapeHtml(t('ngoNamePh'))}" value="${escapeHtml(n.name)}">
-      <input class="edit-field" placeholder="${escapeHtml(t('ngoUrlPh'))}" value="${escapeHtml(n.url)}">
-      <textarea class="edit-field" placeholder="${escapeHtml(t('ngoNotePh'))}">${escapeHtml(n.note)}</textarea>
+      <input class="edit-field" placeholder="${escapeHtmlAttr(t('ngoNamePh'))}" value="${escapeHtmlAttr(n.name)}">
+      <input class="edit-field" placeholder="${escapeHtmlAttr(t('ngoUrlPh'))}" value="${escapeHtmlAttr(n.url)}">
+      <textarea class="edit-field" placeholder="${escapeHtmlAttr(t('ngoNotePh'))}">${escapeHtml(n.note)}</textarea>
       <button class="row-del" data-del-ngo="${n.id}">×</button>
     </div>
   `).join('') + `<button class="mini-btn add-ngo-btn" id="add-ngo-btn">${escapeHtml(t('addOrg'))}</button>`;
@@ -1876,7 +1912,7 @@ function goResources(){
           <div class="kv-row" style="align-items:flex-start;">
             <span class="k" style="min-width:0;"></span>
             <span class="v">
-              <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener" style="color:var(--teal); font-weight:700; text-decoration:none;">${escapeHtml(item.name)} →</a>
+              <a href="${escapeHtmlAttr(safeUrl(item.url))}" target="_blank" rel="noopener" style="color:var(--teal); font-weight:700; text-decoration:none;">${escapeHtml(item.name)} →</a>
               <div style="color:var(--ink-2); margin-top:2px;">${escapeHtml(item.note)}</div>
             </span>
           </div>
@@ -1914,7 +1950,7 @@ function renderOrgDirectory(){
           ${o.description ? `<div class="org-desc">${escapeHtml(o.description)}</div>` : ''}
           ${o.contact ? `<div class="org-contact">${escapeHtml(o.contact)}</div>` : ''}
         </div>
-        ${o.url ? `<a href="${escapeHtml(o.url)}" target="_blank" rel="noopener">${escapeHtml(t('visitSite'))} →</a>` : ''}
+        ${safeUrl(o.url) ? `<a href="${escapeHtmlAttr(safeUrl(o.url))}" target="_blank" rel="noopener">${escapeHtml(t('visitSite'))} →</a>` : ''}
       </div>
     `).join('') + (orgs.length ? '' : `<p class="ngo-empty">${escapeHtml(t('orgEmpty'))}</p>`);
     return;
@@ -1923,12 +1959,12 @@ function renderOrgDirectory(){
   el.innerHTML = orgs.map(o => `
     <div class="org-item" data-org-id="${o.id}" style="display:block;">
       <div class="org-edit-grid">
-        <input class="edit-field" placeholder="${escapeHtml(t('orgNamePh'))}" value="${escapeHtml(o.name)}" data-f="name">
-        <input class="edit-field" placeholder="${escapeHtml(t('orgUrlPh'))}" value="${escapeHtml(o.url)}" data-f="url">
+        <input class="edit-field" placeholder="${escapeHtmlAttr(t('orgNamePh'))}" value="${escapeHtmlAttr(o.name)}" data-f="name">
+        <input class="edit-field" placeholder="${escapeHtmlAttr(t('orgUrlPh'))}" value="${escapeHtmlAttr(o.url)}" data-f="url">
       </div>
       <div class="org-edit-grid">
-        <input class="edit-field" placeholder="${escapeHtml(t('orgContactPh'))}" value="${escapeHtml(o.contact)}" data-f="contact">
-        <textarea class="edit-field" placeholder="${escapeHtml(t('orgDescPh'))}" data-f="description">${escapeHtml(o.description)}</textarea>
+        <input class="edit-field" placeholder="${escapeHtmlAttr(t('orgContactPh'))}" value="${escapeHtmlAttr(o.contact)}" data-f="contact">
+        <textarea class="edit-field" placeholder="${escapeHtmlAttr(t('orgDescPh'))}" data-f="description">${escapeHtml(o.description)}</textarea>
       </div>
       <button class="mini-btn danger" data-del-org="${o.id}" style="margin-top:8px;">${escapeHtml(t('deleteOrg'))}</button>
     </div>
@@ -2022,8 +2058,8 @@ function renderKvEditor(){
     if(!row || modalKvRemoved.has(row.id)) return '';
     return `
     <div class="kv-edit-row" data-kv-idx="${i}">
-      <input class="edit-field" placeholder="${escapeHtml(t('kvK'))}" value="${escapeHtml(row.k)}" data-k="1">
-      <textarea class="edit-field" placeholder="${escapeHtml(t('kvV'))}" data-v="1">${escapeHtml(row.v)}</textarea>
+      <input class="edit-field" placeholder="${escapeHtmlAttr(t('kvK'))}" value="${escapeHtmlAttr(row.k)}" data-k="1">
+      <textarea class="edit-field" placeholder="${escapeHtmlAttr(t('kvV'))}" data-v="1">${escapeHtml(row.v)}</textarea>
       <button class="row-del" data-del-kv="${i}">×</button>
     </div>`;
   }).join('');
@@ -2141,15 +2177,20 @@ document.getElementById('import-file').addEventListener('change', async (e)=>{
   const file = e.target.files[0];
   if(!file) return;
   const buf = new Uint8Array(await file.arrayBuffer());
+  const prevDb = db;
+  let candidate = null;
   try{
-    db = new SQLLib.Database(buf);
-    q(`SELECT COUNT(*) AS c FROM languages`);
-    ensureSeedTranslations();
-    await persistDB(false);
+    candidate = new SQLLib.Database(buf);
+    db = candidate;
+    validateImportedDb();            // throws unless every required table exists
+    ensureSeedTranslations();        // fills missing seed rows for older variants
+    await persistDB(false);          // only now is the imported DB durable
     goStart();
     renderLangSwitch();
     alert(t('importOk'));
   }catch(err){
+    if(candidate){ try{ candidate.close(); }catch(ignored){} }
+    db = prevDb;                     // keep the working DB, never run on a broken one
     alert(t('importFail'));
     console.error(err);
   }
