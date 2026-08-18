@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  GeoBas V3 — favicon (SVG source of truth)
+  Simplified mark for 16-64px use: ink tile, gold ring, 4-point radiant star.
+  Original artwork — see LOGO-PROVENANCE.md. viewBox 0 0 64 64.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="GeoBas">
+  <title>GeoBas</title>
+  <desc>GeoBas V3 favicon — gold north star on an ink tile.</desc>
+  <defs>
+    <linearGradient id="favInk" x1="0" y1="0" x2="0" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0a1c30"/>
+      <stop offset="55%" stop-color="#06111e"/>
+      <stop offset="100%" stop-color="#020812"/>
+    </linearGradient>
+    <linearGradient id="favStar" x1="0" y1="11" x2="0" y2="43" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffcf81"/>
+      <stop offset="100%" stop-color="#c8954d"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="64" height="64" rx="14" fill="url(#favInk)"/>
+  <circle cx="32" cy="32" r="17.5" fill="none" stroke="#e9bd73" stroke-width="1.6" opacity="0.9"/>
+  <!-- radiant north star: elongated vertical + short horizontal diamond -->
+  <polygon points="38.5,32.0 32.0,43.0 25.5,32.0 32.0,11.0" fill="url(#favStar)"/>
+  <polygon points="40.5,32.0 32.0,36.5 23.5,32.0 32.0,27.5" fill="url(#favStar)"/>
+</svg>
