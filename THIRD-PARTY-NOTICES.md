@@ -102,10 +102,14 @@ arabic body + display, mono). Font files are OFL-1.1 licensed (see LICENSE files
   considered acceptable with its license notice). This reference is retained as-is and is
   outside the offline globe stack. Flag for G0/planner if the offline requirement must
   extend to CKEditor.
-- **sql.js CDN constant** — the current app hard-codes a jsDelivr sql.js URL in
-  `geobas-portal.html`; the local copies in `assets/js/` are provided for the downstream
-  worker to wire in. This residual reference is persistence-related, not part of the
-  globe stack, and rewiring is reserved for the implementation worker.
+- **sql.js** — RESOLVED (verified 2026-08-20): the app now loads the vendored local
+  build, `assets/js/sql-wasm.js` (with `SQLJS_CDN = 'assets/js/'` for the `.wasm`),
+  instead of the jsDelivr URL. The `assets/js/sql.js/1.10.3` npm build is MIT-licensed.
+- **Web fonts** — RESOLVED (verified 2026-08-20): the Google Fonts `<link>` + preconnects
+  were removed. All five families (Inter, JetBrains Mono, Noto Naskh Arabic, Amiri,
+  Source Serif 4) are served from vendored `assets/fonts/` via corrected local `@font-face`
+  rules (OFL-1.1 — see §6); `--serif` was remapped from the non-vendored Cormorant
+  Garamond to the vendored display serif Source Serif 4.
 
 ## 8. License texts
 

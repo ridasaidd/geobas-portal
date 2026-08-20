@@ -18,7 +18,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const require = createRequire(import.meta.url);
-const parse5 = require('/opt/hermes/node_modules/parse5');
+let parse5;
+try { parse5 = require('/opt/hermes/node_modules/parse5'); }
+catch (e) { parse5 = require('parse5'); } // host fallback (tests/node_modules)
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const HTML_PATH = path.join(__dirname, '..', 'geobas-portal.html');
@@ -556,7 +558,7 @@ const sourceChecks = [
   ['url guard wiring: org save sanitizes url', /\[name, safeUrl\(url\), contact, description, id\]/.test(inlineScript)],
   ['sanitizer wiring: href check uses safeUrl', /if\(!safeUrl\(el\.getAttribute\('href'\)\)\)/.test(inlineScript)],
   ['lang-switch wiring: code escaped into data-lang attr', /data-lang="\$\{escapeHtml\(l\.code\)\}"/.test(inlineScript)],
-  ['no new innerHTML sinks (baseline 29)', (inlineScript.match(/innerHTML/g) || []).length === 29],
+  ['no new innerHTML sinks (baseline 33, +4 for premium country dossier: overview/facts/related + topic-area refactor)', (inlineScript.match(/innerHTML/g) || []).length === 33],
   ['no new outerHTML sinks (baseline 1)', (inlineScript.match(/outerHTML/g) || []).length === 1],
   ['no insertAdjacentHTML growth (baseline 1)', (inlineScript.match(/insertAdjacentHTML/g) || []).length === 1],
   ['no document.write usage', !/document\.write/.test(inlineScript)],

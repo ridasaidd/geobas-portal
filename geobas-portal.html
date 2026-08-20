@@ -4,10 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GeoBas — Landinfo för återvändare</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Cormorant+Garamond:wght@500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/sql-wasm.js"></script>
+<script src="assets/js/sql-wasm.js"></script>
 <script src="https://cdn.ckeditor.com/ckeditor5/40.0.0/classic/ckeditor.js" defer></script>
 <style>
 /* =====================================================================
@@ -57,7 +54,7 @@
   --radius:7px;
   --r-6:6px; --r-7:7px; --r-8:8px; --r-9:9px; --r-full:50%;
   /* typography */
-  --serif:'Cormorant Garamond',Georgia,serif;
+  --serif:'Source Serif 4',Georgia,serif;
   --sans:'Inter',system-ui,sans-serif;
   --mono:'JetBrains Mono',ui-monospace,monospace;
   --arabic-body:'Noto Naskh Arabic',Tahoma,'Segoe UI',sans-serif;
@@ -93,12 +90,22 @@
   --warn-soft:rgba(150,105,15,.14); --danger-soft:rgba(179,64,46,.12); --accent-soft:rgba(180,130,50,.14);
 }
 
-/* ---- web fonts (assets/fonts, graceful fallback if file absent) ---- */
-@font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:500 700;font-display:swap;src:url('assets/fonts/cormorant-garamond-latin-500.woff2') format('woff2');}
-@font-face{font-family:'Inter';font-style:normal;font-weight:400 700;font-display:swap;src:url('assets/fonts/inter-latin-400.woff2') format('woff2');}
-@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:400 600;font-display:swap;src:url('assets/fonts/jetbrains-mono-latin-400.woff2') format('woff2');}
-@font-face{font-family:'Noto Naskh Arabic';font-style:normal;font-weight:400 700;font-display:swap;src:url('assets/fonts/noto-naskh-arabic-400.woff2') format('woff2');}
-@font-face{font-family:'Amiri';font-style:normal;font-weight:400 700;font-display:swap;src:url('assets/fonts/amiri-arabic-400.woff2') format('woff2');}
+/* ---- web fonts (all vendored locally in assets/fonts, OFL-1.1; graceful fallback if file absent) ---- */
+@font-face{font-family:'Inter';font-style:normal;font-weight:400;font-display:swap;src:url('assets/fonts/inter/inter-latin-400-normal.woff2') format('woff2');}
+@font-face{font-family:'Inter';font-style:normal;font-weight:500;font-display:swap;src:url('assets/fonts/inter/inter-latin-500-normal.woff2') format('woff2');}
+@font-face{font-family:'Inter';font-style:normal;font-weight:600;font-display:swap;src:url('assets/fonts/inter/inter-latin-600-normal.woff2') format('woff2');}
+@font-face{font-family:'Inter';font-style:normal;font-weight:700;font-display:swap;src:url('assets/fonts/inter/inter-latin-700-normal.woff2') format('woff2');}
+@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:400;font-display:swap;src:url('assets/fonts/jetbrains-mono/jetbrains-mono-latin-400-normal.woff2') format('woff2');}
+@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:500;font-display:swap;src:url('assets/fonts/jetbrains-mono/jetbrains-mono-latin-500-normal.woff2') format('woff2');}
+@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:600;font-display:swap;src:url('assets/fonts/jetbrains-mono/jetbrains-mono-latin-600-normal.woff2') format('woff2');}
+@font-face{font-family:'Noto Naskh Arabic';font-style:normal;font-weight:400;font-display:swap;src:url('assets/fonts/noto-naskh-arabic/noto-naskh-arabic-arabic-400-normal.woff2') format('woff2');}
+@font-face{font-family:'Noto Naskh Arabic';font-style:normal;font-weight:600;font-display:swap;src:url('assets/fonts/noto-naskh-arabic/noto-naskh-arabic-arabic-600-normal.woff2') format('woff2');}
+@font-face{font-family:'Noto Naskh Arabic';font-style:normal;font-weight:700;font-display:swap;src:url('assets/fonts/noto-naskh-arabic/noto-naskh-arabic-arabic-700-normal.woff2') format('woff2');}
+@font-face{font-family:'Amiri';font-style:normal;font-weight:400;font-display:swap;src:url('assets/fonts/amiri/amiri-arabic-400-normal.woff2') format('woff2');}
+@font-face{font-family:'Amiri';font-style:normal;font-weight:700;font-display:swap;src:url('assets/fonts/amiri/amiri-arabic-700-normal.woff2') format('woff2');}
+@font-face{font-family:'Source Serif 4';font-style:normal;font-weight:400;font-display:swap;src:url('assets/fonts/source-serif-4/source-serif-4-latin-400-normal.woff2') format('woff2');}
+@font-face{font-family:'Source Serif 4';font-style:normal;font-weight:600;font-display:swap;src:url('assets/fonts/source-serif-4/source-serif-4-latin-600-normal.woff2') format('woff2');}
+@font-face{font-family:'Source Serif 4';font-style:normal;font-weight:700;font-display:swap;src:url('assets/fonts/source-serif-4/source-serif-4-latin-700-normal.woff2') format('woff2');}
 
 /* ---- base ---- */
 *,*::before,*::after{box-sizing:border-box;}
@@ -221,37 +228,38 @@ button,input,textarea,select{font-family:inherit;}
 .btn.primary:hover{filter:brightness(1.06);}
 .btn.secondary{background:var(--btn-bg);border:1px solid var(--whiteLine);color:var(--button-text);}
 .btn.secondary:hover{border-color:var(--gold);color:var(--gold);}
-/* css/svg globe centerpiece (fallback spatial centerpiece; no three/globe.gl CDN) */
-.hero-globe{position:relative;display:flex;align-items:center;justify-content:center;min-height:340px;}
-.globe-orb{
-  position:relative;width:min(360px,80%);aspect-ratio:1;border-radius:50%;
+/* real-earth hero globe (vendored globe.gl 2.46.0 + topojson 3.1.0; NO CDN) —
+   deep-space night stage. WebGL canvas draws the NASA night-earth sphere with
+   real country polygons, thin luminous arcs and arrival rings; the CSS layers
+   below provide the deep-space ink, halo ring, and warm sunrise limb flare. */
+.hero-globe{
+  position:relative;display:flex;align-items:center;justify-content:center;
+  min-height:340px;overflow:hidden;
+  /* deep-space near-black ink (#020812/#06111e family) + faint starfield +
+     soft amber glow behind the right-of-center globe */
   background:
-    radial-gradient(circle at 34% 30%,#123047,#0a1b2b 42%,#040d18 72%,#030a14);
-  box-shadow:0 0 260px rgba(255,213,146,.22), inset -28px -22px 70px rgba(0,0,0,.65), inset 8px 10px 40px rgba(120,180,230,.12);
-  overflow:hidden;
+    radial-gradient(circle at 66% 46%, rgba(156,103,41,.13), rgba(5,14,26,0) 58%),
+    radial-gradient(rgba(214,236,255,.28) 0 1px, transparent 1px),
+    radial-gradient(rgba(214,236,255,.16) 0 1px, transparent 1px),
+    linear-gradient(180deg,#040a14,#020812 60%,#05101f);
+  background-size:100% 100%, 22px 22px, 44px 44px, 100% 100%;
+  background-position:0 0, 0 0, 11px 11px, 0 0;
 }
-.globe-orb::before{ /* meridian grid */
-  content:'';position:absolute;inset:0;border-radius:50%;
-  background:
-    linear-gradient(rgba(137,170,194,.14) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(137,170,194,.14) 1px,transparent 1px);
-  background-size:25% 12.5%,12.5% 25%;
+.globe-stage{position:relative;width:min(340px,78%);aspect-ratio:1;margin:0 auto;}
+.globe-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
+.globe-halo{ /* atmospheric limb glow / halo ring */
+  position:absolute;inset:-11%;border-radius:50%;pointer-events:none;z-index:2;
+  background:radial-gradient(circle, rgba(156,103,41,0) 58%, rgba(233,189,115,.16) 70%, rgba(121,184,255,.12) 79%, rgba(233,189,115,0) 92%);
+  animation:globe-halo-breathe 6s ease-in-out infinite;
 }
-.globe-orb::after{ /* atmosphere */
-  content:'';position:absolute;inset:-9%;border-radius:50%;
-  background:radial-gradient(circle, transparent 60%, rgba(121,184,255,.25) 78%, transparent 90%);
+.sun-flare{ /* warm sunrise flare on the upper-right limb (screen-blended) */
+  position:absolute;right:-4%;top:-6%;width:64%;height:64%;pointer-events:none;z-index:3;
+  border-radius:50%;mix-blend-mode:screen;
+  background:radial-gradient(circle at 70% 62%, rgba(255,207,129,.92), rgba(233,189,115,.30) 34%, rgba(233,189,115,0) 62%);
+  animation:sunflare-breathe 5.5s ease-in-out infinite;
 }
-.globe-ring{position:absolute;inset:-9%;border-radius:50%;border:1px solid rgba(255,213,146,.10);}
-.arc-trail{position:absolute;left:50%;top:18%;width:34%;height:34%;border:2px solid transparent;border-top-color:rgba(255,214,142,.55);border-radius:50%;transform:rotate(18deg);animation:arc-dash 2.8s linear infinite;}
-.arc-trail.alt{top:34%;right:6%;left:auto;transform:rotate(150deg);border-top-color:rgba(217,103,255,.45);animation-delay:1.1s;}
-@keyframes arc-dash{to{transform:rotate(378deg);}}
-.arrival-dot{position:absolute;width:5px;height:5px;border-radius:50%;background:var(--gold2);box-shadow:0 0 8px var(--gold);animation:ring-pulse 1.6s ease-out infinite;}
-.arrival-dot.a{right:20%;top:22%;}
-.arrival-dot.b{right:9%;top:52%;}
-.arrival-dot.c{left:22%;bottom:18%;
-background:var(--violet);box-shadow:0 0 8px var(--violet);animation-delay:.4s;}
-.arrival-dot.d{left:38%;top:12%;background:var(--cyan);box-shadow:0 0 8px var(--cyan);animation-delay:.8s;}
-@keyframes ring-pulse{0%{box-shadow:0 0 0 0 rgba(255,213,146,.35);}70%{box-shadow:0 0 0 12px rgba(255,213,146,0);}100%{box-shadow:0 0 0 0 rgba(255,213,146,0);}}
+@keyframes globe-halo-breathe{0%,100%{opacity:.72;}50%{opacity:1;}}
+@keyframes sunflare-breathe{0%,100%{opacity:.82;}50%{opacity:1;}}
 
 /* ---- search ---- */
 .search-box{position:relative;margin:0 0 20px;max-width:440px;}
@@ -380,6 +388,81 @@ background:var(--violet);box-shadow:0 0 8px var(--violet);animation-delay:.4s;}
 .empty-country h3{color:var(--gold);margin-bottom:10px;font-size:1.15rem;}
 .disclaimer{margin-top:26px;padding:13px 16px;border-radius:10px;background:var(--warn-soft);border:1px solid var(--accent-line);font-size:.78rem;color:var(--warn);line-height:1.6;}
 
+/* ---- premium country dossier (v3) ---- */
+.dossier-hero{
+  position:relative;border-radius:var(--r-8);overflow:hidden;border:1px solid var(--whiteLine);
+  background:
+    linear-gradient(180deg, rgba(6,13,23,.55), rgba(6,13,23,.94)),
+    radial-gradient(circle at 82% 12%, rgba(244,183,110,.32), transparent 32%),
+    linear-gradient(120deg,#101929,#3c353c 55%,#151d28);
+  background-size:cover,cover,cover;background-position:center;
+  min-height:230px;display:flex;flex-direction:column;justify-content:flex-end;
+  margin-bottom:18px;box-shadow:var(--shadow);
+}
+.dossier-hero-scrim{padding:26px 28px 22px;position:relative;z-index:1;}
+.dossier-hero .region-tag{display:block;margin-bottom:10px;}
+.dossier-title-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.dossier-flag{width:46px;height:32px;object-fit:cover;border-radius:4px;box-shadow:0 2px 10px rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.18);}
+.dossier-flag[hidden]{display:none;}
+.dossier-hero h2{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,3.6vw,2.7rem);color:var(--cream);text-shadow:0 2px 26px rgba(0,0,0,.7);margin:0;line-height:1.05;letter-spacing:.01em;}
+.dossier-hero .lede{max-width:62ch;color:var(--hero-lede);margin:10px 0 0;}
+.dossier-hero .dossier-meta{font-family:var(--mono),var(--arabic-body);font-size:.62rem;color:var(--muted);letter-spacing:.03em;margin:12px 0 0;}
+.dossier-hero-credit{display:inline-block;margin-top:14px;font-family:var(--mono);font-size:.62rem;letter-spacing:.04em;color:var(--status-label);background:rgba(2,8,18,.55);padding:4px 10px;border-radius:6px;border:1px solid rgba(255,255,255,.08);}
+.dossier-hero-credit[hidden]{display:none;}
+/* tabs */
+.dossier-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 18px;padding:4px;background:var(--btn-bg);border:1px solid var(--whiteLine);border-radius:8px;}
+.dossier-tab{appearance:none;border:none;background:none;cursor:pointer;color:var(--muted);
+  font-family:var(--mono),var(--arabic-body);font-size:.66rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  padding:9px 14px;border-radius:6px;transition:color .15s ease,background .15s ease;}
+.dossier-tab:hover{color:var(--gold2);}
+.dossier-tab.active{color:var(--tab-active);background:var(--nav-active-grad);box-shadow:inset 0 -2px 0 var(--gold);}
+/* dossier grid */
+.dossier-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr) minmax(0,.85fr);gap:14px;align-items:start;}
+.dossier-overview,.dossier-facts,.dossier-support,.dossier-topics,.dossier-related,.dossier-sources{
+  background:var(--dcard-bg);border:1px solid var(--whiteLine);border-radius:var(--r-7);padding:20px 22px 18px;}
+.dossier-topics{grid-column:1 / -1;}
+.dossier-sources{grid-column:2 / -1;}
+.dossier-grid h3.dcard-label{font-family:var(--mono),var(--arabic-body);font-size:.64rem;text-transform:uppercase;letter-spacing:.12em;color:var(--label-gold);margin:0 0 12px;padding-bottom:10px;border-bottom:1px solid var(--whiteLine);}
+.dossier-grid .body-text{color:var(--muted);font-size:.92rem;line-height:1.65;margin:0 0 16px;}
+.dossier-grid .muted-empty{color:var(--muted);font-size:.84rem;font-style:italic;margin:0;}
+.dossier-grid .disclaimer{margin-top:18px;}
+/* quick facts */
+.facts{margin:0;display:flex;flex-direction:column;}
+.fact{display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding:9px 0;border-top:1px dashed var(--line-strong);}
+.fact:first-child{border-top:none;}
+.fact dt{font-family:var(--mono),var(--arabic-body);font-size:.62rem;text-transform:uppercase;letter-spacing:.06em;color:var(--gold);}
+.fact dd{margin:0;color:var(--cream);font-size:.9rem;font-weight:600;text-align:right;}
+/* support card */
+.dossier-support{display:flex;flex-direction:column;}
+.dossier-support .support-cta{margin-top:auto;}
+/* topics grid inside dossier gets 2 columns */
+.dossier-topics .topics-grid{grid-template-columns:1fr 1fr;}
+/* related */
+.related-list{list-style:none;margin:0;padding:0;}
+.related-list li{border-bottom:1px solid var(--whiteLine);}
+.related-list li:last-child{border-bottom:none;}
+.related-list button{width:100%;text-align:left;background:none;border:none;cursor:pointer;padding:10px 2px;font-size:.88rem;color:var(--muted);display:flex;align-items:center;gap:10px;}
+.related-list button:hover{color:var(--gold);}
+.related-flag{width:22px;height:16px;object-fit:cover;border-radius:2px;flex-shrink:0;border:1px solid rgba(255,255,255,.15);}
+.related-list .q-arrow{margin-inline-start:auto;opacity:.45;font-weight:700;color:var(--gold);}
+.more-link{display:inline-block;margin-top:10px;color:var(--gold);font-family:var(--mono);font-size:.68rem;letter-spacing:.05em;text-transform:uppercase;text-decoration:none;font-weight:600;}
+.more-link:hover{text-decoration:underline;}
+/* side (organisations) */
+.dossier-side{margin-top:18px;}
+@media (max-width:980px){
+  .dossier-grid{grid-template-columns:1fr 1fr;}
+  .dossier-overview,.dossier-facts{grid-column:auto;}
+  .dossier-support{grid-column:1 / -1;}
+  .dossier-sources{grid-column:1 / -1;}
+}
+@media (max-width:640px){
+  .dossier-grid{grid-template-columns:1fr;}
+  .dossier-overview,.dossier-facts,.dossier-support,.dossier-topics,.dossier-related,.dossier-sources{grid-column:1 / -1;}
+  .dossier-topics .topics-grid{grid-template-columns:1fr;}
+}
+[dir="rtl"] .fact dd{text-align:left;}
+[dir="rtl"] .related-list button{text-align:right;}
+
 /* ---- NGOs ---- */
 .ngo-item{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--whiteLine);}
 .ngo-item:last-child{border-bottom:none;}
@@ -475,7 +558,7 @@ footer.foot .data-actions{display:flex;gap:8px;}
 [dir="rtl"] .del-x{right:auto;left:10px;}
 [dir="rtl"] .kv-row .k{text-align:right;}
 [dir="rtl"] .hero-copy h1,[dir="rtl"] .page-head h1,[dir="rtl"] .page-head h2,
-[dir="rtl"] .dossier-head h2,[dir="rtl"] .topic-card h3{font-family:var(--arabic-display),var(--arabic-body),serif;}
+[dir="rtl"] .dossier-head h2,[dir="rtl"] .dossier-hero h2,[dir="rtl"] .topic-card h3{font-family:var(--arabic-display),var(--arabic-body),serif;}
 [dir="rtl"] .hero-copy h1{letter-spacing:0;line-height:1.25;}
 [dir="rtl"] .statusbar .status{flex-direction:row-reverse;}
 [dir="rtl"] .search-field{padding:12px 14px 12px 42px;}
@@ -486,6 +569,7 @@ footer.foot .data-actions{display:flex;gap:8px;}
   .view-grid{grid-template-columns:1fr;}
   .hero{grid-template-columns:1fr;min-height:0;}
   .hero-globe{min-height:260px;order:-1;}
+  .globe-stage{width:min(250px,74%);}
 }
 /* ---- mobile: hamburger nav drawer at <=760px ---- */
 @media (max-width:760px){
@@ -602,14 +686,10 @@ footer.foot .data-actions{display:flex;gap:8px;}
             </div>
           </div>
           <div class="hero-globe" aria-hidden="true">
-            <div class="globe-orb">
-              <span class="globe-ring"></span>
-              <span class="arc-trail"></span>
-              <span class="arc-trail alt"></span>
-              <span class="arrival-dot a"></span>
-              <span class="arrival-dot b"></span>
-              <span class="arrival-dot c"></span>
-              <span class="arrival-dot d"></span>
+            <div class="globe-stage">
+              <div id="globe" class="globe-canvas"></div>
+              <div class="globe-halo"></div>
+              <div class="sun-flare"></div>
             </div>
           </div>
         </div>
@@ -725,42 +805,80 @@ footer.foot .data-actions{display:flex;gap:8px;}
       </section>
 
       <section id="view-country" class="view">
-        <div class="view-grid">
-          <div class="view-main">
-            <header class="dossier-head">
+        <div class="country-dossier">
+          <!-- identity / country hero banner (local verified image) -->
+          <header class="dossier-hero" id="dossier-hero">
+            <div class="dossier-hero-scrim">
               <span class="eyebrow region-tag" id="country-region-tag">Region</span>
-              <h2 id="country-name-static"></h2>
-              <input id="country-name-edit" class="edit-field title-field" style="display:none;" />
+              <div class="dossier-title-row">
+                <img class="dossier-flag" id="country-flag" alt="" src="" hidden>
+                <h2 id="country-name-static"></h2>
+                <input id="country-name-edit" class="edit-field title-field" style="display:none;" />
+              </div>
               <p class="lede" id="country-intro-static"></p>
               <textarea id="country-intro-edit" class="edit-field" style="display:none;"></textarea>
               <p class="dossier-meta" data-i18n="dossier_meta">Uppdaterad från Migrationsverkets landinfo (2026)</p>
-            </header>
-            <div class="topics-grid" id="topics-grid"></div>
-            <div id="empty-state"></div>
-            <div class="disclaimer" id="country-disclaimer" style="display:none;"></div>
-            <div class="back-strip">
-              <button class="link-btn" data-nav="back-to-countries" type="button">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
-                <span data-i18n="back_more_countries">Fler länder i regionen</span>
-              </button>
-              <button class="link-btn" data-nav="regions" type="button"><span data-i18n="back_switch_region">Byt region</span></button>
+              <span class="dossier-hero-credit" id="country-hero-credit" hidden></span>
             </div>
-          </div>
-          <aside class="view-side">
-            <div class="side-card">
-              <div class="side-card-head"><span class="eyebrow" data-i18n="ngo_eyebrow">Lokala organisationer</span><h3 data-i18n="ngo_title">NGOs i landet</h3></div>
-              <div id="ngo-list"></div>
-            </div>
-            <div class="side-card">
-              <h3 data-i18n="sources_title">Officiella källor</h3>
+          </header>
+
+          <!-- tabbed navigation -->
+          <nav class="dossier-tabs" id="dossier-tabs" role="tablist" aria-label="Landinfo">
+            <button type="button" class="dossier-tab active" data-tab="overview" role="tab" aria-selected="true" data-i18n="tab_overview">Översikt</button>
+            <button type="button" class="dossier-tab" data-tab="practical" role="tab" aria-selected="false" data-i18n="tab_practical">Praktisk information</button>
+            <button type="button" class="dossier-tab" data-tab="security" role="tab" aria-selected="false" data-i18n="tab_security">Säkerhet</button>
+            <button type="button" class="dossier-tab" data-tab="support" role="tab" aria-selected="false" data-i18n="tab_support">Stöd &amp; tjänster</button>
+            <button type="button" class="dossier-tab" data-tab="orgs" role="tab" aria-selected="false" data-i18n="tab_orgs">Organisationer</button>
+            <button type="button" class="dossier-tab" data-tab="sources" role="tab" aria-selected="false" data-i18n="tab_sources">Källor</button>
+          </nav>
+
+          <div class="dossier-grid">
+            <!-- overview card -->
+            <section class="dossier-overview" id="dossier-overview" aria-labelledby="ov-title"></section>
+            <!-- quick facts card -->
+            <section class="dossier-facts" id="dossier-facts" aria-labelledby="facts-title"></section>
+            <!-- support / help card -->
+            <section class="dcard dossier-support" id="dossier-support">
+              <h3 class="dcard-label" data-i18n="support_title">Stöd på vägen hem</h3>
+              <p class="support-text" data-i18n="support_text">Organisationer och myndigheter kan hjälpa dig före, under och efter återvändandet.</p>
+              <button type="button" class="btn primary support-cta" data-tab="orgs"><span aria-hidden="true">→</span> <span data-i18n="support_cta">Hitta stöd</span></button>
+            </section>
+            <!-- important information (topic cards) -->
+            <section class="dossier-topics" id="dossier-topics">
+              <h3 class="dcard-label" data-i18n="topics_title">Viktig information</h3>
+              <div class="topics-grid" id="topics-grid"></div>
+              <div id="empty-state"></div>
+              <div class="disclaimer" id="country-disclaimer" style="display:none;"></div>
+            </section>
+            <!-- related countries -->
+            <section class="dossier-related" id="dossier-related" aria-labelledby="related-title"></section>
+            <!-- sources / organizations -->
+            <section class="dcard dossier-sources" id="dossier-sources">
+              <h3 class="dcard-label" data-i18n="sources_title">Officiella källor</h3>
               <div class="sources-links sources-col">
                 <a class="source-chip" href="https://lifos.migrationsverket.se/fokuslander.html" target="_blank" rel="noopener">Lifos — landinformation (Migrationsverket)</a>
                 <a class="source-chip" href="https://www.iom.int/" target="_blank" rel="noopener">IOM — International Organization for Migration</a>
                 <a class="source-chip" href="https://reintegrationfacility.eu/" target="_blank" rel="noopener">ERRIN / Return &amp; Reintegration Facility</a>
               </div>
               <p class="sources-note" data-i18n="sources_note">ERRIN avslutades formellt 2022 — arbetet fortsätter sedan dess genom Return and Reintegration Facility (RRF), som drivs av ICMPD.</p>
+            </section>
+          </div>
+
+          <!-- local organisations -->
+          <aside class="dossier-side" id="country-side">
+            <div class="side-card">
+              <div class="side-card-head"><span class="eyebrow" data-i18n="ngo_eyebrow">Lokala organisationer</span><h3 data-i18n="ngo_title">NGOs i landet</h3></div>
+              <div id="ngo-list"></div>
             </div>
           </aside>
+
+          <div class="back-strip">
+            <button class="link-btn" data-nav="back-to-countries" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+              <span data-i18n="back_more_countries">Fler länder i regionen</span>
+            </button>
+            <button class="link-btn" data-nav="regions" type="button"><span data-i18n="back_switch_region">Byt region</span></button>
+          </div>
         </div>
       </section>
 
@@ -845,6 +963,9 @@ footer.foot .data-actions{display:flex;gap:8px;}
   </div>
 </div>
 
+<!-- vendored globe stack (NO CDN): globe.gl 2.46.0 bundles its own Three; topojson 3.1.0 for land polygons. Both UMD -> globals Globe / topojson. -->
+<script src="assets/js/topojson-client.min.js"></script>
+<script src="assets/js/globe.gl.min.js"></script>
 <script>
 /* =====================================================================
    SEED DATA (Swedish, extracted from source PPTX)
@@ -902,7 +1023,7 @@ const ORG_DIRECTORY_SEED = [
   { name:"Svenska Röda Korset", url:"https://www.rodakorset.se/", contact:"", description:"Kan bland annat hjälpa till att söka efter anhöriga och ge stöd inför och efter återvändande." },
 ];
 
-const SQLJS_CDN = 'https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/';
+const SQLJS_CDN = 'assets/js/'; // vendored local sql-wasm loader/.wasm (same 1.10.3 npm build) — no runtime CDN for sql.js
 const STORAGE_KEY = 'geobas-db-v1';
 
 const ICONS = {
@@ -1006,6 +1127,15 @@ const STRINGS = {
     countries_in_region:'Länder i regionen',
     other_regions:'Andra regioner',
     dossier_meta:'Uppdaterad från Migrationsverkets landinfo (2026)',
+    tab_overview:'Översikt', tab_practical:'Praktisk information', tab_security:'Säkerhet',
+    tab_support:'Stöd & tjänster', tab_orgs:'Organisationer', tab_sources:'Källor',
+    ov_title:'Om landet', ov_empty:'Ingen sammanfattning ännu.', ov_cta:'Läs mer',
+    facts_head:'Snabbfakta', facts_empty:'Inga snabbfakta inlagda ännu.',
+    support_title:'Stöd på vägen hem', support_text:'Organisationer och myndigheter kan hjälpa dig före, under och efter återvändandet.',
+    support_cta:'Hitta stöd', topics_title:'Viktig information',
+    related_title:'Relaterade länder', related_empty:'Inga andra länder i regionen.', related_all:'Visa alla länder',
+    empty_tab_hint:'Det finns ingen information i den här kategorin ännu.',
+    img_credit:'Bild: %s',
     hero_eyebrow:'Migrationsverket · organiserad sysselsättning',
     hero_h1_a:'Var vill du bygga', hero_h1_b:'ditt nästa kapitel',
     hero_lede:'En samlad guide till affärsmöjligheter, stödprogram och praktiska första steg — oavsett vilket land du är på väg tillbaka till.',
@@ -1114,6 +1244,15 @@ const STRINGS = {
     countries_in_region:'Countries in the region',
     other_regions:'Other regions',
     dossier_meta:'Updated from the Swedish Migration Agency country information (2026)',
+    tab_overview:'Overview', tab_practical:'Practical information', tab_security:'Safety',
+    tab_support:'Support & services', tab_orgs:'Organizations', tab_sources:'Sources',
+    ov_title:'About the country', ov_empty:'No summary yet.', ov_cta:'Read more',
+    facts_head:'Quick facts', facts_empty:'No quick facts added yet.',
+    support_title:'Support on your way home', support_text:'Organizations and authorities can help you before, during and after the return.',
+    support_cta:'Find support', topics_title:'Important information',
+    related_title:'Related countries', related_empty:'No other countries in this region.', related_all:'View all countries',
+    empty_tab_hint:'There is no information in this category yet.',
+    img_credit:'Image: %s',
     hero_eyebrow:'Swedish Migration Agency · organised employment',
     hero_h1_a:'Where do you want to build', hero_h1_b:'your next chapter?',
     hero_lede:'A single guide to business opportunities, support programmes and practical first steps — no matter which country you are returning to.',
@@ -1222,6 +1361,15 @@ const STRINGS = {
     countries_in_region:'Países de la región',
     other_regions:'Otras regiones',
     dossier_meta:'Actualizado a partir de la información de países de la Agencia de Migración (2026)',
+    tab_overview:'Resumen', tab_practical:'Información práctica', tab_security:'Seguridad',
+    tab_support:'Apoyo y servicios', tab_orgs:'Organizaciones', tab_sources:'Fuentes',
+    ov_title:'Sobre el país', ov_empty:'Aún no hay resumen.', ov_cta:'Leer más',
+    facts_head:'Datos rápidos', facts_empty:'Aún no se han añadido datos rápidos.',
+    support_title:'Apoyo en el camino a casa', support_text:'Las organizaciones y autoridades pueden ayudarte antes, durante y después del retorno.',
+    support_cta:'Encontrar apoyo', topics_title:'Información importante',
+    related_title:'Países relacionados', related_empty:'No hay otros países en esta región.', related_all:'Ver todos los países',
+    empty_tab_hint:'Aún no hay información en esta categoría.',
+    img_credit:'Imagen: %s',
     hero_eyebrow:'Agencia de Migración · empleo organizado',
     hero_h1_a:'¿Dónde quieres construir', hero_h1_b:'tu próximo capítulo?',
     hero_lede:'Una guía completa de oportunidades de negocio, programas de apoyo y primeros pasos prácticos — sin importar a qué país vuelvas.',
@@ -1330,6 +1478,15 @@ const STRINGS = {
     countries_in_region:'بلدان المنطقة',
     other_regions:'مناطق أخرى',
     dossier_meta:'مُحدَّث من معلومات بلدية لوكالة الهجرة السويدية (2026)',
+    tab_overview:'نظرة عامة', tab_practical:'معلومات عملية', tab_security:'الأمان',
+    tab_support:'الدعم والخدمات', tab_orgs:'المنظمات', tab_sources:'المصادر',
+    ov_title:'عن البلد', ov_empty:'لا يوجد ملخص بعد.', ov_cta:'اقرأ المزيد',
+    facts_head:'حقائق سريعة', facts_empty:'لا توجد حقائق سريعة بعد.',
+    support_title:'الدعم في طريق العودة', support_text:'يمكن للمنظمات والسلطات مساعدتك قبل العودة وأثناءها وبعدها.',
+    support_cta:'ابحث عن الدعم', topics_title:'معلومات مهمة',
+    related_title:'دول ذات صلة', related_empty:'لا توجد دول أخرى في هذه المنطقة.', related_all:'عرض جميع الدول',
+    empty_tab_hint:'لا توجد معلومات في هذه الفئة بعد.',
+    img_credit:'الصورة: %s',
     hero_eyebrow:'وكالة الهجرة السويدية · توظيف منظم',
     hero_h1_a:'أين تريد بناء', hero_h1_b:'فصلك القادم؟',
     hero_lede:'دليل شامل لفرص الأعمال وبرامج الدعم والخطوات العملية الأولى — أياً كان البلد الذي تعود إليه.',
@@ -2229,6 +2386,183 @@ function renderRegionContext(regionId){
     </div>`;
 }
 
+/* ---- country dossier (v3): local assets, tabbed, card-based (REF C8) ---- */
+// Country slug -> flag asset (assets/flags/*.svg; flag-icons 7.5.0 subset, ISO alpha-2).
+const COUNTRY_FLAGS = {
+  ecuador:'EC', venezuela:'VE', peru:'PE', chile:'CL', colombia:'CO', 'el-salvador':'SV', guatemala:'GT',
+  georgien:'GE', kosovo:'XK', albanien:'AL', ryssland:'RU', ukraina:'UA', rumanien:'RO',
+  azerbajdzjan:'AZ', uzbekistan:'UZ', kazakstan:'KZ',
+  afghanistan:'AF', pakistan:'PK', 'sri-lanka':'LK', bangladesh:'BD',
+  vietnam:'VN', indien:'IN', mongoliet:'MN', kina:'CN',
+  nigeria:'NG', elfenbenskusten:'CI', ghana:'GH', somalia:'SO', senegal:'SN', kenya:'KE', kongo:'CD', marocko:'MA',
+  egypten:'EG', libyen:'LY', tunisien:'TN', algeriet:'DZ',
+  palestina:'PS', libanon:'LB', syrien:'SY', turkiet:'TR', iran:'IR', irak:'IQ',
+};
+// Verified country hero banners — LOCAL asset paths only (see IMAGE-PROVENANCE.md;
+// CC0 / Public Domain, no attribution required; courtesy line shown in-hero).
+const COUNTRY_HEROES = {
+  somalia: { img:'assets/img/countries/country-somalia.jpg',
+    credit:'© AU/UN AMISOM Public Information — CC0, via Wikimedia Commons' },
+  ecuador: { img:'assets/img/countries/country-ecuador.jpg',
+    credit:'Gebrüder Underwood (c. 1900) — public domain, via Wikimedia Commons / Zeno.org' },
+};
+function getCountrySlug(countryId){
+  try{
+    const r = q('SELECT slug FROM countries WHERE id=?', [countryId]);
+    return r.length ? (r[0].slug || '') : '';
+  }catch(e){ return ''; }
+}
+function setCountryHero(slug, name){
+  const hero = document.getElementById('dossier-hero');
+  const credit = document.getElementById('country-hero-credit');
+  const flag = document.getElementById('country-flag');
+  const h = COUNTRY_HEROES[slug];
+  if(hero){
+    hero.style.backgroundImage = h
+      ? `linear-gradient(180deg, rgba(6,13,23,.55), rgba(6,13,23,.94)), radial-gradient(circle at 82% 12%, rgba(244,183,110,.32), transparent 32%), url('${h.img}')`
+      : '';
+  }
+  if(credit){
+    if(h){ credit.textContent = Tf('img_credit', h.credit); credit.hidden = false; }
+    else { credit.hidden = true; }
+  }
+  if(flag){
+    const code = COUNTRY_FLAGS[slug];
+    if(code){ flag.src = 'assets/flags/' + code + '.svg'; flag.alt = name || ''; flag.hidden = false; }
+    else { flag.hidden = true; }
+  }
+}
+
+// Dossier tabs map to the sections currently visible and (optionally) a topic
+// keyword filter. Overview shows the full reference grid; info tabs narrow the
+// "Viktig information" tiles; orgs/sources show support + organisations + sources.
+function dossierTabConfig(){
+  return {
+    overview:  { show: null, topics: 'all' },
+    practical: { show: ['topics','related'], topics: /resor|inresa|dokument|praktisk|mottagning|boende|kontakt|visum|transport|infrastruktur/i },
+    security:  { show: ['topics','related'], topics: /säkerhet|säker|risk|trygg|läge|skydd|hälsa/i },
+    support:   { show: ['support','topics','related','side'], topics: /stöd|tjänst|hjälp|ekonomi|arbete|återetabler|program|bank|försäkring|inkomst/i },
+    orgs:      { show: ['support','side','related','topics'], topics: 'all' },
+    sources:   { show: ['sources','related'] },
+  };
+}
+
+function renderOverview(detail){
+  const el = document.getElementById('dossier-overview');
+  if(!el) return;
+  const text = (detail && detail.intro) ? detail.intro : T('ov_empty');
+  el.innerHTML = `<h3 class="dcard-label" id="ov-title">${escapeHtml(T('ov_title'))}</h3>
+    <p class="body-text">${escapeHtml(text)}</p>
+    <button type="button" class="btn secondary" data-tab="practical"><span aria-hidden="true">→</span> ${escapeHtml(T('ov_cta'))}</button>`;
+}
+function collectKv(detail){
+  const rows = [];
+  ((detail && detail.cards) || []).forEach(c => ((c && c.kv) || []).forEach(r => rows.push(r)));
+  return rows;
+}
+function renderQuickFacts(detail){
+  const el = document.getElementById('dossier-facts');
+  if(!el) return;
+  const kvs = collectKv(detail);
+  const body = kvs.length
+    ? `<dl class="facts">` + kvs.map(r => `<div class="fact"><dt>${escapeHtml(r.k)}</dt><dd>${escapeHtml(r.v)}</dd></div>`).join('') + `</dl>`
+    : `<p class="muted-empty">${escapeHtml(T('facts_empty'))}</p>`;
+  el.innerHTML = `<h3 class="dcard-label" id="facts-title">${escapeHtml(T('facts_head'))}</h3>` + body;
+}
+function renderRelated(region, countryId){
+  const el = document.getElementById('dossier-related');
+  if(!el) return;
+  let list = [];
+  try{
+    if(region && region.id != null) list = (getCountriesForRegion(region.id, currentLang) || []).filter(c => c.id !== countryId);
+  }catch(e){ list = []; }
+  let body;
+  if(!list.length){
+    body = `<p class="muted-empty">${escapeHtml(T('related_empty'))}</p>`;
+  } else {
+    body = `<ul class="related-list">` + list.map(c => {
+      const cslug = getCountrySlug(c.id);
+      const code = COUNTRY_FLAGS[cslug];
+      return `<li><button type="button" class="related-link" data-goto-country="${c.id}">
+        ${code ? `<img class="related-flag" src="assets/flags/${code}.svg" alt="">` : ''}
+        <span>${escapeHtml(c.name)}</span><span class="q-arrow" aria-hidden="true">→</span></button></li>`;
+    }).join('') + `</ul>
+      <button type="button" class="more-link" data-nav="regions">${escapeHtml(T('related_all'))}</button>`;
+  }
+  el.innerHTML = `<h3 class="dcard-label" id="related-title">${escapeHtml(T('related_title'))}</h3>` + body;
+  el.querySelectorAll('[data-goto-country]').forEach(btn => {
+    btn.addEventListener('click', () => { goCountry(parseInt(btn.getAttribute('data-goto-country'),10)); });
+  });
+}
+function renderTopicArea(countryId, detail, cards, isFull){
+  const grid = document.getElementById('topics-grid');
+  const emptyState = document.getElementById('empty-state');
+  const disclaimer = document.getElementById('country-disclaimer');
+  if(!grid || !emptyState || !disclaimer) return;
+  cards = cards || [];
+  if(cards.length === 0 && !editMode){
+    grid.innerHTML = '';
+    if(isFull){
+      const region = findRegionForCountry(countryId);
+      const name = detail ? (detail.name || '') : '';
+      emptyState.innerHTML = `
+        <div class="empty-country">
+          <h3>${escapeHtml(T('empty_title'))}</h3>
+          <p>${escapeHtml(Tf('empty_body_p1', name, currentLang.toUpperCase()))} ${region ? escapeHtml(Tf('empty_body_p2', region.name)) : ''}</p>
+        </div>`;
+    } else {
+      emptyState.innerHTML = `<div class="empty-country"><p>${escapeHtml(T('empty_tab_hint'))}</p></div>`;
+    }
+    disclaimer.style.display = 'none';
+    return;
+  }
+  emptyState.innerHTML = '';
+  grid.innerHTML = cards.map(c => renderTopicCard(c, countryId)).join('')
+    + (editMode ? `<div class="add-topic-card" id="add-card-btn">${escapeHtml(T('add_card'))}</div>` : '');
+  disclaimer.style.display = editMode ? 'none' : 'block';
+  disclaimer.textContent = Tf('disclaimer_body', detail ? (detail.name || '') : '');
+  bindTopicCardEvents(countryId);
+  const addCardBtn = document.getElementById('add-card-btn');
+  if(addCardBtn) addCardBtn.addEventListener('click', () => { addCard(countryId, currentLang); goCountry(countryId); });
+}
+function applyTopicFilter(rule){
+  if(!state.countryId) return;
+  let detail;
+  try{ detail = getCountryDetail(state.countryId, currentLang); }catch(e){ detail = { name:'', cards:[] }; }
+  if(editMode || rule === 'all'){ renderTopicArea(state.countryId, detail, detail.cards || [], true); return; }
+  const cards = (detail.cards || []).filter(c => { try{ return rule.test(c.title || ''); }catch(_e){ return false; } });
+  renderTopicArea(state.countryId, detail, cards, false);
+}
+var __dossierTopicTab = null;
+function setDossierTab(tabKey){
+  const cfg = dossierTabConfig()[tabKey] || dossierTabConfig().overview;
+  const sections = {
+    overview: document.getElementById('dossier-overview'),
+    facts: document.getElementById('dossier-facts'),
+    support: document.getElementById('dossier-support'),
+    topics: document.getElementById('dossier-topics'),
+    related: document.getElementById('dossier-related'),
+    sources: document.getElementById('dossier-sources'),
+    side: document.getElementById('country-side'),
+  };
+  const showAll = tabKey === 'overview';
+  Object.keys(sections).forEach(k => {
+    const el = sections[k];
+    if(!el) return;
+    const on = showAll || cfg.show.indexOf(k) >= 0;
+    el.style.display = on ? '' : 'none';
+  });
+  document.querySelectorAll('#dossier-tabs .dossier-tab').forEach(b => {
+    const active = b.getAttribute('data-tab') === tabKey;
+    b.classList.toggle('active', active);
+    b.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+  if(__dossierTopicTab !== tabKey){
+    __dossierTopicTab = tabKey;
+    applyTopicFilter(cfg.topics);
+  }
+}
+
 function goCountry(countryId){
   const region = findRegionForCountry(countryId);
   state.regionId = region ? region.id : state.regionId;
@@ -2236,6 +2570,7 @@ function goCountry(countryId){
   renderCrumbs();
 
   const detail = getCountryDetail(countryId, currentLang);
+  const slug = getCountrySlug(countryId);
   document.getElementById('country-region-tag').textContent = region ? region.name : '';
 
   const nameStatic = document.getElementById('country-name-static');
@@ -2258,32 +2593,22 @@ function goCountry(countryId){
     introEdit.onchange = () => upsertCountryIntro(countryId, currentLang, introEdit.value);
   }
 
-  const grid = document.getElementById('topics-grid');
-  const emptyState = document.getElementById('empty-state');
-  const disclaimer = document.getElementById('country-disclaimer');
-
-  if(detail.cards.length === 0 && !editMode){
-    grid.innerHTML = '';
-    emptyState.innerHTML = `
-      <div class="empty-country">
-        <h3>${escapeHtml(T('empty_title'))}</h3>
-        <p>${escapeHtml(Tf('empty_body_p1', detail.name, currentLang.toUpperCase()))} ${region ? escapeHtml(Tf('empty_body_p2', region.name)) : ''}</p>
-      </div>`;
-    disclaimer.style.display = 'none';
-  } else {
-    emptyState.innerHTML = '';
-    grid.innerHTML = detail.cards.map(c => renderTopicCard(c, countryId)).join('')
-      + (editMode ? `<div class="add-topic-card" id="add-card-btn">${escapeHtml(T('add_card'))}</div>` : '');
-    disclaimer.style.display = editMode ? 'none' : 'block';
-    disclaimer.textContent = Tf('disclaimer_body', detail.name);
-    bindTopicCardEvents(countryId);
-    const addCardBtn = document.getElementById('add-card-btn');
-    if(addCardBtn) addCardBtn.addEventListener('click', ()=>{ addCard(countryId, currentLang); goCountry(countryId); });
-  }
+  setCountryHero(slug, detail.name);
+  renderOverview(detail);
+  renderQuickFacts(detail);
+  renderRelated(region, countryId);
 
   renderNgoList(countryId);
+  setDossierTab('overview');
   setActive('view-country');
 }
+
+// dossier tab clicks (delegated; also covers in-card CTA tab-jumps)
+document.addEventListener('click', function(e){
+  const t = e.target && e.target.closest ? e.target.closest('[data-tab]') : null;
+  if(t){ e.preventDefault(); setDossierTab(t.getAttribute('data-tab')); }
+});
+
 
 function renderNgoList(countryId){
   const el = document.getElementById('ngo-list');
@@ -2708,6 +3033,7 @@ window.addEventListener('DOMContentLoaded', async ()=>{
   renderLangSwitch();
   goHome();
   wireAuroraIA();
+  initHeroGlobe(); // real-earth hero globe (guarded: no-ops in Node/test + non-WebGL sandboxes)
 });
 
 /* =====================================================================
@@ -2996,6 +3322,121 @@ function wireAuroraIA(){
       setMenuOpen(false);
     }
   });
+}
+
+/* =====================================================================
+   REAL-EARTH HERO GLOBE (vendored globe.gl 2.46.0 + topojson 3.1.0)
+   ---------------------------------------------------------------------
+   Guarded so it NO-OPS gracefully in the Node/parse5 test sandboxes: those
+   pass `Globe`=undefined and have no WebGL/DOM scriptability. This block is
+   also only ever invoked from the DOMContentLoaded boot above, which the
+   sandbox never fires. All three guards below are belt-and-suspenders.
+   Motion honors prefers-reduced-motion in JS (CSS animations are already
+   killed by the global media query).
+   ===================================================================== */
+function initHeroGlobe(){
+  // --- guard: non-WebGL / test / headless contexts ---------------------------------
+  if (typeof Globe === 'undefined') return;                 // UMD global not loaded
+  if (typeof window === 'undefined' || !window.WebGLRenderingContext) return; // no WebGL
+  var holder = document.getElementById('globe');
+  if (!holder) return;
+
+  // --- reduced-motion policy (JS side; CSS handled by media query) ---------------
+  var reduced = false;
+  try { reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
+  catch(e){ reduced = false; }
+
+  // --- real GeoBas destination countries (Stockholm 59.33,18.07) ------------------
+  // Thin, luminous arcs; 7 destinations across Europe / Africa / Middle East visible
+  // from the Stockholm-facing camera.
+  var DEST = [
+    { endLat: 41.72, endLng: 44.78 },  // Georgia (Tbilisi)
+    { endLat: 50.45, endLng: 30.52 },  // Ukraine (Kyiv)
+    { endLat: 42.66, endLng: 21.17 },  // Kosovo (Pristina)
+    { endLat: 9.07,  endLng: 7.48 },   // Nigeria (Abuja)
+    { endLat: -1.29, endLng: 36.82 },  // Kenya (Nairobi)
+    { endLat: 34.02, endLng: -6.84 },  // Morocco (Rabat)
+    { endLat: 33.51, endLng: 36.29 },  // Syria (Damascus)
+  ];
+  var ARCS = DEST.map(function(d){
+    return {
+      startLat: 59.33, startLng: 18.07,
+      endLat: d.endLat, endLng: d.endLng,
+      color: ['rgba(233,189,115,0)', 'rgba(233,189,115,.9)'],
+    };
+  });
+  var RINGS = DEST.map(function(d){
+    return { lat: d.endLat, lng: d.endLng, color: 'rgba(233,189,115,.55)' };
+  });
+
+  // --- build the globe ------------------------------------------------------------
+  var world;
+  try {
+    world = Globe({ rendererConfig: { alpha: true, antialias: true } })(holder);
+  } catch(e){ return; } // WebGL init failed -> static CSS night-stage remains
+
+  function sizeGlobe(){
+    var w = holder.clientWidth || (holder.parentNode && holder.parentNode.clientWidth) || 340;
+    var h = holder.clientHeight || (holder.parentNode && holder.parentNode.clientHeight) || 340;
+    world.width(w).height(h);
+  }
+  sizeGlobe();
+
+  world
+    .backgroundColor('rgba(0,0,0,0)')                 // transparent: hero-stage CSS shows through
+    .globeImageUrl('assets/img/earth-night.jpg')      // NASA night-earth: recognizable continents + city lights
+    .bumpImageUrl('assets/img/earth-topology.png')    // topographic relief on the sphere
+    .showAtmosphere(true)
+    .atmosphereColor('#9c6729')                       // warm amber atmosphere halo
+    .atmosphereAltitude(0.18)
+    // real lat/lng land polygons (topojson countries-110m) -> recognizable geography
+    .arcsData(ARCS)
+    .arcStartLat('startLat').arcStartLng('startLng')
+    .arcEndLat('endLat').arcEndLng('endLng')
+    .arcColor('color')
+    .arcStroke(0.4)                                   // thesis: thin 0.3-0.5
+    .arcAltitudeAutoScale(0.45)
+    .arcDashLength(reduced ? 0 : 0.6)                 // reduced: full static arcs, no dash travel
+    .arcDashGap(reduced ? 0 : 0.35)
+    .arcDashInitialGap(reduced ? 0 : 1)
+    .arcDashAnimateTime(reduced ? 0 : 2800)           // thesis dash period
+    .ringsData(RINGS)
+    .ringColor(function(){ return 'rgba(233,189,115,.55)'; })
+    .ringMaxRadius(2.4)
+    .ringPropagationSpeed(reduced ? 0 : 1.4)          // reduced: no ring propagation
+    .ringRepeatPeriod(reduced ? 0 : 1600)             // thesis ring period
+    .pointOfView({ lat: 52, lng: 16, altitude: 2.4 }); // Europe/Africa view, Stockholm-facing
+
+  // land polygons (opt-in; skip cleanly if geometry cannot load)
+  if (typeof topojson !== 'undefined'){
+    fetch('assets/data/countries-110m.json')
+      .then(function(r){ return r.json(); })
+      .then(function(topo){
+        var feats = topojson.feature(topo, topo.objects.countries).features;
+        world
+          .showGraticules(false)
+          .polygonsData(feats)
+          .polygonCapColor(function(){ return 'rgba(255,213,146,0.03)'; })      // near-invisible land tint over night texture
+          .polygonSideColor(function(){ return 'rgba(6,17,30,0.55)'; })
+          .polygonStrokeColor(function(){ return 'rgba(137,170,194,0.20)'; });  // faint coastlines -> recognizable
+      })
+      .catch(function(){ /* geometry is decoration; night texture still shows Earth */ });
+  }
+
+  // --- camera: slow auto-rotate, no zoom-out of scope ---------------------------------
+  var controls = world.controls();
+  controls.autoRotate = reduced ? false : true;   // thesis autoRotateSpeed .35 (~17 deg/min)
+  controls.autoRotateSpeed = 0.35;
+  controls.enableZoom = false;
+
+  // --- resize -------------------------------------------------------------------------
+  var resizeT;
+  if (window.addEventListener){
+    window.addEventListener('resize', function(){
+      clearTimeout(resizeT);
+      resizeT = setTimeout(sizeGlobe, 150);
+    });
+  }
 }
 
 </script>
