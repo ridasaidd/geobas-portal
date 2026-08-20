@@ -1,0 +1,10 @@
+# Don't commit editor/OS noise
+.DS_Store
+*.swp
+
+# Runtime/npm caches that must not be committed
+node_modules/
+**/node_modules/
+
+# The failed v3-next branch's own vendored node_modules are NOT tracked
+# (reproducible via tests/node_modules committed here)

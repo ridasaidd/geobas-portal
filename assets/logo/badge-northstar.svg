@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  GeoBas V3 — north-star badge (small lockup variant)
+  Compact emblem tile + wordmark for the brand lockup (site header / hero / footer).
+  Emblem = simplified 4-point compass rose crowned by Polaris, on an ink tile.
+  Wordmark: GEOBAS (Inter / sans) + CIVIC ATLAS (Source Serif 4 / Georgia, serif) — the
+  serif+sans pairing of the Aurora Atlas identity. Designed for dark (ink) surfaces.
+  Original artwork — see LOGO-PROVENANCE.md. viewBox 0 0 400 112.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="112" viewBox="0 0 400 112" role="img" aria-label="GeoBas — Civic Atlas">
+  <title>GeoBas — Civic Atlas</title>
+  <desc>GeoBas Aurora Atlas V3 badge: north-star emblem and wordmark.</desc>
+  <defs>
+    <radialGradient id="badgeInk" cx="50%" cy="38%" r="80%" fx="50%" fy="34%">
+      <stop offset="0%"  stop-color="#0f2239"/>
+      <stop offset="55%" stop-color="#06111e"/>
+      <stop offset="100%" stop-color="#020812"/>
+    </radialGradient>
+    <radialGradient id="badgeGlow" cx="60" cy="26" r="12" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"  stop-color="#ffcf81" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#e9bd73" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- emblem tile -->
+  <rect x="8" y="8" width="104" height="104" rx="26" fill="url(#badgeInk)"/>
+  <circle cx="60" cy="60" r="42" fill="none" stroke="#e9bd73" stroke-width="1.8" opacity="0.9"/>
+
+  <!-- simplified compass rose (cardinal points) -->
+  <g fill="#e9bd73">
+    <polygon points="60.0,26.0 52.0,60.0 60.0,60.0 68.0,60.0"/> <!-- N -->
+    <polygon points="60.0,94.0 68.0,60.0 60.0,60.0 52.0,60.0"/> <!-- S -->
+    <polygon points="94.0,60.0 60.0,52.0 60.0,60.0 60.0,68.0"/> <!-- E -->
+    <polygon points="26.0,60.0 60.0,68.0 60.0,60.0 60.0,52.0"/> <!-- W -->
+  </g>
+  <!-- centre boss -->
+  <circle cx="60" cy="60" r="4.5" fill="#ffcf81"/>
+  <!-- Polaris radiant star crowning the north point -->
+  <circle cx="60" cy="26" r="18" fill="#e9bd73" opacity="0.08"/>
+  <circle cx="60" cy="26" r="12" fill="url(#badgeGlow)"/>
+  <polygon points="65.0,32.0 65.0,26.0 60.0,14.0 55.0,26.0 55.0,32.0" fill="#ffcf81"/>
+  <polygon points="65.5,26.0 60.0,29.0 54.5,26.0 60.0,23.0" fill="#ffcf81"/>
+
+  <!-- wordmark -->
+  <text x="128" y="56" font-family="Inter, 'Helvetica Neue', Arial, sans-serif"
+        font-size="30" font-weight="700" letter-spacing="0.22em" fill="#f2eadf">GEOBAS</text>
+  <line x1="130" y1="66" x2="376" y2="66" stroke="#e9bd73" stroke-width="1" opacity="0.35"/>
+  <text x="132" y="84" font-family="'Source Serif 4', 'Cormorant Garamond', Georgia, serif"
+        font-size="12.5" letter-spacing="0.5em" fill="#e9bd73">CIVIC ATLAS</text>
+</svg>

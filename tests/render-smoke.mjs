@@ -7,7 +7,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const require = createRequire(import.meta.url);
-const parse5 = require('/opt/hermes/node_modules/parse5');
+let parse5;
+try { parse5 = require('/opt/hermes/node_modules/parse5'); }
+catch (e) { parse5 = require('parse5'); } // host fallback (tests/node_modules)
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const HTML_PATH = path.join(__dirname, '..', 'geobas-portal.html');
 const html = fs.readFileSync(HTML_PATH, 'utf8');
