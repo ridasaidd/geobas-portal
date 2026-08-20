@@ -21,6 +21,14 @@ See `V3-ASSET-RESEARCH.md` for the sourcing decisions.
 - `earth-night.jpg`, `earth-day.jpg`, `earth-topology.png` (bump),
   from three-globe 2.45.2 example images (NASA Visible Earth imagery).
 
+## Country banners — `assets/img/countries/` (NEW, 2026-08-20)
+- `country-somalia.jpg` (3766×2511) — Mogadishu former parliament building, CC0,
+  AMISOM Public Information. No attribution required.
+- `country-ecuador.jpg` (1280×647) — historic view of Quito c. 1900, Public Domain,
+  Gebrüder Underwood via Wikimedia Commons/Zeno.org. No attribution required.
+- **Exact file pages, creators, licenses, SHA-256 and download dates: see
+  `IMAGE-PROVENANCE.md`** (verified live from each Commons file page this date).
+
 ## Icons — `assets/icons/` (Lucide 1.31.0, 53 inline SVGs)
 Filenames = lucide-static icon names: `home menu settings search globe globe-2 compass star
 book chevron-left/right/up/down arrow-left/right sun moon plus minus edit save trash-2 copy
