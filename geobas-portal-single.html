@@ -331,6 +331,9 @@ button,input,textarea{font-family:inherit;}
 .globeBox canvas{filter:saturate(1.12) contrast(1.06) brightness(1.04);}
 .globeGlow{right:15%; top:12%; width:290px; height:290px; opacity:.86;}
 .globeHalo{right:1%; top:3%; width:88%; border-color:rgba(255,213,146,.12); box-shadow:0 0 0 58px rgba(89,129,191,.025),0 0 0 124px rgba(89,129,191,.016),inset 0 0 90px rgba(255,200,120,.055);}
+.globeBox{right:-5%; top:-7%; width:84%; height:770px;}
+.globeGlow{right:17%; top:13%; width:320px; height:320px; opacity:.94;}
+.globeHalo{right:-2%; top:0; width:94%; box-shadow:0 0 0 68px rgba(89,129,191,.028),0 0 0 142px rgba(89,129,191,.018),inset 0 0 110px rgba(255,200,120,.065);}
 .securityBar{left:10%; right:5%; bottom:25px; background:rgba(4,14,26,.86); border-color:rgba(255,255,255,.11);}
 .rail{padding:56px 14px 18px; background:linear-gradient(180deg,rgba(4,14,26,.9),rgba(2,9,16,.96));}
 .railcard{background:rgba(7,20,35,.72); border-color:rgba(255,255,255,.1); box-shadow:0 14px 32px rgba(0,0,0,.2);}
@@ -351,6 +354,38 @@ button,input,textarea{font-family:inherit;}
 .dossier-head .lede{max-width:62ch;}
 .topic-card{background:linear-gradient(145deg,rgba(8,23,40,.88),rgba(4,13,24,.78)); border-color:rgba(255,255,255,.1);}
 .topic-card:hover{border-color:rgba(233,189,115,.35); box-shadow:0 16px 34px rgba(0,0,0,.25);}
+
+/* =====================================================================
+   STRUCTURAL ATLAS PASS — the region selector is a spatial index first,
+   while the existing table remains the keyboard/data fallback below it.
+   ===================================================================== */
+.atlas-map{position:relative; min-height:360px; margin:0 20px 22px; border:1px solid rgba(137,170,194,.22); border-radius:12px; overflow:hidden; background:radial-gradient(ellipse at 54% 46%,rgba(236,185,104,.16),transparent 25%),radial-gradient(ellipse at 58% 50%,rgba(52,112,171,.16),transparent 55%),#06111d; box-shadow:inset 0 0 70px rgba(0,0,0,.32);}
+.atlas-map::before{content:""; position:absolute; inset:0; opacity:.7; background:repeating-linear-gradient(0deg,transparent 0 44px,rgba(137,170,194,.09) 45px,transparent 46px),repeating-linear-gradient(90deg,transparent 0 66px,rgba(137,170,194,.075) 67px,transparent 68px);}
+.atlas-map::after{content:"N  ·  59°20′N / 18°04′E"; position:absolute; left:18px; bottom:15px; color:rgba(222,211,196,.58); font:500 .6rem var(--mono); letter-spacing:.12em;}
+.atlas-map-title{position:absolute; left:20px; top:18px; z-index:2; color:var(--gold2); font:600 .62rem var(--mono); letter-spacing:.16em; text-transform:uppercase;}
+.atlas-map-subtitle{position:absolute; right:20px; top:18px; z-index:2; color:var(--muted); font:500 .6rem var(--mono); letter-spacing:.08em; text-transform:uppercase;}
+.atlas-orbit{position:absolute; width:66%; aspect-ratio:1.9; left:17%; top:23%; border:1px solid rgba(98,207,255,.18); border-radius:50%; transform:rotate(-12deg); box-shadow:0 0 0 28px rgba(98,207,255,.025),0 0 42px rgba(98,207,255,.08);}
+.atlas-marker{position:absolute; z-index:3; width:96px; min-height:42px; padding:7px 9px; border:1px solid color-mix(in srgb,var(--marker) 58%,transparent); border-radius:7px; background:rgba(3,12,22,.86); color:var(--cream); text-align:left; box-shadow:0 8px 18px rgba(0,0,0,.28);}
+.atlas-marker::before{content:attr(data-index); display:block; color:var(--marker); font:600 .62rem var(--mono); letter-spacing:.1em; margin-bottom:3px;}
+.atlas-marker span{display:block; font:600 .74rem var(--serif); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.atlas-marker::after{content:""; position:absolute; width:7px; height:7px; border-radius:50%; background:var(--marker); box-shadow:0 0 12px var(--marker); top:-4px; left:14px;}
+.atlas-marker:nth-of-type(4){left:12%; top:30%;--marker:#65c5ff}.atlas-marker:nth-of-type(5){left:35%;top:27%;--marker:#74e9a7}.atlas-marker:nth-of-type(6){left:52%;top:48%;--marker:#ff9b51}.atlas-marker:nth-of-type(7){left:25%;top:60%;--marker:#c976ff}.atlas-marker:nth-of-type(8){left:44%;top:68%;--marker:#64dff1}.atlas-marker:nth-of-type(9){left:67%;top:63%;--marker:#ffd267}.atlas-marker:nth-of-type(10){left:72%;top:29%;--marker:#65c5ff}.atlas-marker:nth-of-type(11){left:80%;top:47%;--marker:#ff9852}.atlas-marker:nth-of-type(12){left:60%;top:15%;--marker:#d866ff}
+.atlas-world{position:relative;z-index:1;display:block;width:100%;height:auto;min-height:360px;background:radial-gradient(ellipse at 50% 52%,rgba(52,112,171,.2),transparent 62%);}
+.atlas-world .country{fill:rgba(67,119,145,.42);stroke:rgba(160,198,211,.5);stroke-width:.7;vector-effect:non-scaling-stroke;}
+.atlas-world .region-marker{cursor:pointer;outline:none;}
+.atlas-world .region-marker circle{fill:var(--gold2);stroke:#071321;stroke-width:2;vector-effect:non-scaling-stroke;}
+.atlas-world .region-marker text{fill:var(--cream);font:600 13px var(--serif);paint-order:stroke;stroke:#071321;stroke-width:4px;stroke-linejoin:round;}
+.atlas-world .region-marker:focus circle,.atlas-world .region-marker:hover circle{fill:#fff0b0;stroke:var(--gold);stroke-width:3;}
+@media (prefers-reduced-motion: reduce){.atlas-world .region-marker,.atlas-world .country{transition:none;}}
+.view-regions .panel > .data-table{margin:0 20px 18px; width:calc(100% - 40px);}
+.view-regions .panel > .data-table caption{caption-side:top; text-align:left; padding:0 0 10px; color:var(--gold); font:600 .62rem var(--mono); letter-spacing:.1em; text-transform:uppercase;}
+
+/* Country view reads as a place banner before it becomes a dossier. */
+#view-country .dossier-head{min-height:218px; padding:32px 34px 26px; background:var(--country-hero-grad),linear-gradient(120deg,rgba(11,26,42,.92),rgba(106,78,68,.5));}
+#view-country .dossier-head::before{content:""; position:absolute; inset:0; opacity:.26; background:repeating-linear-gradient(105deg,transparent 0 58px,rgba(255,213,146,.22) 59px,transparent 60px),linear-gradient(90deg,transparent 55%,rgba(255,180,92,.24)); pointer-events:none;}
+#view-country .dossier-head::after{height:112px; background:linear-gradient(transparent,rgba(7,19,33,.96));}
+#view-country .dossier-head h2{font-size:clamp(2.2rem,5vw,4rem); line-height:.95; margin:14px 0 14px; text-shadow:0 4px 28px rgba(0,0,0,.65);}
+.view-country .dossier-meta{display:inline-block; padding-top:11px; border-top:1px solid rgba(255,213,146,.2); min-width:min(100%,420px);}
 
 /* badges */
 .badge{display:inline-flex; align-items:center; gap:6px; font-family:var(--mono); font-size:0.6rem; letter-spacing:0.05em; text-transform:uppercase; padding:4px 10px; border-radius:100px; white-space:nowrap;}
@@ -739,7 +774,14 @@ footer.foot .data-actions{display:flex; gap:8px;}
         </div>
       </div>
       <div class="panel">
+        <div class="atlas-map" id="regions-map" aria-label="Geografisk världskarta">
+          <svg class="atlas-world" id="regions-world" viewBox="0 0 1000 500" role="img" aria-labelledby="regions-map-title regions-map-desc">
+            <title id="regions-map-title">Världskarta med regioner</title>
+            <desc id="regions-map-desc">Klickbara regionmarkörer och landsgränser.</desc>
+          </svg>
+        </div>
         <table class="data-table">
+          <caption>Datatabell — tillgängligt alternativ</caption>
           <thead><tr><th scope="col" data-i18n="col_region">Region</th><th scope="col" data-i18n="col_countries">Länder</th><th scope="col" data-i18n="col_status">Status</th><th scope="col"></th></tr></thead>
           <tbody id="region-grid"></tbody>
         </table>
@@ -3019,6 +3061,46 @@ o_.readability=function(e,t){var n=o_(e),r=o_(t);return(Math.max(n.getLuminance(
       updateCountryFlag();
       return r;
     };
+  }
+
+  /* --- geographic REGIONS map: reuse the already inlined TopoJSON URI --- */
+  function renderAtlasRegions() {
+    var svg = document.getElementById('regions-world');
+    if (!svg || typeof topojson !== 'object' || typeof topojson.feature !== 'function') return;
+    var scripts = document.querySelectorAll('script'), uri = '';
+    for (var si = 0; si < scripts.length && !uri; si++) {
+      var match = (scripts[si].textContent || '').match(/data:application\/json;base64,[A-Za-z0-9+/=]+/);
+      if (match) uri = match[0];
+    }
+    if (!uri) return;
+    fetch(uri).then(function (res) { return res.json(); }).then(function (topo) {
+      var features = topojson.feature(topo, topo.objects.countries).features;
+      var project = function (lng, lat) { return [(lng + 180) * 1000 / 360, (90 - lat) * 500 / 180]; };
+      var pathFor = function (geometry) {
+        var d = '', polygons = geometry.type === 'Polygon' ? [geometry.coordinates] : geometry.coordinates;
+        polygons.forEach(function (polygon) { polygon.forEach(function (ring) {
+          ring.forEach(function (point, i) { var p = project(point[0], point[1]); d += (i ? 'L' : 'M') + p[0].toFixed(2) + ',' + p[1].toFixed(2); }); d += 'Z';
+        }); }); return d;
+      };
+      while (svg.lastChild && svg.lastChild.tagName !== 'TITLE' && svg.lastChild.tagName !== 'DESC') svg.removeChild(svg.lastChild);
+      features.forEach(function (feature) {
+        if (!feature.geometry) return;
+        var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('class', 'country'); path.setAttribute('d', pathFor(feature.geometry)); svg.appendChild(path);
+      });
+      (typeof getRegions === 'function' ? getRegions(currentLang) : []).forEach(function (region) {
+        var point = project(Number(region.lng), Number(region.lat));
+        var group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        group.setAttribute('class', 'region-marker'); group.setAttribute('tabindex', '0'); group.setAttribute('role', 'button'); group.setAttribute('aria-label', region.name); group.setAttribute('data-region-id', region.id);
+        var circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle'); circle.setAttribute('cx', point[0]); circle.setAttribute('cy', point[1]); circle.setAttribute('r', '5'); group.appendChild(circle);
+        var label = document.createElementNS('http://www.w3.org/2000/svg', 'text'); label.setAttribute('x', point[0] + 9); label.setAttribute('y', point[1] + 4); label.textContent = region.name; group.appendChild(label);
+        var open = function () { goRegion(region.id); }; group.addEventListener('click', open); group.addEventListener('keydown', function (event) { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); open(); } }); svg.appendChild(group);
+      });
+    }).catch(function () { /* map is optional; accessible table remains */ });
+  }
+  if (typeof window.goRegions === 'function') {
+    var _goRegions = window.goRegions;
+    window.goRegions = function () { var result = _goRegions.apply(this, arguments); renderAtlasRegions(); return result; };
   }
 
   /* --- globe centerpiece (C4) — fully local, guarded --- */
