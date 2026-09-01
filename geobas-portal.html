@@ -387,6 +387,22 @@ button,input,textarea{font-family:inherit;}
 #view-country .dossier-head h2{font-size:clamp(2.2rem,5vw,4rem); line-height:.95; margin:14px 0 14px; text-shadow:0 4px 28px rgba(0,0,0,.65);}
 .view-country .dossier-meta{display:inline-block; padding-top:11px; border-top:1px solid rgba(255,213,146,.2); min-width:min(100%,420px);}
 
+/* COUNTRY-only place identity: the existing name/region seed selects a restrained
+   atlas treatment, while the fact band is populated only from stored card KV rows. */
+#view-country .country-fact-band{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin:-4px 0 20px;border-block:1px solid var(--country-accent-line);background:linear-gradient(90deg,rgba(233,189,115,.07),rgba(7,19,33,.24));}
+#view-country .country-fact{padding:13px 16px 12px;border-inline-end:1px solid var(--whiteLine);min-width:0;}
+#view-country .country-fact:last-child{border-inline-end:0;}
+#view-country .country-fact-label{display:block;color:var(--country-accent);font:600 .58rem var(--mono);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#view-country .country-fact-value{display:block;margin-top:5px;color:var(--cream);font:600 1rem/1.25 var(--serif);overflow-wrap:anywhere;}
+#view-country .dossier-head{border-color:var(--country-accent-line);}
+#view-country .dossier-head .region-tag{display:inline-flex;align-items:center;gap:9px;color:var(--country-accent);letter-spacing:.16em;}
+#view-country .dossier-head .region-tag::before{content:"";width:25px;height:1px;background:var(--country-accent);box-shadow:8px 4px 0 -0.3px var(--country-accent);}
+#view-country.country-tone-1{--country-accent:#d9ad68;--country-accent-line:rgba(217,173,104,.38);}
+#view-country.country-tone-2{--country-accent:#c8b17e;--country-accent-line:rgba(200,177,126,.38);}
+#view-country.country-tone-3{--country-accent:#d69a73;--country-accent-line:rgba(214,154,115,.38);}
+#view-country.country-tone-4{--country-accent:#b9c28f;--country-accent-line:rgba(185,194,143,.36);}
+@media (max-width:700px){#view-country .country-fact-band{grid-template-columns:repeat(2,minmax(0,1fr));}#view-country .country-fact:nth-child(2){border-inline-end:0;}#view-country .country-fact:nth-child(-n+2){border-bottom:1px solid var(--whiteLine);}}
+
 /* badges */
 .badge{display:inline-flex; align-items:center; gap:6px; font-family:var(--mono); font-size:0.6rem; letter-spacing:0.05em; text-transform:uppercase; padding:4px 10px; border-radius:100px; white-space:nowrap;}
 .badge::before{content:''; width:6px; height:6px; border-radius:50%; background:currentColor; flex-shrink:0;}
@@ -6407,6 +6423,7 @@ footer.foot .data-actions{display:flex; gap:8px;}
             <textarea id="country-intro-edit" class="edit-field" style="display:none;"></textarea>
             <p class="dossier-meta" data-i18n="dossier_meta">Uppdaterad från Migrationsverkets landinfo (2026)</p>
           </header>
+          <div class="country-fact-band" id="country-fact-band" aria-label="Country dossier facts"></div>
           <div class="topics-grid" id="topics-grid"></div>
           <div id="empty-state"></div>
           <div class="disclaimer" id="country-disclaimer" style="display:none;"></div>
@@ -7880,6 +7897,14 @@ function goCountry(countryId){
 
   const detail = getCountryDetail(countryId, currentLang);
   document.getElementById('country-region-tag').textContent = region ? region.name : '';
+  const countryView = document.getElementById('view-country');
+  if(countryView){
+    const identity = (detail.name + '|' + (region ? region.name : '')).toLowerCase();
+    let identityScore = 0;
+    for(let i=0;i<identity.length;i++) identityScore = (identityScore + identity.charCodeAt(i) * (i + 1)) % 997;
+    countryView.classList.remove('country-tone-1','country-tone-2','country-tone-3','country-tone-4');
+    countryView.classList.add('country-tone-' + ((identityScore % 4) + 1));
+  }
 
   const nameStatic = document.getElementById('country-name-static');
   const nameEdit = document.getElementById('country-name-edit');
@@ -7890,6 +7915,22 @@ function goCountry(countryId){
   nameEdit.value = detail.name;
   introStatic.textContent = detail.intro;
   introEdit.value = detail.intro;
+
+  const factBand = document.getElementById('country-fact-band');
+  const facts = detail.cards.flatMap(card => card.kv || []).filter(row => row && (row.k || row.v)).slice(0, 4);
+  if(factBand){
+    const factNodes = facts.map(row => {
+      const fact = document.createElement('div'); fact.className = 'country-fact';
+      const label = document.createElement('span'); label.className = 'country-fact-label'; label.textContent = row.k || T('dossier_meta');
+      const value = document.createElement('span'); value.className = 'country-fact-value'; value.textContent = row.v || '';
+      if(typeof fact.append === 'function') fact.append(label, value);
+      else fact.textContent = (row.k || T('dossier_meta')) + ': ' + (row.v || '');
+      return fact;
+    });
+    if(typeof factBand.replaceChildren === 'function') factBand.replaceChildren(...factNodes);
+    else factBand.textContent = facts.map(row => (row.k || T('dossier_meta')) + ': ' + (row.v || '')).join(' | ');
+    factBand.hidden = facts.length === 0;
+  }
 
   nameStatic.style.display = editMode ? 'none' : 'block';
   nameEdit.style.display = editMode ? 'block' : 'none';
